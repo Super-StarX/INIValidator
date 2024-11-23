@@ -1,0 +1,9 @@
+bin/*
+build/*
+debug/*
+release/*
+x64/*
+INIValidater/*
+.vs/*
+*.user
+*.filters
