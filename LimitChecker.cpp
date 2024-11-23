@@ -1,7 +1,7 @@
-﻿#include "LimitRule.h"
+﻿#include "LimitChecker.h"
 #include <sstream>
 
-void LimitRule::loadFromConfig(const std::unordered_map<std::string, std::string>& config) {
+void LimitChecker::loadFromConfig(const std::unordered_map<std::string, std::string>& config) {
     if (config.count("StartWith")) {
         std::istringstream stream(config.at("StartWith"));
         std::string token;
@@ -24,15 +24,16 @@ void LimitRule::loadFromConfig(const std::unordered_map<std::string, std::string
         }
     }
     if (config.count("IgnoreCase")) {
-        ignoreCase = config.at("IgnoreCase") == "yes";
+        char res = config.at("IgnoreCase")[0];
+        ignoreCase = res == '1' || res == 'y' || res == 't';
     }
 }
 
-bool LimitRule::validate(const std::string& value) const {
+bool LimitChecker::validate(const std::string& value) const {
     return matchesStart(value) && matchesEnd(value) && matchesList(value);
 }
 
-bool LimitRule::matchesStart(const std::string& value) const {
+bool LimitChecker::matchesStart(const std::string& value) const {
     if (startWith.empty()) return true;
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& prefix : startWith) {
@@ -44,7 +45,7 @@ bool LimitRule::matchesStart(const std::string& value) const {
     return false;
 }
 
-bool LimitRule::matchesEnd(const std::string& value) const {
+bool LimitChecker::matchesEnd(const std::string& value) const {
     if (endWith.empty()) return true;
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& suffix : endWith) {
@@ -57,7 +58,7 @@ bool LimitRule::matchesEnd(const std::string& value) const {
     return false;
 }
 
-bool LimitRule::matchesList(const std::string& value) const {
+bool LimitChecker::matchesList(const std::string& value) const {
     if (limitIn.empty()) return true;
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& item : limitIn) {
@@ -69,7 +70,7 @@ bool LimitRule::matchesList(const std::string& value) const {
     return false;
 }
 
-std::string LimitRule::toLower(const std::string& str) const {
+std::string LimitChecker::toLower(const std::string& str) const {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
     return result;

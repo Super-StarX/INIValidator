@@ -1,4 +1,4 @@
-﻿#include "ConfigChecker.h"
+﻿#include "Checker.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -6,17 +6,17 @@
 #include <regex>
 #include <set>
 
-ConfigChecker::ConfigChecker(const IniFile& configFile) {
+Checker::Checker(const IniFile& configFile) {
     loadConfig(configFile);
 }
 
 // 加载配置文件
-void ConfigChecker::loadConfig(const IniFile& configFile) {
+void Checker::loadConfig(const IniFile& configFile) {
     // 加载 Limits
     if (configFile.sections.count("Limits")) {
         for (const auto& [limitKey, _] : configFile.sections.at("Limits")) {
             if (configFile.sections.count(limitKey)) {
-                LimitRule rule;
+                LimitChecker rule;
                 rule.loadFromConfig(configFile.sections.at(limitKey));
                 limits[limitKey] = rule;
             }
@@ -35,7 +35,7 @@ void ConfigChecker::loadConfig(const IniFile& configFile) {
 }
 
 // 处理继承关系 (支持 [A]:[B] 语法)
-void ConfigChecker::handleInheritance(std::unordered_map<std::string, std::string>& section) {
+void Checker::handleInheritance(std::unordered_map<std::string, std::string>& section) {
     for (const auto& [key, value] : section) {
         if (key.back() == ':') {
             std::string parentSection = key.substr(0, key.size() - 1);
@@ -47,37 +47,26 @@ void ConfigChecker::handleInheritance(std::unordered_map<std::string, std::strin
 }
 
 // 解析目标 INI 的注册表
-void ConfigChecker::parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<int, std::string>& registry) {
-    std::set<int> usedKeys;
+void Checker::parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<std::string, std::string>& registry) {
     if (targetIni.sections.count(registrySection)) {
         for (const auto& [keyStr, value] : targetIni.sections.at(registrySection)) {
-            int key;
+            std::string key;
             if (keyStr == "+") {
-                key = 1;
-                while (usedKeys.count(key)) ++key; // 找到未使用的最小整数
+                static int var_num = 0;
+                key = "var_"+ std::to_string(var_num);
+                ++var_num;
             }
-            else {
-                try {
-                    key = std::stoi(keyStr);
-                }
-                catch (...) {
-                    std::cerr << "Warning: Non-integer key \"" << keyStr << "\" in " << registrySection << " ignored." << std::endl;
-                    continue;
-                }
-                if (registry.count(key)) {
-                    std::cerr << "Error: Duplicate key \"" << key << "\" in " << registrySection << ", value \"" << registry[key] << "\" overwritten by \"" << value << "\"." << std::endl;
-                }
-            }
+            else if (registry.count(key))
+                std::cerr << "Error: Duplicate key \"" << key << "\" in " << registrySection << ", value \"" << registry[key] << "\" overwritten by \"" << value << "\"." << std::endl;
             registry[key] = value;
-            usedKeys.insert(key);
         }
     }
 }
 
 // 验证每个注册节的内容
-void ConfigChecker::checkFile(const IniFile& targetIni) {
+void Checker::checkFile(const IniFile& targetIni) {
     for (const auto& [registryName, _] : sections) {
-        std::unordered_map<int, std::string> registry;
+        std::unordered_map<std::string, std::string> registry;
         parseRegistry(registryName, targetIni, registry);
 
         for (const auto& [_, sectionName] : registry) {
@@ -92,7 +81,7 @@ void ConfigChecker::checkFile(const IniFile& targetIni) {
 }
 
 // 验证某个节
-void ConfigChecker::validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys) {
+void Checker::validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys) {
     if (!sections.count(sectionName)) {
         std::cerr << "Warning: No configuration found for section \"" << sectionName << "\"." << std::endl;
         return;
@@ -108,7 +97,7 @@ void ConfigChecker::validateSection(const std::string& sectionName, const std::u
 }
 
 // 验证键值对
-bool ConfigChecker::validate(const std::string& key, const std::string& value, const std::string& type) {
+bool Checker::validate(const std::string& key, const std::string& value, const std::string& type) {
     if (type == "int") return isNumber(value);
     if (type == "float" || type == "double") return isFloat(value);
     if (type == "string") return value.size() < 256;
@@ -120,5 +109,5 @@ bool ConfigChecker::validate(const std::string& key, const std::string& value, c
     return true;
 }
 
-bool ConfigChecker::isNumber(const std::string& str) { return std::regex_match(str, std::regex("^-?\\d+$")); }
-bool ConfigChecker::isFloat(const std::string& str) { return std::regex_match(str, std::regex("^-?\\d+(\\.\\d+)?$")); }
+bool Checker::isNumber(const std::string& str) { return std::regex_match(str, std::regex("^-?\\d+$")); }
+bool Checker::isFloat(const std::string& str) { return std::regex_match(str, std::regex("^-?\\d+(\\.\\d+)?$")); }

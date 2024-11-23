@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-class LimitRule {
+class LimitChecker {
 public:
     std::vector<std::string> startWith;
     std::vector<std::string> endWith;

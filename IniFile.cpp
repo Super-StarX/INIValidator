@@ -1,4 +1,5 @@
 ﻿#include "IniFile.h"
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -11,17 +12,18 @@ IniFile::IniFile(const std::string& filepath) {
 }
 
 void IniFile::load(const std::string& filepath) {
-    if (!std::filesystem::exists(filepath)) {
+    if (filepath.empty())
+        throw std::runtime_error("Error: No file path provided.");
+    if (!std::filesystem::exists(filepath))
         throw std::runtime_error("File not found: " + filepath);
-    }
     std::ifstream file(filepath);
-    if (!file.is_open()) {
+    if (!file.is_open())
         throw std::runtime_error("Failed to open file: " + filepath);
-    }
 
     std::string line, currentSection;
     while (std::getline(file, line)) {
-        line = trim(removeInlineComment(line));
+        line = removeInlineComment(line);
+        line = trim(line);
         if (line.empty()) continue;
 
         // 检测新 Section
@@ -35,9 +37,8 @@ void IniFile::load(const std::string& filepath) {
                 std::string value = trim(line.substr(delimiterPos + 1));
                 sections[currentSection][key] = value;
             }
-            else {
+            else
                 sections[currentSection][line] = ""; // 单独的键
-            }
         }
     }
     processIncludes(std::filesystem::path(filepath).parent_path().string());
@@ -48,18 +49,16 @@ void IniFile::processIncludes(const std::string& basePath) {
     if (sections.count("#include")) {
         for (const auto& [key, value] : sections["#include"]) {
             IniFile includedFile(basePath + "/" + value);
-            for (const auto& [sec, keys] : includedFile.sections) {
+            for (const auto& [sec, keys] : includedFile.sections)
                 sections[sec].insert(keys.begin(), keys.end());
-            }
         }
     }
 }
 
 void IniFile::processInheritance() {
     std::vector<std::string> sectionsToProcess;
-    for (const auto& [section, keys] : sections) {
+    for (const auto& [section, keys] : sections)
         sectionsToProcess.push_back(section);
-    }
 
     for (const std::string& sectionName : sectionsToProcess) {
         auto pos = sectionName.find(':');
@@ -67,9 +66,8 @@ void IniFile::processInheritance() {
             std::string section = sectionName.substr(0, pos);
             std::string parent = sectionName.substr(pos + 1);
 
-            if (sections.count(parent)) {
+            if (sections.count(parent))
                 sections[section].insert(sections[parent].begin(), sections[parent].end());
-            }
         }
     }
 }

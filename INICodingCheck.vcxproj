@@ -130,15 +130,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConfigChecker.cpp" />
+    <ClCompile Include="Checker.cpp" />
     <ClCompile Include="INIValidater.cpp" />
     <ClCompile Include="IniFile.cpp" />
-    <ClCompile Include="LimitRule.cpp" />
+    <ClCompile Include="LimitChecker.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConfigChecker.h" />
+    <ClInclude Include="Checker.h" />
     <ClInclude Include="IniFile.h" />
-    <ClInclude Include="LimitRule.h" />
+    <ClInclude Include="LimitChecker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
