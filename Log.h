@@ -1,43 +1,69 @@
 ﻿#pragma once
 
-#include <iostream>
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <queue>
-#include <mutex>
 #include <thread>
+#include <mutex>
 #include <condition_variable>
-#include <atomic>
+#include <stdexcept>
+#include <memory>
+#define INFO(line) Log::Instance->createStream(Severity::INFO, line)
+#define WARNING(line) Log::Instance->createStream(Severity::WARNING, line)
+#define ERROR(line) Log::Instance->createStream(Severity::ERROR, line)
 
+// 日志级别
+enum class Severity {
+    INFO,
+    WARNING,
+    ERROR
+};
+
+class LogStream; // 前向声明
+
+// 日志类
 class Log {
 public:
-    enum class Severity {
-        INFO,
-        WARNING,
-        ERROR
-    };
-
+    static Log* Instance; // 静态实例
     Log(const std::string& logFileName);
     ~Log();
 
-    // 普通日志
-    void log(const std::string& message);
-    // 检查问题日志
-    void logIssue(Severity severity, int line, const std::string& key, const std::string& value, const std::string& errorMessage);
+    LogStream createStream(Severity severity, int line);
 
-    // 停止日志线程
     void stop();
 
 private:
+    friend class LogStream;
+
+    void processLogQueue();
+    void writeLog(const std::string& message);
+    std::string getSeverityLabel(Severity severity);
+    std::string getPlainSeverityLabel(Severity severity);
+
     std::ofstream logFile;
     std::queue<std::string> logQueue;
     std::mutex queueMutex;
     std::condition_variable condition;
     std::thread writerThread;
-    std::atomic<bool> running;
+    bool running;
 
-    void processLogQueue();
+};
 
-    // 日志颜色编码
-    std::string getSeverityColor(Severity severity);
+// 中间类：用于流式日志操作
+class LogStream {
+public:
+    LogStream(Log* logger, Severity severity, int line);
+    ~LogStream(); // 析构时提交日志
+    template <typename T>
+    LogStream& operator<<(const T& value) {
+        buffer << value;
+        return *this;
+    }
+
+private:
+    Log* logger;
+    Severity severity;
+    int line;
+    std::ostringstream buffer;
 };

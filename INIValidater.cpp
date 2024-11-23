@@ -6,6 +6,8 @@
 #include <string>
 
 int main(int argc, char* argv[]) {
+    Log log("Checker.log");
+
     try {
         std::string targetFilePath;
         if (argc >= 2)
@@ -15,7 +17,6 @@ int main(int argc, char* argv[]) {
             std::getline(std::cin, targetFilePath);
         }
 
-        Log logger("Checker.log");
         IniFile configIni("INICodingCheck.ini");
         IniFile targetIni(targetFilePath);
 
@@ -23,12 +24,12 @@ int main(int argc, char* argv[]) {
         checker.checkFile(targetIni);
 
         std::cout << "Validation completed." << std::endl;
-        logger.stop();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 
+    log.stop();
     return 0;
 }
