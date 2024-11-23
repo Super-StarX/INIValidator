@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -9,27 +8,29 @@
 #include <condition_variable>
 #include <stdexcept>
 #include <memory>
-#define INFO(line) Log::Instance->createStream(Severity::INFO, line)
-#define WARNING(line) Log::Instance->createStream(Severity::WARNING, line)
-#define ERROR(line) Log::Instance->createStream(Severity::ERROR, line)
+
+#define LOG Log::Instance->stream(Severity::DEFAULT)
+#define INFO(line) Log::Instance->stream(Severity::INFO, line)
+#define WARNING(line) Log::Instance->stream(Severity::WARNING, line)
+#define ERROR(line) Log::Instance->stream(Severity::ERROR, line)
 
 // 日志级别
 enum class Severity {
+    DEFAULT,
     INFO,
     WARNING,
     ERROR
 };
 
-class LogStream; // 前向声明
-
 // 日志类
+class LogStream;
 class Log {
 public:
-    static Log* Instance; // 静态实例
+    static Log* Instance; 
     Log(const std::string& logFileName);
     ~Log();
 
-    LogStream createStream(Severity severity, int line);
+    LogStream stream(Severity severity, int line = -1);
 
     void stop();
 
@@ -50,7 +51,7 @@ private:
 
 };
 
-// 中间类：用于流式日志操作
+// 流式日志操作
 class LogStream {
 public:
     LogStream(Log* logger, Severity severity, int line);

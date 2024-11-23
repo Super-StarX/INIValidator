@@ -38,9 +38,8 @@ bool LimitChecker::matchesStart(const std::string& value) const {
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& prefix : startWith) {
         std::string checkPrefix = ignoreCase ? toLower(prefix) : prefix;
-        if (target.rfind(checkPrefix, 0) == 0) { // 检查是否以 prefix 开头
+        if (target.rfind(checkPrefix, 0) == 0) // 检查是否以 prefix 开头
             return true;
-        }
     }
     return false;
 }

@@ -1,4 +1,5 @@
 ﻿#include "Checker.h"
+#include "Log.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -57,7 +58,7 @@ void Checker::parseRegistry(const std::string& registrySection, const IniFile& t
                 ++var_num;
             }
             else if (registry.count(key))
-                std::cerr << "Error: Duplicate key \"" << key << "\" in " << registrySection << ", value \"" << registry[key] << "\" overwritten by \"" << value << "\"." << std::endl;
+                ERROR(__LINE__) << "Error: Duplicate key \"" << key << "\" in " << registrySection << ", value \"" << registry[key] << "\" overwritten by \"" << value << "\".";
             registry[key] = value;
         }
     }
@@ -73,7 +74,7 @@ void Checker::checkFile(const IniFile& targetIni) {
             if (targetIni.sections.count(sectionName))
                 validateSection(sectionName, targetIni.sections.at(sectionName));
             else
-                std::cerr << "Error: Section \"" << sectionName << "\" referenced in " << registryName << " not found." << std::endl;
+                ERROR(__LINE__) << "Error: Section \"" << sectionName << "\" referenced in " << registryName << " not found.";
         }
     }
 }
@@ -81,7 +82,7 @@ void Checker::checkFile(const IniFile& targetIni) {
 // 验证某个节
 void Checker::validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys) {
     if (!sections.count(sectionName)) {
-        std::cerr << "Warning: No configuration found for section \"" << sectionName << "\"." << std::endl;
+        ERROR(__LINE__) << "Warning: No configuration found for section \"" << sectionName << "\".";
         return;
     }
 
@@ -89,7 +90,7 @@ void Checker::validateSection(const std::string& sectionName, const std::unorder
     for (const auto& [key, value] : keys) {
         std::string type = rules.count(key) ? rules.at(key) : "";
         if (!validate(key, value, type))
-            std::cerr << "Error: Invalid value for " << sectionName << "." << key << ": " << value << std::endl;
+            ERROR(__LINE__) << "Error: Invalid value for " << sectionName << "." << key << ": " << value;
     }
 }
 

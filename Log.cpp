@@ -1,14 +1,13 @@
 ﻿#include "Log.h"
 #include <iostream>
 
-// 静态实例初始化
 Log* Log::Instance;
 
 Log::Log(const std::string& logFileName) : running(true) {
     Instance = this;
-    logFile.open("app.log", std::ios::out | std::ios::trunc);
+    logFile.open(logFileName, std::ios::out | std::ios::trunc);
     if (!logFile.is_open())
-        throw std::runtime_error("Unable to open log file: app.log");
+        throw std::runtime_error("Unable to open log file: " + logFileName);
 
     writerThread = std::thread(&Log::processLogQueue, this);
 }
@@ -21,7 +20,7 @@ Log::~Log() {
         logFile.close();
 }
 
-LogStream Log::createStream(Severity severity, int line) {
+LogStream Log::stream(Severity severity, int line) {
     return LogStream(this, severity, line);
 }
 
@@ -50,36 +49,42 @@ void Log::writeLog(const std::string& message) {
 
 std::string Log::getSeverityLabel(Severity severity) {
     switch (severity) {
+    case Severity::DEFAULT: return "";
     case Severity::INFO:    return "\033[32m[建议]\033[0m";
     case Severity::WARNING: return "\033[33m[非法]\033[0m";
     case Severity::ERROR:   return "\033[31m[错误]\033[0m";
+    default:__assume(0);
     }
-    return "[未知]";
 }
 
 std::string Log::getPlainSeverityLabel(Severity severity) {
     switch (severity) {
+    case Severity::DEFAULT: return "";
     case Severity::INFO:    return "[建议]";
     case Severity::WARNING: return "[非法]";
     case Severity::ERROR:   return "[错误]";
+    default:__assume(0);
     }
-    return "[未知]";
 }
-
-// LogStream 实现
 
 LogStream::LogStream(Log* logger, Severity severity, int line)
     : logger(logger), severity(severity), line(line) {}
 
 LogStream::~LogStream() {
-    std::ostringstream formattedMessage;
+    if (severity == Severity::DEFAULT) {
+        std::cerr << buffer.str() << std::endl;
+        logger->writeLog(buffer.str());
+    }
+    else {
+        std::ostringstream formattedMessage;
 
-    // 控制台输出带颜色的内容
-    formattedMessage << logger->getSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
-    std::cerr << formattedMessage.str() << std::endl;
+        // 控制台输出带颜色的内容
+        formattedMessage << logger->getSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
+        std::cerr << formattedMessage.str() << std::endl;
 
-    // 文件写入无颜色内容
-    std::ostringstream plainMessage;
-    plainMessage << logger->getPlainSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
-    logger->writeLog(plainMessage.str());
+        // 文件写入无颜色内容
+        std::ostringstream plainMessage;
+        plainMessage << logger->getPlainSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
+        logger->writeLog(plainMessage.str());
+    }
 }
