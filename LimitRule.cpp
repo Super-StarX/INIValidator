@@ -1,4 +1,4 @@
-#include "LimitRule.h"
+ï»¿#include "LimitRule.h"
 #include <sstream>
 
 void LimitRule::loadFromConfig(const std::unordered_map<std::string, std::string>& config) {
@@ -37,7 +37,7 @@ bool LimitRule::matchesStart(const std::string& value) const {
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& prefix : startWith) {
         std::string checkPrefix = ignoreCase ? toLower(prefix) : prefix;
-        if (target.rfind(checkPrefix, 0) == 0) { // ¼ì²éÊÇ·ñÒÔ prefix ¿ªÍ·
+        if (target.rfind(checkPrefix, 0) == 0) { // æ£€æŸ¥æ˜¯å¦ä»¥ prefix å¼€å¤´
             return true;
         }
     }

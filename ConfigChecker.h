@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IniFile.h"
 #include "LimitRule.h"
 #include <unordered_map>
@@ -13,8 +13,8 @@ public:
     void checkFile(const IniFile& targetIni);
 
 private:
-    std::unordered_map<std::string, LimitRule> limits; // ÏŞÖÆ¹æÔò
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sections; // SectionsÄÚÈİ
+    std::unordered_map<std::string, LimitRule> limits; // é™åˆ¶è§„åˆ™
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sections; // Sectionså†…å®¹
 
     void handleInheritance(std::unordered_map<std::string, std::string>& section);
     void parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<int, std::string>& registry);

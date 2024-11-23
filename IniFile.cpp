@@ -1,4 +1,4 @@
-#include "IniFile.h"
+ï»¿#include "IniFile.h"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -24,7 +24,7 @@ void IniFile::load(const std::string& filepath) {
         line = trim(removeInlineComment(line));
         if (line.empty()) continue;
 
-        // ¼ì²âĞÂ Section
+        // æ£€æµ‹æ–° Section
         if (line[0] == '[' && line.back() == ']') {
             currentSection = line.substr(1, line.size() - 2);
         }
@@ -36,7 +36,7 @@ void IniFile::load(const std::string& filepath) {
                 sections[currentSection][key] = value;
             }
             else {
-                sections[currentSection][line] = ""; // µ¥¶ÀµÄ¼ü
+                sections[currentSection][line] = ""; // å•ç‹¬çš„é”®
             }
         }
     }

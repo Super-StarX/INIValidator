@@ -1,4 +1,4 @@
-#include "ConfigChecker.h"
+ï»¿#include "ConfigChecker.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -10,9 +10,9 @@ ConfigChecker::ConfigChecker(const IniFile& configFile) {
     loadConfig(configFile);
 }
 
-// ¼ÓÔØÅäÖÃÎÄ¼ş
+// åŠ è½½é…ç½®æ–‡ä»¶
 void ConfigChecker::loadConfig(const IniFile& configFile) {
-    // ¼ÓÔØ Limits
+    // åŠ è½½ Limits
     if (configFile.sections.count("Limits")) {
         for (const auto& [limitKey, _] : configFile.sections.at("Limits")) {
             if (configFile.sections.count(limitKey)) {
@@ -23,7 +23,7 @@ void ConfigChecker::loadConfig(const IniFile& configFile) {
         }
     }
 
-    // ¼ÓÔØ Sections
+    // åŠ è½½ Sections
     if (configFile.sections.count("Sections")) {
         for (const auto& [sectionName, _] : configFile.sections.at("Sections")) {
             if (configFile.sections.count(sectionName)) {
@@ -34,7 +34,7 @@ void ConfigChecker::loadConfig(const IniFile& configFile) {
     }
 }
 
-// ´¦Àí¼Ì³Ğ¹ØÏµ (Ö§³Ö [A]:[B] Óï·¨)
+// å¤„ç†ç»§æ‰¿å…³ç³» (æ”¯æŒ [A]:[B] è¯­æ³•)
 void ConfigChecker::handleInheritance(std::unordered_map<std::string, std::string>& section) {
     for (const auto& [key, value] : section) {
         if (key.back() == ':') {
@@ -46,7 +46,7 @@ void ConfigChecker::handleInheritance(std::unordered_map<std::string, std::strin
     }
 }
 
-// ½âÎöÄ¿±ê INI µÄ×¢²á±í
+// è§£æç›®æ ‡ INI çš„æ³¨å†Œè¡¨
 void ConfigChecker::parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<int, std::string>& registry) {
     std::set<int> usedKeys;
     if (targetIni.sections.count(registrySection)) {
@@ -54,7 +54,7 @@ void ConfigChecker::parseRegistry(const std::string& registrySection, const IniF
             int key;
             if (keyStr == "+") {
                 key = 1;
-                while (usedKeys.count(key)) ++key; // ÕÒµ½Î´Ê¹ÓÃµÄ×îĞ¡ÕûÊı
+                while (usedKeys.count(key)) ++key; // æ‰¾åˆ°æœªä½¿ç”¨çš„æœ€å°æ•´æ•°
             }
             else {
                 try {
@@ -74,7 +74,7 @@ void ConfigChecker::parseRegistry(const std::string& registrySection, const IniF
     }
 }
 
-// ÑéÖ¤Ã¿¸ö×¢²á½ÚµÄÄÚÈİ
+// éªŒè¯æ¯ä¸ªæ³¨å†ŒèŠ‚çš„å†…å®¹
 void ConfigChecker::checkFile(const IniFile& targetIni) {
     for (const auto& [registryName, _] : sections) {
         std::unordered_map<int, std::string> registry;
@@ -91,7 +91,7 @@ void ConfigChecker::checkFile(const IniFile& targetIni) {
     }
 }
 
-// ÑéÖ¤Ä³¸ö½Ú
+// éªŒè¯æŸä¸ªèŠ‚
 void ConfigChecker::validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys) {
     if (!sections.count(sectionName)) {
         std::cerr << "Warning: No configuration found for section \"" << sectionName << "\"." << std::endl;
@@ -107,13 +107,13 @@ void ConfigChecker::validateSection(const std::string& sectionName, const std::u
     }
 }
 
-// ÑéÖ¤¼üÖµ¶Ô
+// éªŒè¯é”®å€¼å¯¹
 bool ConfigChecker::validate(const std::string& key, const std::string& value, const std::string& type) {
     if (type == "int") return isNumber(value);
     if (type == "float" || type == "double") return isFloat(value);
     if (type == "string") return value.size() < 256;
 
-    // ¼ì²éÊÇ·ñÎªÌØÊâÀàĞÍ
+    // æ£€æŸ¥æ˜¯å¦ä¸ºç‰¹æ®Šç±»å‹
     if (limits.count(type)) {
         return limits.at(type).validate(value);
     }

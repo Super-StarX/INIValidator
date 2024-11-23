@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <unordered_map>
 
@@ -8,7 +8,6 @@ public:
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sections;
 
     void load(const std::string& filepath);
-    void processIncludesAndInheritance(const std::string& basePath);
 
 private:
     void processIncludes(const std::string& basePath);
