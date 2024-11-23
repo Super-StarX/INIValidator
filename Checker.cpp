@@ -70,12 +70,10 @@ void Checker::checkFile(const IniFile& targetIni) {
         parseRegistry(registryName, targetIni, registry);
 
         for (const auto& [_, sectionName] : registry) {
-            if (targetIni.sections.count(sectionName)) {
+            if (targetIni.sections.count(sectionName))
                 validateSection(sectionName, targetIni.sections.at(sectionName));
-            }
-            else {
+            else
                 std::cerr << "Error: Section \"" << sectionName << "\" referenced in " << registryName << " not found." << std::endl;
-            }
         }
     }
 }
@@ -90,9 +88,8 @@ void Checker::validateSection(const std::string& sectionName, const std::unorder
     const auto& rules = sections[sectionName];
     for (const auto& [key, value] : keys) {
         std::string type = rules.count(key) ? rules.at(key) : "";
-        if (!validate(key, value, type)) {
+        if (!validate(key, value, type))
             std::cerr << "Error: Invalid value for " << sectionName << "." << key << ": " << value << std::endl;
-        }
     }
 }
 
