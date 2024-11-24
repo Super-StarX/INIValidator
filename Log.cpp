@@ -25,7 +25,7 @@ LogStream Log::stream(Severity severity, int line) {
 }
 
 LogStream Log::stream(Severity severity, Value line) {
-    return LogStream(this, severity, line.Line);
+    return LogStream(this, severity, line.line);
 }
 
 void Log::stop() {

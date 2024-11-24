@@ -1,4 +1,4 @@
-#include "IniFile.h"
+﻿#include "IniFile.h"
 #include "Log.h"
 #include <iostream>
 #include <fstream>
@@ -50,28 +50,7 @@ void IniFile::readSection(std::string& line, int& lineNumber, std::string& curre
         ERROR(lineNumber) << "No closing ']' found.";
     else {
         currentSection = line.substr(1, endPos - 1);
-		// 处理[]:[]
-		size_t colonPos = line.find(':', endPos + 1);
-		if (colonPos != std::string::npos) {
-			// 检查 ':' 之后的第一个字符是否是 '['
-			if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
-				size_t nextEndPos = line.find(']', colonPos + 2);
-				if (nextEndPos == std::string::npos) {
-					ERROR(lineNumber) << "No closing ']' found for inheritance target.";
-					return;
-				}
-
-				std::string inheritedSections = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
-				if (sections.count(inheritedSections))
-					sections[currentSection].insert(sections[inheritedSections].begin(), sections[inheritedSections].end());
-				else
-					ERROR(lineNumber) << "Inheritance from unknown section '" << inheritedSections << "'.";
-			}
-			else
-				WARNING(lineNumber) << "Incorrect inheritance format.";
-		}
-        else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-            INFO(lineNumber) << "']' is not the last character.";
+		processInheritance(line, endPos, lineNumber, currentSection);
     }
 }
 
@@ -114,21 +93,28 @@ void IniFile::processIncludes(const std::string& basePath) {
 }
 
 // 处理[]:[]
-void IniFile::processInheritance() {
-    std::vector<std::string> sectionsToProcess;
-    for (const auto& [section, keys] : sections)
-        sectionsToProcess.push_back(section);
+void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumber, std::string& currentSection) {
+	size_t colonPos = line.find(':', endPos + 1);
+	if (colonPos != std::string::npos) {
+		// 检查 ':' 之后的第一个字符是否是 '['
+		if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
+			size_t nextEndPos = line.find(']', colonPos + 2);
+			if (nextEndPos == std::string::npos) {
+				ERROR(lineNumber) << "No closing ']' found for inheritance target.";
+				return;
+			}
 
-    for (const std::string& sectionName : sectionsToProcess) {
-        auto pos = sectionName.find(':');
-        if (pos != std::string::npos) {
-            std::string section = sectionName.substr(0, pos);
-            std::string parent = sectionName.substr(pos + 1);
-
-            if (sections.count(parent))
-                sections[section].insert(sections[parent].begin(), sections[parent].end());
-        }
-    }
+			std::string inheritedSections = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
+			if (sections.count(inheritedSections))
+				sections[currentSection].insert(sections[inheritedSections].begin(), sections[inheritedSections].end());
+			else
+				ERROR(lineNumber) << "Inheritance from unknown section '" << inheritedSections << "'.";
+		}
+		else
+			WARNING(lineNumber) << "Incorrect inheritance format.";
+	}
+	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
+		INFO(lineNumber) << "']' is not the last character.";
 }
 
 // 去除注释

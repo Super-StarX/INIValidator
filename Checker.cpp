@@ -24,7 +24,7 @@ void Checker::loadConfig(const IniFile& configFile) {
 		registryMap = configFile.sections.at("Sections");
         for (const auto& [type, registry] : registryMap) {
 			if (!configFile.sections.count(type)) {
-				LOG << registry.Line << "Missing config registry section:" << registry;
+				LOG << registry.line << "Missing config registry section:" << registry;
 				continue;
 			}
             sections[type] = configFile.sections.at(type);
@@ -68,7 +68,7 @@ void Checker::validateSection(const std::string& sectionName, const KeyValues& o
     const auto& dict = sections.at(type);
     for (const auto& [key, value] : object) {
         if (!dict.count(key)) {
-            INFO(value) << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
+			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
             continue;
         }
 		
@@ -94,7 +94,7 @@ void Checker::validate(const std::string& key, const Value& value, const std::st
 void Checker::isInteger(const Value& value) {
 	try {
 		std::size_t pos;
-		std::stoi(value, &pos);
+		auto result = std::stoi(value, &pos);
 		if (pos != value.value.size())
 			ERROR(value) << "Illegal int type data:" << value;
 	}
@@ -109,7 +109,7 @@ void Checker::isInteger(const Value& value) {
 void Checker::isFloat(const Value& value) {
 	try {
 		std::size_t pos;
-		std::stof(value, &pos);
+		auto result = std::stof(value, &pos);
 		if (pos != value.value.size())
 			ERROR(value) << "Illegal float type data:" << value;
 	}
@@ -124,7 +124,7 @@ void Checker::isFloat(const Value& value) {
 void Checker::isDouble(const Value& value) {
 	try {
 		std::size_t pos;
-		std::stod(value, &pos);
+		auto result = std::stod(value, &pos);
 		if (pos != value.value.size())
 			ERROR(value) << "Illegal double type data:" << value;
 	}
