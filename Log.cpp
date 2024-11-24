@@ -24,6 +24,10 @@ LogStream Log::stream(Severity severity, int line) {
     return LogStream(this, severity, line);
 }
 
+LogStream Log::stream(Severity severity, Value line) {
+    return LogStream(this, severity, line.Line);
+}
+
 void Log::stop() {
     running = false;
     condition.notify_one();
@@ -79,12 +83,12 @@ LogStream::~LogStream() {
         std::ostringstream formattedMessage;
 
         // 控制台输出带颜色的内容
-        formattedMessage << logger->getSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
+        formattedMessage << logger->getSeverityLabel(severity) << " Line " << line << "\t| " << buffer.str();
         std::cerr << formattedMessage.str() << std::endl;
 
         // 文件写入无颜色内容
         std::ostringstream plainMessage;
-        plainMessage << logger->getPlainSeverityLabel(severity) << " Line " << line << " | " << buffer.str();
+        plainMessage << logger->getPlainSeverityLabel(severity) << " Line " << line << "\t| " << buffer.str();
         logger->writeLog(plainMessage.str());
     }
 }

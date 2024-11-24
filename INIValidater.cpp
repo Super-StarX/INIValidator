@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
             std::getline(std::cin, targetFilePath);
         }
 
-        IniFile configIni("INICodingCheck.ini");
-        IniFile targetIni(targetFilePath);
+		IniFile configIni("INICodingCheck.ini", true);
+		IniFile targetIni(targetFilePath, false);;
         Checker checker(configIni, targetIni);
         checker.checkFile();
 

@@ -1,4 +1,4 @@
-﻿#include "IniFile.h"
+#include "IniFile.h"
 #include "Log.h"
 #include <iostream>
 #include <fstream>
@@ -8,17 +8,21 @@
 #include <algorithm>
 #include <filesystem>
 
-IniFile::IniFile(const std::string& filepath) {
+IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
     load(filepath);
 }
 
 void IniFile::load(const std::string& filepath) {
-    if (!std::filesystem::exists(filepath))
-        throw std::runtime_error("File not found: " + filepath);
+	if (!std::filesystem::exists(filepath)) {
+		LOG << "File not found: " << filepath;
+		return;
+	}
 
     std::ifstream file(filepath);
-    if (!file.is_open())
-        throw std::runtime_error("Failed to open file: " + filepath);
+    if (!file.is_open()) {
+		LOG << "Failed to open file: " << filepath;
+		return;
+	}
 
     std::string line, currentSection;
     int lineNumber = 0;
@@ -37,7 +41,6 @@ void IniFile::load(const std::string& filepath) {
             readKeyValue(currentSection, line, lineNumber);
     }
     processIncludes(std::filesystem::path(filepath).parent_path().string());
-    processInheritance();
 }
 
 // 开头是[则为节名
@@ -47,7 +50,27 @@ void IniFile::readSection(std::string& line, int& lineNumber, std::string& curre
         ERROR(lineNumber) << "No closing ']' found.";
     else {
         currentSection = line.substr(1, endPos - 1);
-        if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
+		// 处理[]:[]
+		size_t colonPos = line.find(':', endPos + 1);
+		if (colonPos != std::string::npos) {
+			// 检查 ':' 之后的第一个字符是否是 '['
+			if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
+				size_t nextEndPos = line.find(']', colonPos + 2);
+				if (nextEndPos == std::string::npos) {
+					ERROR(lineNumber) << "No closing ']' found for inheritance target.";
+					return;
+				}
+
+				std::string inheritedSections = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
+				if (sections.count(inheritedSections))
+					sections[currentSection].insert(sections[inheritedSections].begin(), sections[inheritedSections].end());
+				else
+					ERROR(lineNumber) << "Inheritance from unknown section '" << inheritedSections << "'.";
+			}
+			else
+				WARNING(lineNumber) << "Incorrect inheritance format.";
+		}
+        else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
             INFO(lineNumber) << "']' is not the last character.";
     }
 }
@@ -83,7 +106,7 @@ void IniFile::processIncludes(const std::string& basePath) {
         // 遍历#include里的所有键值对
         for (const auto& [key, value] : sections["#include"]) {
             // 对于每一个值,找到其对应的ini读进来接到sections里
-            IniFile includedFile(basePath + "/" + value.value);
+            IniFile includedFile(basePath + "/" + value.value, isConfig);
             for (const auto& [sec, keyvalue] : includedFile.sections)
                 sections[sec].insert(keyvalue.begin(), keyvalue.end());
         }

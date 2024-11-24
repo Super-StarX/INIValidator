@@ -24,7 +24,10 @@ private:
 
     void validateSection(const std::string& sectionName, const KeyValues& object, const std::string& type = "");
 
-    bool validate(const std::string& key, const Value& value, const std::string& type);
-    bool isNumber(const std::string& str);
-    bool isFloat(const std::string& str);
+	void validate(const std::string& key, const Value& value, const std::string& type);
+	void isInteger(const Value& str);
+	void isFloat(const Value& str);
+	void isDouble(const Value& str);
+	void isString(const Value& str);
+	void limitCheck(const Value& str, const std::string& type);
 };

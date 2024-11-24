@@ -4,22 +4,24 @@
 
 class Value {
 public:
-	std::string value;
-	int Line;
 	operator std::string() const { return value; }
-	operator int() const { return Line; }
+
+	std::string value { };
+	int Line { -1 };
 };
 using KeyValues = std::unordered_map<std::string, Value>;
 using Sections = std::unordered_map<std::string, KeyValues>;
 
 class IniFile {
 public:
-    IniFile(const std::string& filepath);
+	static std::string argv0;
+    IniFile(const std::string& filepath, bool isConfig);
 
     void load(const std::string& filepath);
     void readSection(std::string& line, int& lineNumber, std::string& currentSection);
     void readKeyValue(std::string& currentSection, std::string& line, int lineNumber);
 
+	bool isConfig { false };
     Sections sections;
 private:
     void processIncludes(const std::string& basePath);

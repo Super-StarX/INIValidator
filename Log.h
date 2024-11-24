@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "IniFile.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -31,6 +32,7 @@ public:
     ~Log();
 
     LogStream stream(Severity severity, int line = -1);
+    LogStream stream(Severity severity, Value value);
 
     void stop();
 
@@ -61,7 +63,10 @@ public:
         buffer << value;
         return *this;
     }
-
+	LogStream& operator<<(const Value& value) {
+		buffer << value.value;
+		return *this;
+	}
 private:
     Log* logger;
     Severity severity;
