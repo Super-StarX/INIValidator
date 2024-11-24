@@ -7,103 +7,83 @@
 #include <regex>
 #include <set>
 
-Checker::Checker(const IniFile& configFile) {
-    loadConfig(configFile);
+Checker::Checker(const IniFile& configFile, const IniFile& targetIni) :targetIni(targetIni) {
+	loadConfig(configFile);
 }
 
 // 加载配置文件
 void Checker::loadConfig(const IniFile& configFile) {
     // 加载 Limits
-    if (configFile.sections.count("Limits")) {
-        for (const auto& [limitKey, _] : configFile.sections.at("Limits")) {
-            if (configFile.sections.count(limitKey)) {
-                LimitChecker rule;
-                rule.loadFromConfig(configFile.sections.at(limitKey));
-                limits[limitKey] = rule;
-            }
-        }
-    }
+    if (configFile.sections.count("Limits"))
+        for (const auto& [limitKey, _] : configFile.sections.at("Limits"))
+            if (configFile.sections.count(limitKey))
+                limits[limitKey] = LimitChecker(configFile.sections.at(limitKey));
 
     // 加载 Sections
     if (configFile.sections.count("Sections")) {
-        for (const auto& [sectionName, _] : configFile.sections.at("Sections")) {
-            if (configFile.sections.count(sectionName)) {
-                sections[sectionName] = configFile.sections.at(sectionName);
-                handleInheritance(sections[sectionName]);
+		registryMap = configFile.sections.at("Sections");
+        for (const auto& [type, _] : registryMap) {
+            if (configFile.sections.count(type)) {
+                sections[type] = configFile.sections.at(type);
             }
         }
     }
 }
 
-// 处理继承关系 (支持 [A]:[B] 语法)
-void Checker::handleInheritance(std::unordered_map<std::string, std::string>& section) {
-    for (const auto& [key, value] : section) {
-        if (key.back() == ':') {
-            std::string parentSection = key.substr(0, key.size() - 1);
-            if (sections.count(parentSection)) {
-                section.insert(sections[parentSection].begin(), sections[parentSection].end());
-            }
+// 验证每个注册表的内容
+void Checker::checkFile() {
+    for (const auto& [type, registryName] : registryMap) {
+        if (!targetIni.sections.count(registryName)) {
+            INFO(-1) << "Missing registry section: " << registryName;
+            continue;
         }
-    }
-}
 
-// 解析目标 INI 的注册表
-void Checker::parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<std::string, std::string>& registry) {
-    if (targetIni.sections.count(registrySection)) {
-        for (const auto& [keyStr, value] : targetIni.sections.at(registrySection)) {
-            std::string key;
-            if (keyStr == "+") {
-                static int var_num = 0;
-                key = "var_"+ std::to_string(var_num);
-                ++var_num;
-            }
-            else if (registry.count(key))
-                ERROR(__LINE__) << "Error: Duplicate key \"" << key << "\" in " << registrySection << ", value \"" << registry[key] << "\" overwritten by \"" << value << "\".";
-            registry[key] = value;
-        }
-    }
-}
-
-// 验证每个注册节的内容
-void Checker::checkFile(const IniFile& targetIni) {
-    for (const auto& [registryName, _] : sections) {
-        std::unordered_map<std::string, std::string> registry;
-        parseRegistry(registryName, targetIni, registry);
-
-        for (const auto& [_, sectionName] : registry) {
-            if (targetIni.sections.count(sectionName))
-                validateSection(sectionName, targetIni.sections.at(sectionName));
-            else
-                ERROR(__LINE__) << "Error: Section \"" << sectionName << "\" referenced in " << registryName << " not found.";
+		// 遍历目标ini的注册表的每个注册项
+		auto& registry = targetIni.sections.at(registryName);
+        for (const auto& [_, object] : registry) {
+            const auto& [name, lineNumber] = object;
+			if(!targetIni.sections.count(name)) {
+				WARNING(lineNumber) << "Section \"" << name << "\" referenced in " << registryName << " is not implemented.";
+				continue;
+			}
+            validateSection(name, targetIni.sections.at(name), type);
         }
     }
 }
 
 // 验证某个节
-void Checker::validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys) {
-    if (!sections.count(sectionName)) {
-        ERROR(__LINE__) << "Warning: No configuration found for section \"" << sectionName << "\".";
+void Checker::validateSection(const std::string& sectionName, const KeyValues& object, const std::string& type) {
+    if (!sections.count(type)) {
+        LOG << "Unknown type \"" << type << "\" for section \"" << sectionName << "\".";
         return;
     }
 
-    const auto& rules = sections[sectionName];
-    for (const auto& [key, value] : keys) {
-        std::string type = rules.count(key) ? rules.at(key) : "";
-        if (!validate(key, value, type))
-            ERROR(__LINE__) << "Error: Invalid value for " << sectionName << "." << key << ": " << value;
+    const auto& dict = sections.at(type);
+    for (const auto& [key, value] : object) {
+        if (!dict.count(key)) {
+            INFO(value) << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
+            continue;
+        }
+
+		auto& expectedType = dict.at(key).value;
+        if (!validate(key, value, expectedType))
+            ERROR(value) << "Invalid value for " << sectionName << "." << key << ": " << value << " (expected: " << expectedType << ")";
     }
 }
 
+
 // 验证键值对
-bool Checker::validate(const std::string& key, const std::string& value, const std::string& type) {
+bool Checker::validate(const std::string& key, const Value& value, const std::string& type) {
     if (type == "int") return isNumber(value);
     if (type == "float" || type == "double") return isFloat(value);
-    if (type == "string") return value.size() < 256;
-
-    // 检查是否为特殊类型
-    if (limits.count(type)) {
-        return limits.at(type).validate(value);
-    }
+    if (type == "string") return value.value.size() < 256;
+    if (limits.count(type)) return limits.at(type).validate(value);
+	if (sections.count(type)) {
+		if (targetIni.sections.count(value))
+			validateSection(value, targetIni.sections.at(value), type);
+		else
+			ERROR(value.Line) << "Referenced section \"" << value << "\" of type \"" << type << "\" is not implemented.";
+	}
     return true;
 }
 

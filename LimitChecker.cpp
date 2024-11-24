@@ -1,32 +1,23 @@
 ﻿#include "LimitChecker.h"
 #include <sstream>
 
-void LimitChecker::loadFromConfig(const std::unordered_map<std::string, std::string>& config) {
-    if (config.count("StartWith")) {
-        std::istringstream stream(config.at("StartWith"));
-        std::string token;
-        while (std::getline(stream, token, ',')) {
-            startWith.push_back(token);
-        }
-    }
-    if (config.count("EndWith")) {
-        std::istringstream stream(config.at("EndWith"));
-        std::string token;
-        while (std::getline(stream, token, ',')) {
-            endWith.push_back(token);
-        }
-    }
-    if (config.count("LimitIn")) {
-        std::istringstream stream(config.at("LimitIn"));
-        std::string token;
-        while (std::getline(stream, token, ',')) {
-            limitIn.push_back(token);
-        }
-    }
-    if (config.count("IgnoreCase")) {
-        char res = config.at("IgnoreCase")[0];
-        ignoreCase = res == '1' || res == 'y' || res == 't';
-    }
+LimitChecker::LimitChecker(const KeyValues& config) {
+	getToken(config, "StartWith", startWith);
+	getToken(config, "EndWith", endWith);
+	getToken(config, "LimitIn", limitIn);
+	if (config.count("IgnoreCase")) {
+		char res = config.at("IgnoreCase").value[0];
+		ignoreCase = res == '1' || res == 'y' || res == 't';
+	}
+}
+
+void LimitChecker::getToken(const KeyValues& config, const std::string& key, std::vector<std::string>& vec) {
+	if (!config.count(key))
+		return;
+	std::istringstream stream(config.at(key).value);
+	std::string token;
+	while (std::getline(stream, token, ','))
+		vec.push_back(token);
 }
 
 bool LimitChecker::validate(const std::string& value) const {
@@ -62,9 +53,8 @@ bool LimitChecker::matchesList(const std::string& value) const {
     std::string target = ignoreCase ? toLower(value) : value;
     for (const auto& item : limitIn) {
         std::string checkItem = ignoreCase ? toLower(item) : item;
-        if (target == checkItem) {
+        if (target == checkItem)
             return true;
-        }
     }
     return false;
 }

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "IniFile.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -6,12 +7,9 @@
 
 class LimitChecker {
 public:
-    std::vector<std::string> startWith;
-    std::vector<std::string> endWith;
-    std::vector<std::string> limitIn;
-    bool ignoreCase = false;
-
-    void loadFromConfig(const std::unordered_map<std::string, std::string>& config);
+	LimitChecker(){};
+	LimitChecker(const KeyValues& config);
+	void getToken(const KeyValues& config, const std::string& key, std::vector<std::string>& vec);
     bool validate(const std::string& value) const;
 
 private:
@@ -19,4 +17,9 @@ private:
     bool matchesEnd(const std::string& value) const;
     bool matchesList(const std::string& value) const;
     std::string toLower(const std::string& str) const;
+
+	std::vector<std::string> startWith;
+	std::vector<std::string> endWith;
+	std::vector<std::string> limitIn;
+	bool ignoreCase = false;
 };

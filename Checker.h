@@ -8,19 +8,23 @@
 
 class Checker {
 public:
-    Checker(const IniFile& configFile);
+    Checker(const IniFile& configFile, const IniFile& targetIni);
     void loadConfig(const IniFile& configFile);
-    void checkFile(const IniFile& targetIni);
+    void checkFile();
 
 private:
-    std::unordered_map<std::string, LimitChecker> limits; // 限制规则
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sections; // Sections内容
+	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
+	KeyValues registryMap;
+	// 特殊类型限制: 类型名 <-> 特殊限制类型section
+    std::unordered_map<std::string, LimitChecker> limits;
+	// 常规类型限制: 类型名 <-> 常规限制类型section
+	std::unordered_map<std::string, KeyValues> sections;
+	// 检查的ini
+	const IniFile& targetIni;
 
-    void handleInheritance(std::unordered_map<std::string, std::string>& section);
-    void parseRegistry(const std::string& registrySection, const IniFile& targetIni, std::unordered_map<std::string, std::string>& registry);
-    void validateSection(const std::string& sectionName, const std::unordered_map<std::string, std::string>& keys);
+    void validateSection(const std::string& sectionName, const KeyValues& object, const std::string& type = "");
 
-    bool validate(const std::string& key, const std::string& value, const std::string& type);
+    bool validate(const std::string& key, const Value& value, const std::string& type);
     bool isNumber(const std::string& str);
     bool isFloat(const std::string& str);
 };

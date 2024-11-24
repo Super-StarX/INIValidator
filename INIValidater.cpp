@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
 
         IniFile configIni("INICodingCheck.ini");
         IniFile targetIni(targetFilePath);
-        Checker checker(configIni);
-        checker.checkFile(targetIni);
+        Checker checker(configIni, targetIni);
+        checker.checkFile();
 
         LOG << "Validation completed.";
         log.stop();
