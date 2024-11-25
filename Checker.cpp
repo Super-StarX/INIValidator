@@ -64,7 +64,7 @@ void Checker::checkFile() {
 }
 
 // 验证某个节
-void Checker::validateSection(const std::string& sectionName, const KeyValues& object, const std::string& type) {
+void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
     const auto& dict = sections.at(type);
     for (const auto& [key, value] : object) {
         if (!dict.count(key)) {

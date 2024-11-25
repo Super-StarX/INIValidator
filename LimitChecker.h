@@ -8,8 +8,8 @@
 class LimitChecker {
 public:
 	LimitChecker(){};
-	LimitChecker(const KeyValues& config);
-	void getToken(const KeyValues& config, const std::string& key, std::vector<std::string>& vec);
+	LimitChecker(const Section& config);
+	void getToken(const Section& config, const std::string& key, std::vector<std::string>& vec);
     bool validate(const std::string& value) const;
 
 private:

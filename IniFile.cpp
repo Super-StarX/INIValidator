@@ -87,7 +87,7 @@ void IniFile::processIncludes(const std::string& basePath) {
             // 对于每一个值,找到其对应的ini读进来接到sections里
             IniFile includedFile(basePath + "/" + value.value, isConfig);
             for (const auto& [sec, keyvalue] : includedFile.sections)
-                sections[sec].insert(keyvalue.begin(), keyvalue.end());
+                sections[sec].insert(keyvalue);
         }
     }
 }
@@ -106,7 +106,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 
 			std::string inheritedSections = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 			if (sections.count(inheritedSections))
-				sections[currentSection].insert(sections[inheritedSections].begin(), sections[inheritedSections].end());
+				sections[currentSection].insert(sections[inheritedSections]);
 			else
 				ERROR(lineNumber) << "Inheritance from unknown section '" << inheritedSections << "'.";
 		}

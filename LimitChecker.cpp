@@ -1,7 +1,7 @@
 ﻿#include "LimitChecker.h"
 #include <sstream>
 
-LimitChecker::LimitChecker(const KeyValues& config) {
+LimitChecker::LimitChecker(const Section& config) {
 	getToken(config, "StartWith", startWith);
 	getToken(config, "EndWith", endWith);
 	getToken(config, "LimitIn", limitIn);
@@ -11,7 +11,7 @@ LimitChecker::LimitChecker(const KeyValues& config) {
 	}
 }
 
-void LimitChecker::getToken(const KeyValues& config, const std::string& key, std::vector<std::string>& vec) {
+void LimitChecker::getToken(const Section& config, const std::string& key, std::vector<std::string>& vec) {
 	if (!config.count(key))
 		return;
 	std::istringstream stream(config.at(key).value);

@@ -13,8 +13,24 @@ public:
 	int fileIndex { -1 };
 	bool isInheritance { false };
 };
-using KeyValues = std::unordered_map<std::string, Value>;
-using Sections = std::unordered_map<std::string, KeyValues>;
+
+class Section {
+public:
+	auto begin() { return section.begin(); }
+	auto begin() const { return section.begin(); }
+	auto end() { return section.end(); }
+	auto end() const { return section.end(); }
+	void insert(const Section& other) { return section.insert(other.begin(), other.end()); }
+	size_t count(const std::string& key) const { return section.count(key); }
+	Value at(const std::string& key) const { return section.at(key); }
+	Value& at(const std::string& key) { return section.at(key); }
+	Value& operator[](const std::string& key) { return section[key]; }
+
+	bool isScanned { false };
+	std::string name { };
+	std::unordered_map<std::string, Value> section;
+};
+using Sections = std::unordered_map<std::string, Section>;
 
 class IniFile {
 public:

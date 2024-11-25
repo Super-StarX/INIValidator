@@ -13,16 +13,14 @@ public:
     void checkFile();
 
 private:
-	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
-	KeyValues registryMap;
-	// 特殊类型限制: 类型名 <-> 特殊限制类型section
-    std::unordered_map<std::string, LimitChecker> limits;
-	// 常规类型限制: 类型名 <-> 常规限制类型section
-	std::unordered_map<std::string, KeyValues> sections;
-	// 检查的ini
-	const IniFile& targetIni;
+	using Limits = std::unordered_map<std::string, LimitChecker>;
+	
+	Section registryMap;		// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
+	Limits limits;				// 特殊类型限制: 类型名 <-> 特殊限制类型section
+	Sections sections;			// 常规类型限制: 类型名 <-> 常规限制类型section
+	const IniFile& targetIni;	// 检查的ini
 
-    void validateSection(const std::string& sectionName, const KeyValues& object, const std::string& type = "");
+    void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 
 	void validate(const std::string& key, const Value& value, const std::string& type);
 	void isInteger(const Value& str);
