@@ -97,9 +97,20 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 
 std::string Checker::isInteger(const Value& value) {
 	try {
+		int base = 10;
+		std::string buffer = value.value;
+		if (*value.value.begin() == '$') {
+			buffer = buffer.substr(1, buffer.size());
+			base = 16;
+		}
+		else if (tolower(value.value.back()) == 'h') {
+			buffer = buffer.substr(0, buffer.size() - 1);
+			base = 16;
+		}
+
 		std::size_t pos;
-		auto result = std::stoi(value, &pos);
-		if (pos != value.value.size())
+		auto result = std::stoi(buffer, &pos, base);
+		if (pos != buffer.size())
 			return std::format("{}不是整数，非整数部分会被忽略", value.value);
 	}
 	catch (const std::invalid_argument) {
@@ -114,9 +125,13 @@ std::string Checker::isInteger(const Value& value) {
 
 std::string Checker::isFloat(const Value& value) {
 	try {
+		std::string buffer = value.value;
+		if (buffer.back() == '%')
+			buffer = buffer.substr(0, buffer.size() - 1);
+
 		std::size_t pos;
-		auto result = std::stof(value, &pos);
-		if (pos != value.value.size())
+		auto result = std::stof(buffer, &pos);
+		if (pos != buffer.size())
 			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
 	}
 	catch (const std::invalid_argument) {
@@ -131,9 +146,13 @@ std::string Checker::isFloat(const Value& value) {
 
 std::string Checker::isDouble(const Value& value) {
 	try {
+		std::string buffer = value.value;
+		if (buffer.back() == '%')
+			buffer = buffer.substr(0, buffer.size() - 1);
+
 		std::size_t pos;
-		auto result = std::stod(value, &pos);
-		if (pos != value.value.size())
+		auto result = std::stod(buffer, &pos);
+		if (pos != buffer.size())
 			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
 	}
 	catch (const std::invalid_argument) {
