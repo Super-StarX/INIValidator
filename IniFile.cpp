@@ -12,6 +12,7 @@ IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig)
     load(filepath);
 }
 
+char fileIndex = -1;
 void IniFile::load(const std::string& filepath) {
 	if (!std::filesystem::exists(filepath)) {
 		LOG << "File not found: " << filepath;
@@ -24,6 +25,8 @@ void IniFile::load(const std::string& filepath) {
 		return;
 	}
 
+	FileNames.push_back(std::filesystem::path(filepath).filename().string());
+	fileIndex++;
     std::string line, currentSection;
     int lineNumber = 0;
 
@@ -70,11 +73,11 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 		}
 		else if (section.count(key))
 			WARNING(lineNumber) << "Duplicate key \"" << key << "\" in " << currentSection << ", value \"" << section[key] << "\" overwritten by \"" << value << "\".";
-		section[key] = { value, lineNumber };
+		section[key] = Value{ value, lineNumber,fileIndex };
     }
     else {
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
-        section[line] = { "", lineNumber };
+        section[line] = Value{ "", lineNumber,fileIndex };
     }
 }
 

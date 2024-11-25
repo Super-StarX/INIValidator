@@ -10,7 +10,7 @@ public:
 
 	std::string value { };
 	int line { -1 };
-	int fileIndex { -1 };
+	char fileIndex { -1 };
 	bool isInheritance { false };
 };
 
