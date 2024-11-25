@@ -22,10 +22,10 @@ private:
 
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 
-	void validate(const std::string& key, const Value& value, const std::string& type);
-	void isInteger(const Value& str);
-	void isFloat(const Value& str);
-	void isDouble(const Value& str);
-	void isString(const Value& str);
-	void limitCheck(const Value& str, const std::string& type);
+	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
+	std::string isInteger(const Value& str);
+	std::string isFloat(const Value& str);
+	std::string isDouble(const Value& str);
+	std::string isString(const Value& str);
+	std::string limitCheck(const Value& str, const std::string& type);
 };

@@ -2,11 +2,12 @@
 #include <string>
 #include <unordered_map>
 
-static std::vector<std::string> FileNames;
+#include <iostream>
+
 class Value {
 public:
 	operator std::string() const { return value; }
-	std::string getFileName() const { return FileNames.at(fileIndex); }
+	std::string getFileName() const;
 
 	std::string value { };
 	int line { -1 };

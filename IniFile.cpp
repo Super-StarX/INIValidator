@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <filesystem>
 
+static std::vector<std::string> FileNames;
+
 IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
     load(filepath);
 }
@@ -49,10 +51,11 @@ void IniFile::load(const std::string& filepath) {
 // 开头是[则为节名
 void IniFile::readSection(std::string& line, int& lineNumber, std::string& currentSection) {
     size_t endPos = line.find(']');
-    if (endPos == std::string::npos)
-        ERROR(lineNumber) << "No closing ']' found.";
+	if (endPos == std::string::npos)
+		ERRORF(currentSection, FileNames.back(), lineNumber) << "中括号未闭合";
     else {
         currentSection = line.substr(1, endPos - 1);
+		sections[currentSection].name = currentSection;
 		processInheritance(line, endPos, lineNumber, currentSection);
     }
 }
@@ -72,7 +75,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			++var_num;
 		}
 		else if (section.count(key))
-			WARNING(lineNumber) << "Duplicate key \"" << key << "\" in " << currentSection << ", value \"" << section[key] << "\" overwritten by \"" << value << "\".";
+			WARNINGK(section, key) << "重复的键，\"" << value << "\"被覆盖为\"" << section[key] << "\".";
 		section[key] = Value{ value, lineNumber,fileIndex };
     }
     else {
@@ -103,7 +106,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
 			size_t nextEndPos = line.find(']', colonPos + 2);
 			if (nextEndPos == std::string::npos) {
-				ERROR(lineNumber) << "No closing ']' found for inheritance target.";
+				ERRORF(currentSection, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
 				return;
 			}
 
@@ -111,13 +114,13 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 			if (sections.count(inheritedSections))
 				sections[currentSection].insert(sections[inheritedSections]);
 			else
-				ERROR(lineNumber) << "Inheritance from unknown section '" << inheritedSections << "'.";
+				ERRORF(currentSection, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedSections << "\"未找到";
 		}
 		else
-			WARNING(lineNumber) << "Incorrect inheritance format.";
+			WARNINGF(currentSection, FileNames.back(), lineNumber) << "继承格式不正确";
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		INFO(lineNumber) << "']' is not the last character.";
+		INFOF(currentSection, FileNames.back(), lineNumber) << "未以']'结尾";
 }
 
 // 去除注释
@@ -131,4 +134,8 @@ std::string IniFile::trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t\r\n");
     size_t end = str.find_last_not_of(" \t\r\n");
     return (start == std::string::npos || end == std::string::npos) ? "" : str.substr(start, end - start + 1);
+}
+
+std::string Value::getFileName() const {
+	return FileNames.at(fileIndex); 
 }

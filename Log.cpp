@@ -1,5 +1,6 @@
 ﻿#include "Log.h"
 #include <iostream>
+#include <iomanip>
 
 Log* Log::Instance;
 
@@ -24,8 +25,13 @@ LogStream Log::stream(Severity severity, int line) {
     return LogStream(this, severity, line);
 }
 
-LogStream Log::stream(Severity severity, Value line) {
-    return LogStream(this, severity, line.line);
+LogStream Log::stream(Severity severity, const Section& section, const std::string& key) {
+	const auto& value = section.at(key);
+	return LogStream(this, severity, value.getFileName(), section.name, key, value.value, value.line);
+}
+
+LogStream Log::stream(Severity severity, const std::string& section, const std::string& filename, const int& line) {
+	return LogStream(this, severity, filename, section, std::string(), std::string(), line);
 }
 
 void Log::stop() {
@@ -74,6 +80,9 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 LogStream::LogStream(Log* logger, Severity severity, int line)
     : logger(logger), severity(severity), line(line) {}
 
+LogStream::LogStream(Log* logger, Severity severity, std::string filename, std::string section, std::string key, std::string value, int line)
+	: logger(logger), severity(severity), line(line), filename(filename), section(section), key(key), value(value) {}
+
 LogStream::~LogStream() {
     if (severity == Severity::DEFAULT) {
         std::cerr << buffer.str() << std::endl;
@@ -81,14 +90,31 @@ LogStream::~LogStream() {
     }
     else {
         std::ostringstream formattedMessage;
+		std::ostringstream plainMessage;
 
-        // 控制台输出带颜色的内容
-        formattedMessage << logger->getSeverityLabel(severity) << " Line " << line << "\t| " << buffer.str();
-        std::cerr << formattedMessage.str() << std::endl;
+		if (section.empty()) {
+			// 控制台输出带颜色的内容
+			formattedMessage << logger->getSeverityLabel(severity) << " 第" << line << "行\t| " << buffer.str();
+			std::cerr << formattedMessage.str() << std::endl;
 
-        // 文件写入无颜色内容
-        std::ostringstream plainMessage;
-        plainMessage << logger->getPlainSeverityLabel(severity) << " Line " << line << "\t| " << buffer.str();
-        logger->writeLog(plainMessage.str());
+			// 文件写入无颜色内容
+			plainMessage << logger->getPlainSeverityLabel(severity) << " 第" << line << "行\t| " << buffer.str();
+			logger->writeLog(plainMessage.str());
+		}
+		else {
+			std::string linenumber = std::format("第{}行", line);
+			std::string pair = std::format("[{}] ", section);
+			if (!key.empty())
+				pair += std::format("{}={}", key, value);
+			size_t blocksize = std::max(filename.size(), linenumber.size());
+
+			formattedMessage << logger->getSeverityLabel(severity) << " " << std::left << std::setw(blocksize) << filename << std::setw(0) << " | " << pair
+				<< std::endl << "[详情] " << std::left << std::setw(blocksize) << linenumber << std::setw(0) << " | " << buffer.str();
+			std::cerr << formattedMessage.str() << std::endl;
+
+			plainMessage << logger->getPlainSeverityLabel(severity) << " " << std::left << std::setw(blocksize) << filename << std::setw(0) << " | " << pair
+				<< std::endl << "[详情] " << std::left << std::setw(blocksize) << linenumber << std::setw(0) << " | " << buffer.str();
+			logger->writeLog(plainMessage.str());
+		}
     }
 }

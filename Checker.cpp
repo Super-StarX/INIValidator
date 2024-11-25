@@ -24,7 +24,7 @@ void Checker::loadConfig(const IniFile& configFile) {
 		registryMap = configFile.sections.at("Sections");
         for (const auto& [type, registry] : registryMap) {
 			if (!configFile.sections.count(type)) {
-				LOG << registry.line << "Missing config registry section:" << registry;
+				LOG << registry.line << "缺少配置注册节：" << registry;
 				continue;
 			}
             sections[type] = configFile.sections.at(type);
@@ -41,7 +41,7 @@ void Checker::checkFile() {
 
 		// 检查注册表是否有使用
         if (!targetIni.sections.count(registryName)) {
-            INFO(registryName) << "Missing registry section: " << registryName;
+            INFOL(-1) << "没有注册表：" << registryName;
             continue;
         }
 
@@ -50,11 +50,11 @@ void Checker::checkFile() {
         for (const auto& [_, name] : registry) {
 
 			if(!targetIni.sections.count(name)) {
-				WARNING(name) << "Section \"" << name << "\" referenced in " << registryName.value << " is not implemented.";
+				WARNINGL(name.line) << "注册表\"" << registryName.value << "\"中声明的 " << name << " 未被实现";
 				continue;
 			}
 			if (!sections.count(type)) {
-				LOG << "Unknown type \"" << type << "\" for section \"" << name << "\".";
+				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
 			auto& objectData = targetIni.sections.at(name);
@@ -72,76 +72,90 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
             continue;
         }
 		
-		validate(key, value, dict.at(key));
+		validate(object, key, value, dict.at(key));
     }
 }
 
 
 // 验证键值对
-void Checker::validate(const std::string& key, const Value& value, const std::string& type) {
-    if (type == "int") return isInteger(value);
-    if (type == "float" || type == "double") return isFloat(value);
-    if (type == "string") return isString(value);
-    if (limits.count(type)) return limitCheck(value, type);
-	if (sections.count(type)) {
+void Checker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
+	std::string result;
+	if (type == "int") result = isInteger(value);
+    else if (type == "float" || type == "double") result = isFloat(value);
+    else if (type == "string") result = isString(value);
+    else if (limits.count(type)) result = limitCheck(value, type);
+	else if (sections.count(type)) {
 		if (targetIni.sections.count(value))
 			validateSection(value, targetIni.sections.at(value), type);
 		else
-			ERROR(value) << "Referenced section \"" << value << "\" of type \"" << type << "\" is not implemented.";
+			ERRORL(value.line) << "\"" << type << "\"中声明的\"" << value << "\"未被实现";
 	}
+
+	if (!result.empty())
+		ERRORK(section, key) << result;
 }
 
-void Checker::isInteger(const Value& value) {
+std::string Checker::isInteger(const Value& value) {
 	try {
 		std::size_t pos;
 		auto result = std::stoi(value, &pos);
 		if (pos != value.value.size())
-			ERROR(value) << "Illegal int type data:" << value;
+			return std::format("{}不是整数，非整数部分会被忽略", value.value);
 	}
-	catch (const std::invalid_argument& e) {
-		ERROR(value) << e.what();
+	catch (const std::invalid_argument) {
+		return std::format("{}不是整数，结果为0", value.value);
 	}
 	catch (const std::out_of_range& e) {
-		ERROR(value) << e.what();
+		return e.what();
 	}
+
+	return std::string();
 }
 
-void Checker::isFloat(const Value& value) {
+std::string Checker::isFloat(const Value& value) {
 	try {
 		std::size_t pos;
 		auto result = std::stof(value, &pos);
 		if (pos != value.value.size())
-			ERROR(value) << "Illegal float type data:" << value;
+			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
 	}
-	catch (const std::invalid_argument& e) {
-		ERROR(value) << e.what();
+	catch (const std::invalid_argument) {
+		return std::format("{}不是浮点数，会造成非预期的结果", value.value);
 	}
 	catch (const std::out_of_range& e) {
-		ERROR(value) << e.what();
+		return e.what();
 	}
+
+	return std::string();
 }
 
-void Checker::isDouble(const Value& value) {
+std::string Checker::isDouble(const Value& value) {
 	try {
 		std::size_t pos;
 		auto result = std::stod(value, &pos);
 		if (pos != value.value.size())
-			ERROR(value) << "Illegal double type data:" << value;
+			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
 	}
-	catch (const std::invalid_argument& e) {
-		ERROR(value) << e.what();
+	catch (const std::invalid_argument) {
+		return std::format("{}不是浮点数，会造成非预期的结果", value.value);
 	}
 	catch (const std::out_of_range& e) {
-		ERROR(value) << e.what();
+		return e.what();
 	}
+
+	return std::string();
 }
 
-void Checker::isString(const Value& value) {
+std::string Checker::isString(const Value& value) {
 	if (value.value.size() > 256)
-		ERROR(value) << "To long value:" << value;
+		return std::format("太长了：{}", value.value);
+
+	return std::string();
 }
 
-void Checker::limitCheck(const Value& value, const std::string& type) {
+std::string Checker::limitCheck(const Value& value, const std::string& type) {
 	if (limits.at(type).validate(value))
-		ERROR(value) << "To long value:" << value;
+		return std::format("太长了：{}", value.value);
+
+	return std::string();
 }

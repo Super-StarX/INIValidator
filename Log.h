@@ -10,10 +10,20 @@
 #include <stdexcept>
 #include <memory>
 
+// L = Line
+// F = File
+// K = Key
+
 #define LOG Log::Instance->stream(Severity::DEFAULT)
-#define INFO(line) Log::Instance->stream(Severity::INFO, line)
-#define WARNING(line) Log::Instance->stream(Severity::WARNING, line)
-#define ERROR(line) Log::Instance->stream(Severity::ERROR, line)
+#define INFOL(line) Log::Instance->stream(Severity::INFO, line)
+#define WARNINGL(line) Log::Instance->stream(Severity::WARNING, line)
+#define ERRORL(line) Log::Instance->stream(Severity::ERROR, line)
+#define INFOF(section, filename, line) Log::Instance->stream(Severity::INFO, section, filename, line)
+#define WARNINGF(section, filename, line) Log::Instance->stream(Severity::WARNING, section, filename, line)
+#define ERRORF(section, filename, line) Log::Instance->stream(Severity::ERROR, section, filename, line)
+#define INFOK(section, key) Log::Instance->stream(Severity::INFO, section, key)
+#define WARNINGK(section, key) Log::Instance->stream(Severity::WARNING, section, key)
+#define ERRORK(section, key) Log::Instance->stream(Severity::ERROR, section, key)
 
 // 日志级别
 enum class Severity {
@@ -32,7 +42,8 @@ public:
     ~Log();
 
     LogStream stream(Severity severity, int line = -1);
-    LogStream stream(Severity severity, Value value);
+    LogStream stream(Severity severity, const Section& section, const std::string& key);
+	LogStream stream(Severity severity, const std::string& section, const std::string& filename, const int& line);
 
     void stop();
 
@@ -56,20 +67,25 @@ private:
 // 流式日志操作
 class LogStream {
 public:
-    LogStream(Log* logger, Severity severity, int line);
-    ~LogStream(); // 析构时提交日志
-    template <typename T>
-    LogStream& operator<<(const T& value) {
-        buffer << value;
-        return *this;
-    }
+	LogStream(Log* logger, Severity severity, int line);
+	LogStream(Log* logger, Severity severity, std::string filename, std::string section, std::string key, std::string value, int line);
+	~LogStream(); // 析构时提交日志
+	template <typename T>
+	LogStream& operator<<(const T& value) {
+		buffer << value;
+		return *this;
+	}
 	LogStream& operator<<(const Value& value) {
 		buffer << value.value;
 		return *this;
 	}
 private:
-    Log* logger;
-    Severity severity;
-    int line;
+	Log* logger;
+	Severity severity;
+	int line;
+	std::string filename{};
+	std::string section{};
+	std::string key{};
+	std::string value{};
     std::ostringstream buffer;
 };

@@ -21,13 +21,15 @@ int main(int argc, char* argv[]) {
         Checker checker(configIni, targetIni);
         checker.checkFile();
 
-        LOG << "Validation completed.";
+        LOG << "\n检查完毕";
         log.stop();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
+
+	system("pause>nul");
 
     return 0;
 }
