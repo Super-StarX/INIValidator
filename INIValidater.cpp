@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
         Checker checker(configIni, targetIni);
         checker.checkFile();
 
+		log.output();
         LOG << "\n检查完毕";
         log.stop();
     }

@@ -14,7 +14,7 @@
 // F = File
 // K = Key
 
-#define LOG Log::Instance->stream(Severity::DEFAULT)
+#define LOG Log::Instance->logstream(Severity::DEFAULT)
 #define INFOL(line) Log::Instance->stream(Severity::INFO, line)
 #define WARNINGL(line) Log::Instance->stream(Severity::WARNING, line)
 #define ERRORL(line) Log::Instance->stream(Severity::ERROR, line)
@@ -38,13 +38,18 @@ class LogStream;
 class Log {
 public:
     static Log* Instance; 
+	static std::vector<LogStream> Logs;
+	static bool CanOutput;
+
     Log(const std::string& logFileName);
     ~Log();
 
-    LogStream stream(Severity severity, int line = -1);
-    LogStream stream(Severity severity, const Section& section, const std::string& key);
-	LogStream stream(Severity severity, const std::string& section, const std::string& filename, const int& line);
+	LogStream logstream(Severity severity);
+    LogStream& stream(Severity severity, int line = -2);
+    LogStream& stream(Severity severity, const Section& section, const std::string& key);
+	LogStream& stream(Severity severity, const std::string& section, const std::string& filename, const int& line);
 
+	void output();
     void stop();
 
 private:
@@ -70,13 +75,18 @@ public:
 	LogStream(Log* logger, Severity severity, int line);
 	LogStream(Log* logger, Severity severity, std::string filename, std::string section, std::string key, std::string value, int line);
 	~LogStream(); // 析构时提交日志
+
+	int getline() const { return line; }
+
 	template <typename T>
 	LogStream& operator<<(const T& value) {
-		buffer << value;
+		std::ostringstream oss;
+		oss << value;
+		buffer += oss.str();
 		return *this;
 	}
 	LogStream& operator<<(const Value& value) {
-		buffer << value.value;
+		buffer += value.value;
 		return *this;
 	}
 private:
@@ -87,5 +97,5 @@ private:
 	std::string section{};
 	std::string key{};
 	std::string value{};
-    std::ostringstream buffer;
+    std::string buffer;
 };
