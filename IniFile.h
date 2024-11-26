@@ -9,6 +9,34 @@ public:
 	operator std::string() const { return value; }
 	std::string getFileName() const;
 
+	friend Value operator+(const Value& lhs, const std::string& rhs) {
+		Value result = lhs;
+		result.value += rhs;
+		return result;
+	}
+
+	friend Value operator+(const std::string& lhs, const Value& rhs) {
+		Value result = rhs;
+		result.value = lhs + result.value;
+		return result;
+	}
+
+	friend Value operator+(const Value& lhs, const Value& rhs) {
+		Value result = lhs;
+		result.value += rhs.value;
+		return result;
+	}
+
+	Value& operator+=(const std::string& rhs) {
+		value += rhs;
+		return *this;
+	}
+
+	Value& operator+=(const Value& rhs) {
+		value += rhs.value;
+		return *this;
+	}
+
 	std::string value { };
 	int line { -1 };
 	char fileIndex { -1 };
@@ -28,6 +56,7 @@ public:
 	Value& operator[](const std::string& key) { return section[key]; }
 
 	bool isScanned { false };
+	int inheritanceLevel { 0 };
 	std::string name { };
 	std::unordered_map<std::string, Value> section;
 };

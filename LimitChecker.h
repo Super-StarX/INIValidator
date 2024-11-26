@@ -10,13 +10,13 @@ public:
 	LimitChecker(){};
 	LimitChecker(const Section& config);
 	void getToken(const Section& config, const std::string& key, std::vector<std::string>& vec);
-    bool validate(const std::string& value) const;
+	std::string validate(const std::string& value) const;
 
 private:
-    bool matchesStart(const std::string& value) const;
-    bool matchesEnd(const std::string& value) const;
-    bool matchesList(const std::string& value) const;
-    std::string toLower(const std::string& str) const;
+	std::string matchesStart(const std::string& value) const;
+	std::string matchesEnd(const std::string& value) const;
+	std::string matchesList(const std::string& value) const;
+    std::string checkLower(const std::string& str) const;
 
 	std::vector<std::string> startWith;
 	std::vector<std::string> endWith;

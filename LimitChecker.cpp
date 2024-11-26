@@ -20,46 +20,48 @@ void LimitChecker::getToken(const Section& config, const std::string& key, std::
 		vec.push_back(token);
 }
 
-bool LimitChecker::validate(const std::string& value) const {
-    return matchesStart(value) && matchesEnd(value) && matchesList(value);
+std::string LimitChecker::validate(const std::string& value) const {
+    return matchesStart(value) + matchesEnd(value) + matchesList(value);
 }
 
-bool LimitChecker::matchesStart(const std::string& value) const {
-    if (startWith.empty()) return true;
-    std::string target = ignoreCase ? toLower(value) : value;
+std::string LimitChecker::matchesStart(const std::string& value) const {
+    if (startWith.empty()) return std::string();
+    auto target = checkLower(value);
     for (const auto& prefix : startWith) {
-        std::string checkPrefix = ignoreCase ? toLower(prefix) : prefix;
+		auto checkPrefix = checkLower(prefix);
         if (target.rfind(checkPrefix, 0) == 0) // 检查是否以 prefix 开头
-            return true;
+            return std::string();
     }
-    return false;
+	return value + "前缀不符合规则";
 }
 
-bool LimitChecker::matchesEnd(const std::string& value) const {
-    if (endWith.empty()) return true;
-    std::string target = ignoreCase ? toLower(value) : value;
+std::string LimitChecker::matchesEnd(const std::string& value) const {
+    if (endWith.empty()) return std::string();
+	auto target = checkLower(value);
     for (const auto& suffix : endWith) {
-        std::string checkSuffix = ignoreCase ? toLower(suffix) : suffix;
+		auto checkSuffix = checkLower(suffix);
         if (target.size() >= checkSuffix.size() &&
             target.compare(target.size() - checkSuffix.size(), checkSuffix.size(), checkSuffix) == 0) {
-            return true;
+            return std::string();
         }
     }
-    return false;
+    return value + "后缀不符合规则";
 }
 
-bool LimitChecker::matchesList(const std::string& value) const {
-    if (limitIn.empty()) return true;
-    std::string target = ignoreCase ? toLower(value) : value;
+std::string LimitChecker::matchesList(const std::string& value) const {
+    if (limitIn.empty()) return std::string();
+	auto target = checkLower(value);
     for (const auto& item : limitIn) {
-        std::string checkItem = ignoreCase ? toLower(item) : item;
+		auto checkItem = checkLower(item);
         if (target == checkItem)
-            return true;
+            return std::string();
     }
-    return false;
+	return value + "不属于限定范围内的值";
 }
 
-std::string LimitChecker::toLower(const std::string& str) const {
+std::string LimitChecker::checkLower(const std::string& str) const {
+	if (ignoreCase)
+		return str;
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
     return result;
