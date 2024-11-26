@@ -8,8 +8,8 @@
 
 class Checker {
 public:
-    Checker(const IniFile& configFile, const IniFile& targetIni);
-    void loadConfig(const IniFile& configFile);
+    Checker(IniFile& configFile, IniFile& targetIni);
+    void loadConfig(IniFile& configFile);
     void checkFile();
 
 private:
@@ -18,7 +18,7 @@ private:
 	Section registryMap;		// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
 	Limits limits;				// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Sections sections;			// 常规类型限制: 类型名 <-> 常规限制类型section
-	const IniFile& targetIni;	// 检查的ini
+	IniFile& targetIni;	// 检查的ini
 
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 

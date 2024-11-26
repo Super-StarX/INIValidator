@@ -7,12 +7,12 @@
 #include <regex>
 #include <set>
 
-Checker::Checker(const IniFile& configFile, const IniFile& targetIni) :targetIni(targetIni) {
+Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(targetIni) {
 	loadConfig(configFile);
 }
 
 // 加载配置文件
-void Checker::loadConfig(const IniFile& configFile) {
+void Checker::loadConfig(IniFile& configFile) {
     // 加载 Limits
     if (configFile.sections.count("Limits"))
         for (const auto& [limitKey, _] : configFile.sections.at("Limits"))
@@ -50,15 +50,18 @@ void Checker::checkFile() {
         for (const auto& [_, name] : registry) {
 
 			if(!targetIni.sections.count(name)) {
-				WARNINGL(name.line) << "注册表\"" << registryName.value << "\"中声明的 " << name << " 未被实现";
+				WARNINGL(name.line) << "注册表\"" << registryName << "\"中声明的 " << name << " 未被实现";
 				continue;
 			}
 			if (!sections.count(type)) {
 				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
-			auto& objectData = targetIni.sections.at(name);
-            validateSection(name, objectData, type);
+			Section& objectData = targetIni.sections[name.value];
+			if (!objectData.isScanned) {
+				objectData.isScanned = true;
+				validateSection(name, objectData, type);
+			}
         }
     }
 }
@@ -109,12 +112,12 @@ std::string Checker::isInteger(const Value& value) {
 		}
 
 		std::size_t pos;
-		auto result = std::stoi(buffer, &pos, base);
-		if (pos != buffer.size())
-			return std::format("{}不是整数，非整数部分会被忽略", value.value);
+		auto result = std::stoi(value, &pos);
+		if (pos != value.value.size())
+			return value + "不是整数，非整数部分会被忽略";
 	}
 	catch (const std::invalid_argument) {
-		return std::format("{}不是整数，结果为0", value.value);
+		return value + "不是整数，结果为0";
 	}
 	catch (const std::out_of_range& e) {
 		return e.what();
@@ -130,12 +133,12 @@ std::string Checker::isFloat(const Value& value) {
 			buffer = buffer.substr(0, buffer.size() - 1);
 
 		std::size_t pos;
-		auto result = std::stof(buffer, &pos);
-		if (pos != buffer.size())
-			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
+		auto result = std::stof(value, &pos);
+		if (pos != value.value.size())
+			return value + "不是浮点数，非浮点数部分会被忽略";
 	}
 	catch (const std::invalid_argument) {
-		return std::format("{}不是浮点数，会造成非预期的结果", value.value);
+		return value + "不是浮点数，会造成非预期的结果";
 	}
 	catch (const std::out_of_range& e) {
 		return e.what();
@@ -151,12 +154,12 @@ std::string Checker::isDouble(const Value& value) {
 			buffer = buffer.substr(0, buffer.size() - 1);
 
 		std::size_t pos;
-		auto result = std::stod(buffer, &pos);
-		if (pos != buffer.size())
-			return std::format("{}不是浮点数，非浮点数部分会被忽略", value.value);
+		auto result = std::stod(value, &pos);
+		if (pos != value.value.size())
+			return value + "不是浮点数，非浮点数部分会被忽略";
 	}
 	catch (const std::invalid_argument) {
-		return std::format("{}不是浮点数，会造成非预期的结果", value.value);
+		return value + "不是浮点数，会造成非预期的结果";
 	}
 	catch (const std::out_of_range& e) {
 		return e.what();
@@ -166,15 +169,11 @@ std::string Checker::isDouble(const Value& value) {
 }
 
 std::string Checker::isString(const Value& value) {
-	if (value.value.size() > 256)
-		return std::format("太长了：{}", value.value);
-
-	return std::string();
+	return value.value.size() > 256
+		? value + "太长了"
+		: std::string();
 }
 
 std::string Checker::limitCheck(const Value& value, const std::string& type) {
-	if (limits.at(type).validate(value))
-		return std::format("太长了：{}", value.value);
-
-	return std::string();
+	return limits.at(type).validate(value);
 }
