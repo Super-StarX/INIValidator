@@ -66,21 +66,26 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
     auto delimiterPos = line.find('=');
     if (delimiterPos != std::string::npos) {
         // 传统键值对
-        std::string key = trim(line.substr(0, delimiterPos));
-        std::string value = trim(line.substr(delimiterPos + 1));
+		auto key = trim(line.substr(0, delimiterPos));
+		auto value = trim(line.substr(delimiterPos + 1));
 		// += 的特殊处理
 		if (key == "+") {
 			static int var_num = 0;
 			key = "var_" + std::to_string(var_num);
 			++var_num;
 		}
-		else if (section.count(key) && !section[key].isInheritance)
-			WARNINGK(section, key) << "重复的键，\"" << value << "\"被覆盖为\"" << section[key] << "\".";
-		section[key] = Value{ value, lineNumber,fileIndex };
+		else if (section.count(key)) {
+			auto& value = section[key];
+			if (!value.isInheritance && value.fileIndex == fileIndex)
+				WARNINGK(section, key) << "重复的键，\""
+					<< value.getFileName() << " 第" << value.line << "行:" << value
+					<< "\"被覆盖为\"" << value << "\".";
+		}
+		section[key] = { value, lineNumber,fileIndex };
     }
     else {
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
-        section[line] = Value{ "", lineNumber,fileIndex };
+        section[line] = { "", lineNumber,fileIndex };
     }
 }
 
