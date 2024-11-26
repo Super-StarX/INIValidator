@@ -74,7 +74,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			key = "var_" + std::to_string(var_num);
 			++var_num;
 		}
-		else if (section.count(key))
+		else if (section.count(key) && !section[key].isInheritance)
 			WARNINGK(section, key) << "重复的键，\"" << value << "\"被覆盖为\"" << section[key] << "\".";
 		section[key] = Value{ value, lineNumber,fileIndex };
     }
@@ -99,28 +99,39 @@ void IniFile::processIncludes(const std::string& basePath) {
 }
 
 // 处理[]:[]
-void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumber, std::string& currentSection) {
+void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumber, std::string& curSectionName) {
 	size_t colonPos = line.find(':', endPos + 1);
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
 		if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
 			size_t nextEndPos = line.find(']', colonPos + 2);
 			if (nextEndPos == std::string::npos) {
-				ERRORF(currentSection, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
+				ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
 				return;
 			}
 
-			std::string inheritedSections = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
-			if (sections.count(inheritedSections))
-				sections[currentSection].insert(sections[inheritedSections]);
+			std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
+			if (sections.count(inheritedName)) {
+				auto& curSection = sections[curSectionName];
+				auto& inheritedSection = sections[inheritedName];
+				for (const auto& [key, value] : inheritedSection) {
+					if (!curSection.count(key)) {
+						Value inheritedValue = value;   // 复制原值
+						inheritedValue.isInheritance = true; // 设置继承标志
+						curSection[key] = inheritedValue; // 插入到当前节中
+					}
+					else if(curSection[key].isInheritance)
+						WARNINGK(inheritedSection, key) << "重复的键，\"" << value << "\"被覆盖为\"" << inheritedSection[key] << "\".";
+				}
+			}
 			else
-				ERRORF(currentSection, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedSections << "\"未找到";
+				ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
 		}
 		else
-			WARNINGF(currentSection, FileNames.back(), lineNumber) << "继承格式不正确";
+			WARNINGF(curSectionName, FileNames.back(), lineNumber) << "继承格式不正确";
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		INFOF(currentSection, FileNames.back(), lineNumber) << "未以']'结尾";
+		INFOF(curSectionName, FileNames.back(), lineNumber) << "未以']'结尾";
 }
 
 // 去除注释
