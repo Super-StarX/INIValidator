@@ -75,13 +75,20 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			++var_num;
 		}
 		else if (section.count(key)) {
-			auto& value = section[key];
-			if (!value.isInheritance && value.fileIndex == fileIndex)
-				WARNINGK(section, key) << "重复的键，\""
-					<< value.getFileName() << " 第" << value.line << "行:" << value
-					<< "\"被覆盖为\"" << value << "\".";
+			auto& oldValue = section[key];
+			// 已经存进来的是继承来的, 那么本section的值就不存了, 因为按理说被继承来的覆盖了
+			if (!oldValue.isInheritance) {
+				// 如果是同文件内的覆盖, 就报警, 跨文件不报
+				if (oldValue.fileIndex == fileIndex) {
+					WARNINGK(section, key) << "重复的键，"
+						<< oldValue.getFileName() << " 第" << oldValue.line << "行:\"" << oldValue
+						<< "\"被覆盖为\"" << value << "\".";
+				}
+				section[key] = { value, lineNumber,fileIndex };
+			}
 		}
-		section[key] = { value, lineNumber,fileIndex };
+		else
+			section[key] = { value, lineNumber,fileIndex };
     }
     else {
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
