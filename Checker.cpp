@@ -79,7 +79,6 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
     }
 }
 
-
 // 验证键值对
 void Checker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
 	std::string result;

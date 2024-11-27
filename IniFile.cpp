@@ -77,18 +77,15 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 		else if (section.count(key)) {
 			auto& oldValue = section[key];
 			// 已经存进来的是继承来的, 那么本section的值就不存了, 因为按理说被继承来的覆盖了
-			if (!oldValue.isInheritance) {
-				// 如果是同文件内的覆盖, 就报警, 跨文件不报
-				if (oldValue.fileIndex == fileIndex) {
-					WARNINGK(section, key) << "重复的键，"
-						<< oldValue.getFileName() << " 第" << oldValue.line << "行:\"" << oldValue
-						<< "\"被覆盖为\"" << value << "\".";
-				}
-				section[key] = { value, lineNumber,fileIndex };
-			}
+			if (oldValue.isInheritance)
+				return;
+			// 如果是同文件内的覆盖, 就报警, 跨文件不报
+			if (oldValue.fileIndex == fileIndex)
+				WARNINGK(section, key) << "重复的键，"
+					<< oldValue.getFileName() << " 第" << oldValue.line << "行:\"" << oldValue
+					<< "\"被覆盖为\"" << value << "\".";
 		}
-		else
-			section[key] = { value, lineNumber,fileIndex };
+		section[key] = { value, lineNumber,fileIndex };
     }
     else {
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
@@ -115,32 +112,34 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	size_t colonPos = line.find(':', endPos + 1);
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
-		if (colonPos + 1 < line.size() && line[colonPos + 1] == '[') {
-			size_t nextEndPos = line.find(']', colonPos + 2);
-			if (nextEndPos == std::string::npos) {
-				ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
-				return;
-			}
-
-			std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
-			if (sections.count(inheritedName)) {
-				auto& curSection = sections[curSectionName];
-				auto& inheritedSection = sections[inheritedName];
-				for (const auto& [key, value] : inheritedSection) {
-					if (!curSection.count(key)) {
-						Value inheritedValue = value;   // 复制原值
-						inheritedValue.isInheritance = true; // 设置继承标志
-						curSection[key] = inheritedValue; // 插入到当前节中
-					}
-					else if(curSection[key].isInheritance)
-						WARNINGK(inheritedSection, key) << "重复的键，\"" << value << "\"被覆盖为\"" << inheritedSection[key] << "\".";
-				}
-			}
-			else
-				ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
-		}
-		else
+		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[') {
 			WARNINGF(curSectionName, FileNames.back(), lineNumber) << "继承格式不正确";
+			return;
+		}
+
+		size_t nextEndPos = line.find(']', colonPos + 2);
+		if (nextEndPos == std::string::npos) {
+			ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
+			return;
+		}
+
+		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
+		if (!sections.count(inheritedName)) {
+			ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
+			return;
+		}
+
+		auto& curSection = sections[curSectionName];
+		auto& inheritedSection = sections[inheritedName];
+		for (const auto& [key, value] : inheritedSection) {
+			if (!curSection.count(key)) {
+				Value inheritedValue = value;   // 复制原值
+				inheritedValue.isInheritance = true; // 设置继承标志
+				curSection[key] = inheritedValue; // 插入到当前节中
+			}
+			else if (curSection[key].isInheritance)
+				WARNINGK(inheritedSection, key) << "重复的键，\"" << value << "\"被覆盖为\"" << inheritedSection[key] << "\".";
+		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
 		INFOF(curSectionName, FileNames.back(), lineNumber) << "未以']'结尾";
