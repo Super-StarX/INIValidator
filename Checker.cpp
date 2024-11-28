@@ -99,8 +99,6 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else
 			ERRORL(value.line) << "\"" << type << "\"中声明的\"" << value << "\"未被实现";
 	}
-	else
-		result = "未知的类型 \"" + type + "\"";
 
 	if (!result.empty())
 		ERRORK(section, key) << result;
