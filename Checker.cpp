@@ -92,7 +92,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
     else if (type == "float" || type == "double") result = isFloat(value);
     else if (type == "string") result = isString(value);
     else if (limits.count(type)) result = limitCheck(value, type);
-	else if (lists.count(type)) result = lists.at(type).validate(section, key, value); // 新增
+	else if (lists.count(type)) result = lists.at(type).validate(this, key, value); // 新增
 	else if (sections.count(type)) {
 		if (targetIni.sections.count(value))
 			validateSection(value, targetIni.sections.at(value), type);

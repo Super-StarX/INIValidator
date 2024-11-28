@@ -1,9 +1,9 @@
 ﻿#include "ListChecker.h"
 #include "Checker.h"
+#include "Log.h"
 #include <sstream>
 
-ListChecker::ListChecker(const Section& config, const std::unordered_map<std::string, LimitChecker>& limits, IniFile& targetIni)
-	: limits(limits), targetIni(targetIni) {
+ListChecker::ListChecker(const Section& config, const std::unordered_map<std::string, LimitChecker>& limits, IniFile& targetIni) {
 	// 加载 Type
 	if (!config.count("Type"))
 		throw std::runtime_error("ListChecker 配置缺少 Type");
@@ -21,7 +21,7 @@ ListChecker::ListChecker(const Section& config, const std::unordered_map<std::st
 	}
 }
 
-std::string ListChecker::validate(const Section& section, const std::string& key, const Value& value) const {
+std::string ListChecker::validate(Checker* section, const std::string& key, const Value& value) const {
 	int line = value.line;
 	std::vector<Value> elements;
 	std::istringstream stream(value);
@@ -36,13 +36,13 @@ std::string ListChecker::validate(const Section& section, const std::string& key
 	// 验证每个元素
 	for (const auto& element : elements) {
 		std::string result;
-		if (type == "int") result = Checker::isInteger(element);
-		else if (type == "float" || type == "double") result = Checker::isFloat(element);
-		else if (type == "string") result = Checker::isString(element);
-		else if (limits.count(type)) result = limits.at(type).validate(element);
-		else if (section.count(type)) {
-			if (targetIni.sections.count(value))
-				validateSection(value, targetIni.sections.at(value), type);
+		if (type == "int") result = section->isInteger(element);
+		else if (type == "float" || type == "double") result = section->isFloat(element);
+		else if (type == "string") result = section->isString(element);
+		else if (section->limits.count(type)) result = section->limits.at(type).validate(element);
+		else if (section->lists.count(type)) {
+			if (section->targetIni.sections.count(value))
+				section->validateSection(value, section->targetIni.sections.at(value), type);
 			else
 				ERRORL(value.line) << "\"" << type << "\"中声明的\"" << value << "\"未被实现";
 		}

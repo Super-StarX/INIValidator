@@ -13,11 +13,8 @@ public:
     void loadConfig(IniFile& configFile);
     void checkFile();
 
-	static std::string isInteger(const Value& str);
-	static std::string isFloat(const Value& str);
-	static std::string isDouble(const Value& str);
-	static std::string isString(const Value& str);
-private:
+
+public:
 	using Limits = std::unordered_map<std::string, LimitChecker>;
 	using Lists = std::unordered_map<std::string, ListChecker>;
 	
@@ -30,5 +27,9 @@ private:
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 
 	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
+	std::string isInteger(const Value& str);
+	std::string isFloat(const Value& str);
+	std::string isDouble(const Value& str);
+	std::string isString(const Value& str); 
 	std::string limitCheck(const Value& str, const std::string& type);
 };
