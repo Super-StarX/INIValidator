@@ -136,6 +136,7 @@
     <ClCompile Include="LimitChecker.cpp" />
     <ClCompile Include="ListChecker.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="NumberChecker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Checker.h" />
@@ -143,6 +144,7 @@
     <ClInclude Include="LimitChecker.h" />
     <ClInclude Include="ListChecker.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="NumberChecker.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />

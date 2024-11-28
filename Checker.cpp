@@ -25,6 +25,12 @@ void Checker::loadConfig(IniFile& configFile) {
 			if (configFile.sections.count(listKey))
 				lists[listKey] = ListChecker(configFile.sections.at(listKey), limits, targetIni);
 
+	// 加载 NumberLimits
+	if (configFile.sections.count("NumberLimits"))
+		for (const auto& [numberKey, _] : configFile.sections.at("NumberLimits"))
+			if (configFile.sections.count(numberKey))
+				numberLimits[numberKey] = NumberChecker(configFile.sections.at(numberKey));
+
     // 加载 Sections
     if (configFile.sections.count("Sections")) {
 		registryMap = configFile.sections.at("Sections");
@@ -93,6 +99,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
     else if (type == "string") result = isString(value);
     else if (limits.count(type)) result = limitCheck(value, type);
 	else if (lists.count(type)) result = lists.at(type).validate(this, key, value); // 新增
+	else if (numberLimits.count(type)) result = numberLimits.at(type).validate(value.value);
 	else if (sections.count(type)) {
 		if (targetIni.sections.count(value))
 			validateSection(value, targetIni.sections.at(value), type);
