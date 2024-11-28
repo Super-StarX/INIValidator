@@ -99,8 +99,13 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 void IniFile::processIncludes(const std::string& basePath) {
     // 找到名为#include的节
     if (sections.count("#include")) {
-        // 遍历#include里的所有键值对
-        for (const auto& [key, value] : sections["#include"]) {
+        // 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
+		auto& section = sections["#include"];
+		using MapType = decltype(section.section);
+		std::vector<std::pair<MapType::key_type, MapType::mapped_type>> include(section.begin(), section.end());
+		std::sort(include.begin(), include.end(), [](const auto& l, const auto& r) { return l.second.line < r.second.line; });
+
+        for (const auto& [key, value] : include) {
             // 对于每一个值,找到其对应的ini读进来接到sections里
             IniFile includedFile(basePath + "/" + value.value, isConfig);
             for (const auto& [sec, keyvalue] : includedFile.sections)
