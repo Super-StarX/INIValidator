@@ -134,12 +134,14 @@
     <ClCompile Include="INIValidater.cpp" />
     <ClCompile Include="IniFile.cpp" />
     <ClCompile Include="LimitChecker.cpp" />
+    <ClCompile Include="ListChecker.cpp" />
     <ClCompile Include="Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Checker.h" />
     <ClInclude Include="IniFile.h" />
     <ClInclude Include="LimitChecker.h" />
+    <ClInclude Include="ListChecker.h" />
     <ClInclude Include="Log.h" />
   </ItemGroup>
   <ItemGroup>

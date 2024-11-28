@@ -19,6 +19,12 @@ void Checker::loadConfig(IniFile& configFile) {
             if (configFile.sections.count(limitKey))
                 limits[limitKey] = LimitChecker(configFile.sections.at(limitKey));
 
+	// 加载 Lists
+	if (configFile.sections.count("Lists"))
+		for (const auto& [listKey, _] : configFile.sections.at("Lists"))
+			if (configFile.sections.count(listKey))
+				lists[listKey] = ListChecker(configFile.sections.at(listKey), limits, targetIni);
+
     // 加载 Sections
     if (configFile.sections.count("Sections")) {
 		registryMap = configFile.sections.at("Sections");
@@ -86,12 +92,15 @@ void Checker::validate(const Section& section, const std::string& key, const Val
     else if (type == "float" || type == "double") result = isFloat(value);
     else if (type == "string") result = isString(value);
     else if (limits.count(type)) result = limitCheck(value, type);
+	else if (lists.count(type)) result = lists.at(type).validate(section, key, value); // 新增
 	else if (sections.count(type)) {
 		if (targetIni.sections.count(value))
 			validateSection(value, targetIni.sections.at(value), type);
 		else
 			ERRORL(value.line) << "\"" << type << "\"中声明的\"" << value << "\"未被实现";
 	}
+	else
+		result = "未知的类型 \"" + type + "\"";
 
 	if (!result.empty())
 		ERRORK(section, key) << result;
