@@ -65,6 +65,8 @@ using Sections = std::unordered_map<std::string, Section>;
 class IniFile {
 public:
 	static std::string argv0;
+	static std::string GetFileName(size_t index);
+
     IniFile(const std::string& filepath, bool isConfig);
 
     void load(const std::string& filepath);

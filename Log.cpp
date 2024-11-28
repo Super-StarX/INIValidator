@@ -33,15 +33,17 @@ LogStream& Log::stream(Severity severity, int line) {
 
 LogStream& Log::stream(Severity severity, const Section& section, const std::string& key) {
 	const auto& value = section.at(key);
-	return Log::Logs.emplace_back(this, severity, value.getFileName(), section.name, key, value.value, value.line);
+	return Log::Logs.emplace_back(this, severity, value.fileIndex, section.name, key, value.value, value.line);
 }
 
-LogStream& Log::stream(Severity severity, const std::string& section, const std::string& filename, const int& line) {
-	return Log::Logs.emplace_back(this, severity, filename, section, std::string(), std::string(), line);
+LogStream& Log::stream(Severity severity, const std::string& section, const size_t& fileindex, const int& line) {
+	return Log::Logs.emplace_back(this, severity, fileindex, section, std::string(), std::string(), line);
 }
 
 void Log::output() {
-	std::sort(Logs.begin(), Logs.end(), [](const LogStream& l, const LogStream& r) {return l.getline() < r.getline(); });
+	std::sort(Logs.begin(), Logs.end(), [](const LogStream& l, const LogStream& r) {
+		return l.getindex() == r.getindex() ? l.getline() < r.getline() : l.getindex() < r.getindex();
+		});
 	CanOutput = true;
 	Logs.clear();
 }
@@ -92,8 +94,8 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 LogStream::LogStream(Log* logger, Severity severity, int line)
     : logger(logger), severity(severity), line(line) {}
 
-LogStream::LogStream(Log* logger, Severity severity, std::string filename, std::string section, std::string key, std::string value, int line)
-	: logger(logger), severity(severity), line(line), filename(filename), section(section), key(key), value(value) {}
+LogStream::LogStream(Log* logger, Severity severity, size_t fileindex, std::string section, std::string key, std::string value, int line)
+	: logger(logger), severity(severity), line(line), fileindex(fileindex), section(section), key(key), value(value) {}
 
 LogStream::~LogStream() {
 	if (!Log::CanOutput && line != -2)
@@ -123,11 +125,13 @@ LogStream::~LogStream() {
 			logger->writeLog(plainMessage.str());
 		}
 		else {
-			std::string linenumber = std::format("第{}行", line);
+			auto linenumber = std::format("第{}行", line);
+			auto pair = std::format("[{}] ", section);
+			auto filename = IniFile::GetFileName(fileindex);
+
 			if (line < 0)
 				linenumber = "";
 
-			std::string pair = std::format("[{}] ", section);
 			if (!key.empty())
 				pair += std::format("{}={}", key, value);
 			size_t blocksize = std::max(filename.size(), linenumber.size());

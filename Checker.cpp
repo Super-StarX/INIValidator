@@ -56,7 +56,7 @@ void Checker::checkFile() {
         for (const auto& [_, name] : registry) {
 
 			if(!targetIni.sections.count(name)) {
-				WARNINGL(name.line) << "注册表\"" << registryName << "\"中声明的 " << name << " 未被实现";
+				WARNINGF(registryName.value, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
 				continue;
 			}
 			if (!sections.count(type)) {

@@ -10,6 +10,10 @@
 
 static std::vector<std::string> FileNames;
 
+std::string IniFile::GetFileName(size_t index) {
+	return FileNames.at(index);
+}
+
 IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
     load(filepath);
 }
@@ -52,7 +56,7 @@ void IniFile::load(const std::string& filepath) {
 void IniFile::readSection(std::string& line, int& lineNumber, std::string& currentSection) {
     size_t endPos = line.find(']');
 	if (endPos == std::string::npos)
-		ERRORF(currentSection, FileNames.back(), lineNumber) << "中括号未闭合";
+		ERRORF(currentSection, FileNames.size() - 1, lineNumber) << "中括号未闭合";
     else {
         currentSection = line.substr(1, endPos - 1);
 		sections[currentSection].name = currentSection;
@@ -79,7 +83,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			// 如果现存的值是继承来的值，则不报警，新值覆盖后会去掉继承标签
 			// 如果是同文件内的覆盖, 就报警, 跨文件不报
 			if (!oldValue.isInheritance && oldValue.fileIndex == fileIndex)
-				WARNINGF(section.name, oldValue.getFileName(), lineNumber) << "\"" << key << "\"重复设定，"
+				WARNINGF(section.name, oldValue.fileIndex, lineNumber) << "\"" << key << "\"重复设定，"
 					<< "第" << oldValue.line << "行的\"" << oldValue
 					<< "\"被覆盖为\"" << value << "\"。";
 		}
@@ -111,19 +115,19 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
 		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[') {
-			WARNINGF(curSectionName, FileNames.back(), lineNumber) << "继承格式不正确";
+			WARNINGF(curSectionName, FileNames.size() - 1, lineNumber) << "继承格式不正确";
 			return;
 		}
 
 		size_t nextEndPos = line.find(']', colonPos + 2);
 		if (nextEndPos == std::string::npos) {
-			ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承对象的中括号未闭合";
+			ERRORF(curSectionName, FileNames.size() - 1, lineNumber) << "继承对象的中括号未闭合";
 			return;
 		}
 
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 		if (!sections.count(inheritedName)) {
-			ERRORF(curSectionName, FileNames.back(), lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
+			ERRORF(curSectionName, FileNames.size() - 1, lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
 			return;
 		}
 
@@ -140,7 +144,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		INFOF(curSectionName, FileNames.back(), lineNumber) << "未以']'结尾";
+		INFOF(curSectionName, FileNames.size() - 1, lineNumber) << "未以']'结尾";
 }
 
 // 去除注释
