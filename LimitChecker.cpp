@@ -60,7 +60,7 @@ std::string LimitChecker::matchesList(const std::string& value) const {
 }
 
 std::string LimitChecker::checkLower(const std::string& str) const {
-	if (ignoreCase)
+	if (!ignoreCase)
 		return str;
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
