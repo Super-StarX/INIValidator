@@ -23,7 +23,7 @@ void Checker::loadConfig(IniFile& configFile) {
 	if (configFile.sections.count("Lists"))
 		for (const auto& [listKey, _] : configFile.sections.at("Lists"))
 			if (configFile.sections.count(listKey))
-				lists[listKey] = ListChecker(configFile.sections.at(listKey), limits, targetIni);
+				lists[listKey] = ListChecker(this, configFile.sections.at(listKey));
 
 	// 加载 NumberLimits
 	if (configFile.sections.count("NumberLimits"))
@@ -97,9 +97,9 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	if (type == "int") result = isInteger(value);
     else if (type == "float" || type == "double") result = isFloat(value);
     else if (type == "string") result = isString(value);
-    else if (limits.count(type)) result = limitCheck(value, type);
-	else if (lists.count(type)) result = lists.at(type).validate(this, key, value); // 新增
 	else if (numberLimits.count(type)) result = numberLimits.at(type).validate(value.value);
+    else if (limits.count(type)) result = limits.at(type).validate(value);
+	else if (lists.count(type)) result = lists.at(type).validate(section, key, value); // 新增
 	else if (sections.count(type)) {
 		if (targetIni.sections.count(value))
 			validateSection(value, targetIni.sections.at(value), type);

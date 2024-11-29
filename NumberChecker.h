@@ -1,6 +1,10 @@
 ﻿#pragma once
 #include "IniFile.h"
 #include <string>
+
+// 需要限制上下限的数值类型
+// [NumberLimits]
+// Range = 数值下限, 数值上限
 class NumberChecker {
 public:
 	NumberChecker() = default;

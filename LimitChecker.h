@@ -5,6 +5,12 @@
 #include <algorithm>
 #include <unordered_map>
 
+// 用于对字符串类型的特殊判定
+// [Limits]
+// StartWith = 前缀的限定内容, 不填则不检查
+// EndWith = 后缀的限定内容, 不填则不检查
+// LimitIn = 整体的限定内容, 不填则不检查
+// IgnoreCase = 是否忽略大小写检查, 作用于前面三条
 class LimitChecker {
 public:
 	LimitChecker(){};
