@@ -21,7 +21,7 @@ public:
 	std::string& operator()(const std::string& key) { return dynamicKeys[key]; }
 	Value& operator[](const std::string& key) { return section[key]; }
 
-	std::unordered_map<std::string, std::string> dynamicKeys;// count <-> 需要被替换字符串的key和value
+	std::vector<std::string> dynamicKeys;// count <-> 需要被替换字符串的key和value
 															// 每读到一个count,就将dynamicKey里的对应标签替换成数值
 															// 当所有标签都替换为数值后(只剩数字和加减乘除)
 															// 接下来怎么做

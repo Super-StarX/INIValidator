@@ -145,7 +145,7 @@
     <ClInclude Include="ListChecker.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="NumberChecker.h" />
-    <ClInclude Include="Utils.h" />
+    <ClInclude Include="Helper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />

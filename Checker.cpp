@@ -1,6 +1,6 @@
 ﻿#include "Checker.h"
 #include "Log.h"
-#include "Utils.h"
+#include "Helper.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -45,55 +45,13 @@ void Checker::loadConfig(IniFile& configFile) {
 
 			// 检查所有 key，处理 dynamicKeys 和直接生成的 key
 			for (const auto& [key, value] : configFile.sections.at(type)) {
-				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos) {
-					// 如果是动态 key，尝试解析并分类存储
-					if (!processDynamicKey(key, value, configFile.sections.at(type).section)) {
-						targetSection.dynamicKeys.push_back(key); // 无法解析，存为动态 key
-					}
-				}
-				else {
-					targetSection.section[key] = value; // 直接存储普通 key
-				}
+				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
+					targetSection.dynamicKeys.push_back(key);
+				else
+					targetSection.section[key] = value;
 			}
         }
     }
-}
-
-bool Checker::processDynamicKey(const std::string& key, const Value& value,	Section& targetSection) {
-	size_t startPos = key.find('(');
-	size_t endPos = key.find(')');
-
-	if (startPos == std::string::npos || endPos == std::string::npos || endPos <= startPos) {
-		return false; // 格式错误
-	}
-
-	std::string prefix = key.substr(0, startPos);
-	std::string insideBrackets = key.substr(startPos + 1, endPos - startPos - 1); // 提取括号内内容
-
-	// 拆分括号内的值
-	std::vector<std::string> parts = string::split(insideBrackets, ',');
-	if (parts.size() != 2)
-		return false; // 格式不符合要求
-
-	try {
-		// 解析起始值和终止值
-		double startValue = evaluateExpression(parts[0], targetSection.section);
-		double endValue = evaluateExpression(parts[1], targetSection.section);
-
-		// 确保范围是整数
-		int start = static_cast<int>(startValue);
-		int end = static_cast<int>(endValue);
-
-		// 生成 key
-		for (int i = start; i <= end; ++i) {
-			std::string generatedKey = prefix + std::to_string(i);
-			targetSection.section[generatedKey] = value; // 存入 section
-		}
-		return true; // 成功解析并生成 key
-	}
-	catch (...) {
-		return false; // 无法解析括号内的值
-	}
 }
 
 // 验证每个注册表的内容
@@ -133,7 +91,7 @@ void Checker::checkFile() {
 // 验证某个节
 void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
     const auto& dict = sections.at(type);
-	for (const auto& [dynamicKey, value] : dict.dynamicKeys) {
+	for (const auto& dynamicKey : dict.dynamicKeys) {
 		auto keys = generateKey(dynamicKey, object);
 		for (const auto& key : keys)
 			if (object.count(key))
@@ -185,20 +143,99 @@ std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, con
 
 // 用于从表达式中获取数字或引用
 double Checker::evaluateExpression(const std::string& expr, const Section& section) const {
-	if (std::regex_match(expr, std::regex("^-?\\d+(\\.\\d+)?$"))) {
+	if (string::isNumber(expr))
 		return std::stod(expr); // 如果是数字，直接返回
-	}
 
 	// 如果是引用的值，则查找对应的 key，并进行数学计算
-	size_t refPos = expr.find_first_of("+-*/()");  // 如果有算术符号，进行处理
-	if (refPos != std::string::npos) {
-		// 这里可以扩展更复杂的数学运算表达式
-		if (section.count(expr)) {
-			return std::stod(section.at(expr).value);  // 查找 section 中的 key
+	if (!string::isExpression(expr))
+		if (section.count(expr))
+			return std::stod(section[expr].value);  // 查找 section 中的 key
+
+	std::stack<double> values;
+	std::stack<char> operators;
+
+	auto precedence = [](char op) {
+		if (op == '+' || op == '-') return 1;
+		if (op == '*' || op == '/') return 2;
+		return 0;
+	};
+
+	auto applyOperation = [](double a, double b, char op) {
+		switch (op) {
+		case '+': return a + b;
+		case '-': return a - b;
+		case '*': return a * b;
+		case '/':
+			if (b == 0) throw std::runtime_error("Division by zero");
+			return a / b;
+		default:
+			throw std::runtime_error("Invalid operator");
 		}
+	};
+
+	for (size_t i = 0; i < expr.length(); ++i) {
+		char c = expr[i];
+
+		// 如果是数字或变量名
+		if (std::isdigit(c) || std::isalpha(c)) {
+			std::string value;
+			while (i < expr.length() && (std::isalnum(expr[i]) || expr[i] == '.')) {
+				value += expr[i++];
+			}
+			--i;
+
+			// 如果是变量名，查找对应的值
+			if (std::isalpha(value[0])) {
+				if (!section.count(value))
+					throw std::invalid_argument("Undefined variable: " + value);
+				value = section.at(value).value;
+				if (!string::isNumber(value))
+					throw std::invalid_argument("Invalid value for variable: " + value);
+			}
+
+			values.push(std::stod(value));
+		}
+		// 如果是左括号，入栈
+		else if (c == '(')
+			operators.push(c);
+		// 如果是右括号，计算括号内的表达式
+		else if (c == ')') {
+			while (!operators.empty() && operators.top() != '(') {
+				double b = values.top(); values.pop();
+				double a = values.top(); values.pop();
+				char op = operators.top(); operators.pop();
+				values.push(applyOperation(a, b, op));
+			}
+			if (operators.empty() || operators.top() != '(')
+				throw std::invalid_argument("Mismatched parentheses in expression: " + expr);
+			operators.pop(); // 弹出 '('
+		}
+		// 如果是运算符
+		else if (c == '+' || c == '-' || c == '*' || c == '/') {
+			while (!operators.empty() && precedence(operators.top()) >= precedence(c)) {
+				double b = values.top(); values.pop();
+				double a = values.top(); values.pop();
+				char op = operators.top(); operators.pop();
+				values.push(applyOperation(a, b, op));
+			}
+			operators.push(c);
+		}
+		else
+			throw std::invalid_argument("Invalid character in expression: " + std::string(1, c));
 	}
 
-	throw std::invalid_argument("Invalid expression or reference in the dynamic key: " + expr);
+	// 处理栈中剩余的操作符
+	while (!operators.empty()) {
+		double b = values.top(); values.pop();
+		double a = values.top(); values.pop();
+		char op = operators.top(); operators.pop();
+		values.push(applyOperation(a, b, op));
+	}
+
+	if (values.size() != 1)
+		throw std::invalid_argument("Invalid expression: " + expr);
+
+	return values.top();
 }
 
 // 验证键值对
