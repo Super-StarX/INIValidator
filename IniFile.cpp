@@ -20,18 +20,20 @@ IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig)
 
 char fileIndex = -1;
 void IniFile::load(const std::string& filepath) {
-	if (!std::filesystem::exists(filepath)) {
-		LOG << "File not found: " << filepath;
+	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
+
+	if (!std::filesystem::exists(path)) {
+		LOG << "File not found: " << path;
 		return;
 	}
 
-    std::ifstream file(filepath);
+    std::ifstream file(path);
     if (!file.is_open()) {
-		LOG << "Failed to open file: " << filepath;
+		LOG << "Failed to open file: " << path;
 		return;
 	}
 
-	FileNames.push_back(std::filesystem::path(filepath).filename().string());
+	FileNames.push_back(std::filesystem::path(path).filename().string());
 	fileIndex++;
     std::string line, currentSection;
     int lineNumber = 0;
@@ -49,7 +51,7 @@ void IniFile::load(const std::string& filepath) {
         else if (!currentSection.empty())
             readKeyValue(currentSection, line, lineNumber);
     }
-    processIncludes(std::filesystem::path(filepath).parent_path().string());
+    processIncludes(std::filesystem::path(path).parent_path().string());
 }
 
 // 开头是[则为节名

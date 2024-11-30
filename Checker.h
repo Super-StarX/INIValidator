@@ -29,9 +29,9 @@ private:
 
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 
-	std::string isInteger(const Value& str);
-	std::string isFloat(const Value& str);
-	std::string isDouble(const Value& str);
-	std::string isString(const Value& str); 
-	std::string limitCheck(const Value& str, const std::string& type);
+	int isInteger(const Value& str);
+	float isFloat(const Value& str);
+	double isDouble(const Value& str);
+	std::string isString(const Value& str);
+	void limitCheck(const Value& str, const std::string& type);
 };

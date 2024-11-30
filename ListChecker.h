@@ -15,7 +15,7 @@ public:
 
 	ListChecker() = default;
 	ListChecker(Checker* checker, const Section& config);
-	std::string validate(const Section& section, const std::string& key, const Value& value) const;
+	void validate(const Section& section, const std::string& key, const Value& value) const;
 	
 private:
 	Checker* checker;

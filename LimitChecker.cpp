@@ -20,8 +20,10 @@ void LimitChecker::getToken(const Section& config, const std::string& key, std::
 		vec.push_back(token);
 }
 
-std::string LimitChecker::validate(const std::string& value) const {
-    return matchesStart(value) + matchesEnd(value) + matchesList(value);
+void LimitChecker::validate(const std::string& value) const {
+	auto result = matchesStart(value) + matchesEnd(value) + matchesList(value);
+	if (!result.empty())
+		throw result;
 }
 
 std::string LimitChecker::matchesStart(const std::string& value) const {

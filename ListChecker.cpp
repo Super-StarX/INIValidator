@@ -21,7 +21,7 @@ ListChecker::ListChecker(Checker* checker, const Section& config) :checker(check
 	}
 }
 
-std::string ListChecker::validate(const Section& section, const std::string& key, const Value& value) const {
+void ListChecker::validate(const Section& section, const std::string& key, const Value& value) const {
 	int line = value.line;
 	std::vector<Value> values;
 	std::istringstream stream(value);
@@ -32,11 +32,9 @@ std::string ListChecker::validate(const Section& section, const std::string& key
 
 	// 验证 Range
 	if (values.size() < minRange || values.size() > maxRange)
-		return key + " 列表项数超出范围，应在 [" + std::to_string(minRange) + "," + std::to_string(maxRange) + "] 内";
+		throw key + " 列表项数超出范围，应在 [" + std::to_string(minRange) + "," + std::to_string(maxRange) + "] 内";
 
 	// 验证每个元素
 	for (const auto& element : values)
 		checker->validate(section, key, element, type);
-
-	return std::string();
 }
