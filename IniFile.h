@@ -45,6 +45,8 @@ public:
 
 class Section {
 public:
+	using Key = std::string;
+
 	auto begin() { return section.begin(); }
 	auto begin() const { return section.begin(); }
 	auto end() { return section.end(); }
@@ -53,17 +55,18 @@ public:
 	size_t count(const std::string& key) const { return section.count(key); }
 	Value at(const std::string& key) const { return section.at(key); }
 	Value& at(const std::string& key) { return section.at(key); }
-	Value& operator[](const std::string& key) { return section[key]; }
+	Value& operator[](const std::string& key) const { return section[key]; }
 
 	bool isScanned { false };
 	int inheritanceLevel { 0 };
 	std::string name { };
-	std::unordered_map<std::string, Value> section;
+	std::unordered_map<Key, Value> section;
 };
-using Sections = std::unordered_map<std::string, Section>;
 
 class IniFile {
 public:
+	using Sections = std::unordered_map<std::string, Section>;
+
 	static std::string argv0;
 	static std::string GetFileName(size_t index);
 

@@ -14,7 +14,7 @@ public:
 	void validate(const std::string& value) const;
 
 private:
-	std::string type; // 类型，如 uint, short, ushort
+	std::string type; // 类型，如 int, short, double
 	int minRange = 0; // 最小值
 	int maxRange = 0; // 最大值
 

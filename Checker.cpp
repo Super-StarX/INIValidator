@@ -1,5 +1,6 @@
 ﻿#include "Checker.h"
 #include "Log.h"
+#include "Utils.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -7,7 +8,7 @@
 #include <regex>
 #include <set>
 
-Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(targetIni) {
+Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(&targetIni) {
 	loadConfig(configFile);
 }
 
@@ -39,9 +40,60 @@ void Checker::loadConfig(IniFile& configFile) {
 				INFOK(registryMap, registry) << "缺少配置注册节：" << registry;
 				continue;
 			}
-            sections[type] = configFile.sections.at(type);
+			auto& targetSection = sections[type];
+			targetSection.section = configFile.sections.at(type).section;
+
+			// 检查所有 key，处理 dynamicKeys 和直接生成的 key
+			for (const auto& [key, value] : configFile.sections.at(type)) {
+				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos) {
+					// 如果是动态 key，尝试解析并分类存储
+					if (!processDynamicKey(key, value, configFile.sections.at(type).section)) {
+						targetSection.dynamicKeys.push_back(key); // 无法解析，存为动态 key
+					}
+				}
+				else {
+					targetSection.section[key] = value; // 直接存储普通 key
+				}
+			}
         }
     }
+}
+
+bool Checker::processDynamicKey(const std::string& key, const Value& value,	Section& targetSection) {
+	size_t startPos = key.find('(');
+	size_t endPos = key.find(')');
+
+	if (startPos == std::string::npos || endPos == std::string::npos || endPos <= startPos) {
+		return false; // 格式错误
+	}
+
+	std::string prefix = key.substr(0, startPos);
+	std::string insideBrackets = key.substr(startPos + 1, endPos - startPos - 1); // 提取括号内内容
+
+	// 拆分括号内的值
+	std::vector<std::string> parts = string::split(insideBrackets, ',');
+	if (parts.size() != 2)
+		return false; // 格式不符合要求
+
+	try {
+		// 解析起始值和终止值
+		double startValue = evaluateExpression(parts[0], targetSection.section);
+		double endValue = evaluateExpression(parts[1], targetSection.section);
+
+		// 确保范围是整数
+		int start = static_cast<int>(startValue);
+		int end = static_cast<int>(endValue);
+
+		// 生成 key
+		for (int i = start; i <= end; ++i) {
+			std::string generatedKey = prefix + std::to_string(i);
+			targetSection.section[generatedKey] = value; // 存入 section
+		}
+		return true; // 成功解析并生成 key
+	}
+	catch (...) {
+		return false; // 无法解析括号内的值
+	}
 }
 
 // 验证每个注册表的内容
@@ -52,16 +104,16 @@ void Checker::checkFile() {
 			continue;
 
 		// 检查注册表是否有使用
-        if (!targetIni.sections.count(registryName)) {
+        if (!targetIni->sections.count(registryName)) {
             INFOL(-1) << "没有注册表：" << registryName;
             continue;
         }
 
 		// 遍历目标ini的注册表的每个注册项
-		auto& registry = targetIni.sections.at(registryName);
+		auto& registry = targetIni->sections.at(registryName);
         for (const auto& [_, name] : registry) {
 
-			if(!targetIni.sections.count(name)) {
+			if(!targetIni->sections.count(name)) {
 				WARNINGF(registryName.value, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
 				continue;
 			}
@@ -69,7 +121,7 @@ void Checker::checkFile() {
 				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
-			Section& objectData = targetIni.sections[name.value];
+			Section& objectData = targetIni->sections[name.value];
 			if (!objectData.isScanned) {
 				objectData.isScanned = true;
 				validateSection(name, objectData, type);
@@ -81,14 +133,72 @@ void Checker::checkFile() {
 // 验证某个节
 void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
     const auto& dict = sections.at(type);
+	for (const auto& [dynamicKey, value] : dict.dynamicKeys) {
+		auto keys = generateKey(dynamicKey, object);
+		for (const auto& key : keys)
+			if (object.count(key))
+				validate(object, key, object[key], dict.at(key));
+	}
+
     for (const auto& [key, value] : object) {
-        if (!dict.count(key)) {
+        if (!dict.count(key))
 			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
             continue;
-        }
 		
 		validate(object, key, value, dict.at(key));
     }
+}
+
+// 用于生成动态key
+std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, const Section& section) const {
+	std::vector<std::string> generatedKeys;
+
+	// 解析特殊格式 Stage(0,WeaponStage)
+	size_t startPos = dynamicKey.find('(');
+	size_t endPos = dynamicKey.find(')');
+
+	if (startPos != std::string::npos && endPos != std::string::npos && endPos > startPos) {
+		std::string insideBrackets = dynamicKey.substr(startPos + 1, endPos - startPos - 1);  // 获取括号内的内容
+		auto parts = string::split(insideBrackets, ',');  // 按逗号分割
+		if (parts.size() == 2) {
+			// 解析起始值和终止值
+			double startValue = evaluateExpression(parts[0], section);
+			double endValue = evaluateExpression(parts[1], section);
+
+			// 确保生成的范围是整数
+			int start = static_cast<int>(startValue);
+			int end = static_cast<int>(endValue);
+
+			// 生成从 start 到 end 的所有 key
+			for (int i = start; i <= end; ++i) {
+				std::string generatedKey = dynamicKey.substr(0, startPos) + std::to_string(i) + dynamicKey.substr(endPos + 1);
+				generatedKeys.push_back(generatedKey);  // 添加生成的 key
+			}
+		}
+		else {
+			throw std::invalid_argument("Invalid format for dynamic key: " + dynamicKey);
+		}
+	}
+
+	return generatedKeys;
+}
+
+// 用于从表达式中获取数字或引用
+double Checker::evaluateExpression(const std::string& expr, const Section& section) const {
+	if (std::regex_match(expr, std::regex("^-?\\d+(\\.\\d+)?$"))) {
+		return std::stod(expr); // 如果是数字，直接返回
+	}
+
+	// 如果是引用的值，则查找对应的 key，并进行数学计算
+	size_t refPos = expr.find_first_of("+-*/()");  // 如果有算术符号，进行处理
+	if (refPos != std::string::npos) {
+		// 这里可以扩展更复杂的数学运算表达式
+		if (section.count(expr)) {
+			return std::stod(section.at(expr).value);  // 查找 section 中的 key
+		}
+	}
+
+	throw std::invalid_argument("Invalid expression or reference in the dynamic key: " + expr);
 }
 
 // 验证键值对
@@ -102,10 +212,9 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else if (limits.count(type)) limits.at(type).validate(value);
 		else if (lists.count(type)) lists.at(type).validate(section, key, value); // 新增
 		else if (sections.count(type)) {
-			if (targetIni.sections.count(value))
-				validateSection(value, targetIni.sections.at(value), type);
-			else
-				ERRORL(value.line) << "\"" << type << "\"中声明的\"" << value << "\"未被实现";
+			if (!targetIni->sections.count(value))
+				throw "\"" + type + "\"中声明的\"" + value + "\"未被实现";
+			validateSection(value, targetIni->sections.at(value), type);
 		}
 	}
 	catch (const std::string& e) {
@@ -179,8 +288,4 @@ std::string Checker::isString(const Value& value) {
 		throw "值超过最大字数限制：" + value;
 
 	return value;
-}
-
-void Checker::limitCheck(const Value& value, const std::string& type) {
-	return limits.at(type).validate(value);
 }
