@@ -43,7 +43,7 @@ LogStream& Log::stream(Severity severity, const std::string& section, const size
 void Log::output() {
 	std::sort(Logs.begin(), Logs.end(), [](const LogStream& l, const LogStream& r) {
 		return l.getindex() == r.getindex() ? l.getline() < r.getline() : l.getindex() < r.getindex();
-		});
+	});
 	CanOutput = true;
 	Logs.clear();
 }

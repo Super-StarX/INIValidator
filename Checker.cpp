@@ -95,7 +95,7 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
 		auto keys = generateKey(dynamicKey, object);
 		for (const auto& key : keys)
 			if (object.count(key))
-				validate(object, key, object[key], dict.at(key));
+				validate(object, key, object.at(key), dict.at(key));
 	}
 
     for (const auto& [key, value] : object) {
@@ -149,7 +149,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& secti
 	// 如果是引用的值，则查找对应的 key，并进行数学计算
 	if (!string::isExpression(expr))
 		if (section.count(expr))
-			return std::stod(section[expr].value);  // 查找 section 中的 key
+			return std::stod(section.at(expr).value);  // 查找 section 中的 key
 
 	std::stack<double> values;
 	std::stack<char> operators;

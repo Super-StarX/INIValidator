@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <unordered_map>
 
@@ -55,7 +55,7 @@ public:
 	size_t count(const std::string& key) const { return section.count(key); }
 	Value at(const std::string& key) const { return section.at(key); }
 	Value& at(const std::string& key) { return section.at(key); }
-	Value& operator[](const std::string& key) const { return section[key]; }
+	Value& operator[](const std::string& key) { return section[key]; }
 
 	bool isScanned { false };
 	int inheritanceLevel { 0 };

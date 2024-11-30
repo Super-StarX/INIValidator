@@ -18,13 +18,9 @@ public:
 	size_t count(const std::string& key) const { return section.count(key); }
 	Value at(const std::string& key) const { return section.at(key); }
 	Value& at(const std::string& key) { return section.at(key); }
-	std::string& operator()(const std::string& key) { return dynamicKeys[key]; }
 	Value& operator[](const std::string& key) { return section[key]; }
 
-	std::vector<std::string> dynamicKeys;// count <-> 需要被替换字符串的key和value
-															// 每读到一个count,就将dynamicKey里的对应标签替换成数值
-															// 当所有标签都替换为数值后(只剩数字和加减乘除)
-															// 接下来怎么做
+	std::vector<std::string> dynamicKeys;					// 存储所有需要动态生成的key
 	std::unordered_map<std::string, Value> section;			// key <-> 该key对应的自定义类型
 };
 
