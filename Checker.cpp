@@ -45,8 +45,8 @@ void Checker::loadConfig(IniFile& configFile) {
 			for (const auto& [key, value] : configFile.sections.at(type)) {
 				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
 					targetSection.dynamicKeys.push_back(key);
-				else
-					targetSection.section[key] = value;
+				
+				targetSection.section[key] = value;
 			}
         }
     }
@@ -93,10 +93,13 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
 			auto keys = generateKey(dynamicKey, object);
 			for (const auto& key : keys)
 				if (object.count(key))
-					validate(object, key, object.at(key), dict.at(key));
+					validate(object, key, object.at(key), dict.at(dynamicKey));
 		}
 		catch (const std::string& e) {
-			LOG << e;
+			WARNINGL(object.section.begin()->second.line) << e;
+		}
+		catch (const std::invalid_argument) {
+			// 不做任何处理
 		}
 	}
 
@@ -136,7 +139,7 @@ std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, con
 			}
 		}
 		else
-			throw "动态键格式错误: " + dynamicKey;
+			throw std::string("动态键格式错误: " + dynamicKey);
 	}
 
 	return generatedKeys;
@@ -168,10 +171,10 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 			// 如果是变量名，查找对应的值
 			if (std::isalpha(value[0])) {
 				if (!object.count(value))
-					throw "动态键中存在未定义的变量: " + value;
+					throw std::invalid_argument("动态键中存在未定义的变量: " + value);
 				value = object.at(value).value;
 				if (!string::isNumber(value))
-					throw "动态键中存在非数字变量: " + value;
+					throw std::string("动态键中存在非数字变量: " + value);
 			}
 
 			values.push(std::stod(value));
@@ -188,7 +191,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 				values.push(math::applyOperation(a, b, op));
 			}
 			if (operators.empty() || operators.top() != '(')
-				throw "动态键表达式中的括号不匹配: " + expr;
+				throw std::string("动态键表达式中的括号不匹配: " + expr);
 			operators.pop(); // 弹出 '('
 		}
 		// 如果是运算符
@@ -202,7 +205,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 			operators.push(c);
 		}
 		else
-			throw "动态键表达式中的字符无效: " + std::string(1, c);
+			throw std::string("动态键表达式中的字符无效: " + std::string(1, c));
 	}
 
 	// 处理栈中剩余的操作符
@@ -214,7 +217,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 	}
 
 	if (values.size() != 1)
-		throw "动态键表达式无效: " + expr;
+		throw std::string("动态键表达式无效: " + expr);
 
 	return values.top();
 }
@@ -231,7 +234,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else if (lists.count(type)) lists.at(type).validate(section, key, value); // 新增
 		else if (sections.count(type)) {
 			if (!targetIni->sections.count(value))
-				throw "\"" + type + "\"中声明的\"" + value + "\"未被实现";
+				throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
 			validateSection(value, targetIni->sections.at(value), type);
 		}
 	}
@@ -264,7 +267,7 @@ int Checker::isInteger(const Value& value) {
 	std::size_t pos;
 	auto result = std::stoi(value, &pos);
 	if (pos != value.value.size())
-		throw value + "不是整数，非整数部分会被忽略";
+		throw std::string(value + "不是整数，非整数部分会被忽略");
 
 	return result;
 }
@@ -277,7 +280,7 @@ float Checker::isFloat(const Value& value) {
 	std::size_t pos;
 	auto result = std::stof(value, &pos);
 	if (pos != value.value.size())
-		throw value + "不是浮点数，非浮点数部分会被忽略";
+		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 	if (value.value.back() == '%')
 		result /= 100;
@@ -293,7 +296,7 @@ double Checker::isDouble(const Value& value) {
 	std::size_t pos;
 	auto result = std::stod(value, &pos);
 	if (pos != value.value.size())
-		throw value + "不是浮点数，非浮点数部分会被忽略";
+		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 	if (value.value.back() == '%')
 		result /= 100;
@@ -303,7 +306,7 @@ double Checker::isDouble(const Value& value) {
 
 std::string Checker::isString(const Value& value) {
 	if (value.value.size() > 512)
-		throw "值超过最大字数限制：" + value;
+		throw std::string("值超过最大字数限制：" + value);
 
 	return value;
 }
