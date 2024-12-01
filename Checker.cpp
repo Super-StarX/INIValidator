@@ -40,10 +40,8 @@ void Checker::loadConfig(IniFile& configFile) {
 				INFOK(registryMap, registry) << "缺少配置注册节：" << registry;
 				continue;
 			}
-			auto& targetSection = sections[type];
-			targetSection.section = configFile.sections.at(type).section;
-
 			// 检查所有 key，处理 dynamicKeys 和直接生成的 key
+			auto& targetSection = sections[type];
 			for (const auto& [key, value] : configFile.sections.at(type)) {
 				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
 					targetSection.dynamicKeys.push_back(key);
@@ -70,7 +68,6 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
         for (const auto& [_, name] : registry) {
-
 			if(!targetIni->sections.count(name)) {
 				WARNINGF(registryName.value, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
 				continue;
@@ -79,7 +76,7 @@ void Checker::checkFile() {
 				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
-			Section& objectData = targetIni->sections[name.value];
+			auto& objectData = targetIni->sections[name.value];
 			if (!objectData.isScanned) {
 				objectData.isScanned = true;
 				validateSection(name, objectData, type);
@@ -92,10 +89,15 @@ void Checker::checkFile() {
 void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
     const auto& dict = sections.at(type);
 	for (const auto& dynamicKey : dict.dynamicKeys) {
-		auto keys = generateKey(dynamicKey, object);
-		for (const auto& key : keys)
-			if (object.count(key))
-				validate(object, key, object.at(key), dict.at(key));
+		try {
+			auto keys = generateKey(dynamicKey, object);
+			for (const auto& key : keys)
+				if (object.count(key))
+					validate(object, key, object.at(key), dict.at(key));
+		}
+		catch (const std::string& e) {
+			LOG << e;
+		}
 	}
 
     for (const auto& [key, value] : object) {
@@ -108,7 +110,7 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
 }
 
 // 用于生成动态key
-std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, const Section& section) const {
+std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, const Section& object) const {
 	std::vector<std::string> generatedKeys;
 
 	// 解析特殊格式 Stage(0,WeaponStage)
@@ -116,12 +118,12 @@ std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, con
 	size_t endPos = dynamicKey.find(')');
 
 	if (startPos != std::string::npos && endPos != std::string::npos && endPos > startPos) {
-		std::string insideBrackets = dynamicKey.substr(startPos + 1, endPos - startPos - 1);  // 获取括号内的内容
+		auto insideBrackets = dynamicKey.substr(startPos + 1, endPos - startPos - 1);  // 获取括号内的内容
 		auto parts = string::split(insideBrackets, ',');  // 按逗号分割
 		if (parts.size() == 2) {
 			// 解析起始值和终止值
-			double startValue = evaluateExpression(parts[0], section);
-			double endValue = evaluateExpression(parts[1], section);
+			double startValue = evaluateExpression(parts[0], object);
+			double endValue = evaluateExpression(parts[1], object);
 
 			// 确保生成的范围是整数
 			int start = static_cast<int>(startValue);
@@ -129,49 +131,29 @@ std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, con
 
 			// 生成从 start 到 end 的所有 key
 			for (int i = start; i <= end; ++i) {
-				std::string generatedKey = dynamicKey.substr(0, startPos) + std::to_string(i) + dynamicKey.substr(endPos + 1);
+				auto generatedKey = dynamicKey.substr(0, startPos) + std::to_string(i) + dynamicKey.substr(endPos + 1);
 				generatedKeys.push_back(generatedKey);  // 添加生成的 key
 			}
 		}
-		else {
-			throw std::invalid_argument("Invalid format for dynamic key: " + dynamicKey);
-		}
+		else
+			throw "动态键格式错误: " + dynamicKey;
 	}
 
 	return generatedKeys;
 }
 
 // 用于从表达式中获取数字或引用
-double Checker::evaluateExpression(const std::string& expr, const Section& section) const {
+double Checker::evaluateExpression(const std::string& expr, const Section& object) const {
 	if (string::isNumber(expr))
 		return std::stod(expr); // 如果是数字，直接返回
 
-	// 如果是引用的值，则查找对应的 key，并进行数学计算
+	// 不是表达式, 尝试直接进行替换
 	if (!string::isExpression(expr))
-		if (section.count(expr))
-			return std::stod(section.at(expr).value);  // 查找 section 中的 key
+		if (object.count(expr))
+			return std::stod(object.at(expr).value); 
 
 	std::stack<double> values;
 	std::stack<char> operators;
-
-	auto precedence = [](char op) {
-		if (op == '+' || op == '-') return 1;
-		if (op == '*' || op == '/') return 2;
-		return 0;
-	};
-
-	auto applyOperation = [](double a, double b, char op) {
-		switch (op) {
-		case '+': return a + b;
-		case '-': return a - b;
-		case '*': return a * b;
-		case '/':
-			if (b == 0) throw std::runtime_error("Division by zero");
-			return a / b;
-		default:
-			throw std::runtime_error("Invalid operator");
-		}
-	};
 
 	for (size_t i = 0; i < expr.length(); ++i) {
 		char c = expr[i];
@@ -179,18 +161,17 @@ double Checker::evaluateExpression(const std::string& expr, const Section& secti
 		// 如果是数字或变量名
 		if (std::isdigit(c) || std::isalpha(c)) {
 			std::string value;
-			while (i < expr.length() && (std::isalnum(expr[i]) || expr[i] == '.')) {
+			while (i < expr.length() && (std::isalnum(expr[i]) || expr[i] == '.'))
 				value += expr[i++];
-			}
 			--i;
 
 			// 如果是变量名，查找对应的值
 			if (std::isalpha(value[0])) {
-				if (!section.count(value))
-					throw std::invalid_argument("Undefined variable: " + value);
-				value = section.at(value).value;
+				if (!object.count(value))
+					throw "动态键中存在未定义的变量: " + value;
+				value = object.at(value).value;
 				if (!string::isNumber(value))
-					throw std::invalid_argument("Invalid value for variable: " + value);
+					throw "动态键中存在非数字变量: " + value;
 			}
 
 			values.push(std::stod(value));
@@ -204,24 +185,24 @@ double Checker::evaluateExpression(const std::string& expr, const Section& secti
 				double b = values.top(); values.pop();
 				double a = values.top(); values.pop();
 				char op = operators.top(); operators.pop();
-				values.push(applyOperation(a, b, op));
+				values.push(math::applyOperation(a, b, op));
 			}
 			if (operators.empty() || operators.top() != '(')
-				throw std::invalid_argument("Mismatched parentheses in expression: " + expr);
+				throw "动态键表达式中的括号不匹配: " + expr;
 			operators.pop(); // 弹出 '('
 		}
 		// 如果是运算符
 		else if (c == '+' || c == '-' || c == '*' || c == '/') {
-			while (!operators.empty() && precedence(operators.top()) >= precedence(c)) {
+			while (!operators.empty() && math::precedence(operators.top()) >= math::precedence(c)) {
 				double b = values.top(); values.pop();
 				double a = values.top(); values.pop();
 				char op = operators.top(); operators.pop();
-				values.push(applyOperation(a, b, op));
+				values.push(math::applyOperation(a, b, op));
 			}
 			operators.push(c);
 		}
 		else
-			throw std::invalid_argument("Invalid character in expression: " + std::string(1, c));
+			throw "动态键表达式中的字符无效: " + std::string(1, c);
 	}
 
 	// 处理栈中剩余的操作符
@@ -229,11 +210,11 @@ double Checker::evaluateExpression(const std::string& expr, const Section& secti
 		double b = values.top(); values.pop();
 		double a = values.top(); values.pop();
 		char op = operators.top(); operators.pop();
-		values.push(applyOperation(a, b, op));
+		values.push(math::applyOperation(a, b, op));
 	}
 
 	if (values.size() != 1)
-		throw std::invalid_argument("Invalid expression: " + expr);
+		throw "动态键表达式无效: " + expr;
 
 	return values.top();
 }

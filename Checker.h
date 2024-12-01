@@ -45,10 +45,9 @@ private:
 	IniFile* targetIni;		// 检查的ini
 
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
-	std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& section) const;
-	double evaluateExpression(const std::string& expr, const Section& section) const;
-	bool processDynamicKey(const std::string& key, const Value& value, Section& targetSection);
-
+	std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& object) const;
+	double evaluateExpression(const std::string& expr, const Section& object) const;
+	
 	int isInteger(const Value& str);
 	float isFloat(const Value& str);
 	double isDouble(const Value& str);
