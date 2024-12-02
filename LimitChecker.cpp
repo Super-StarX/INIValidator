@@ -6,6 +6,7 @@ LimitChecker::LimitChecker(const Section& config) {
 	getToken(config, "EndWith", endWith);
 	getToken(config, "LimitIn", limitIn);
 	if (config.count("IgnoreCase")) {
+		// 似乎有专有名词"Case-insensitive"
 		char res = config.at("IgnoreCase").value[0];
 		ignoreCase = res == '1' || res == 'y' || res == 't';
 	}
