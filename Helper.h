@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <stack>
+
 namespace string {
 	std::vector<std::string> split(const std::string& str, char delimiter) {
 		std::vector<std::string> tokens;
@@ -12,10 +13,12 @@ namespace string {
 			tokens.push_back(token);
 		return tokens;
 	}
+
 	// 判断是否是包含数学表达式的字符串
 	bool isNumber(const std::string& s) {
 		return !s.empty() && s.find_first_not_of("0123456789.-") == std::string::npos;
 	}
+
 	// 判断是否是包含数学表达式的字符串
 	bool isExpression(const std::string& str) {
 		return str.find_first_of("+-*/()") != std::string::npos;
@@ -35,10 +38,10 @@ namespace math {
 		case '-': return a - b;
 		case '*': return a * b;
 		case '/':
-			if (b == 0) throw std::runtime_error("Division by zero");
-			return a / b;
+			if (b != 0) return a / b; 
+			throw std::string("除零错误:" + std::to_string(a) + "/" + std::to_string(b));
 		default:
-			throw std::runtime_error("Invalid operator");
+			throw std::string("异常操作符:" + op);
 		}
 	}
 }

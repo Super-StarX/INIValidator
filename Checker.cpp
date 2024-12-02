@@ -201,14 +201,19 @@ double Checker::parseValue(size_t& i, const std::string& expr, const Section& ob
 		value += expr[i++];
 	--i;
 
-	// 如果是变量名，查找对应的值
-	if (std::isalpha(value[0])) {
-		if (!object.count(value))
-			throw std::invalid_argument("动态键中存在未定义的变量: " + value);
-		value = object.at(value).value;
-		if (!string::isNumber(value))
-			throw std::string("动态键中存在非数字变量: " + value);
-	}
+	// 是数字, 直接返回具体值
+	if (string::isNumber(value))
+		return std::stod(value);
+
+	// 不是数字, 看看是否是变量
+	if (!object.count(value))
+		throw std::invalid_argument("动态键中存在未定义的变量: " + value);
+
+	// 是否是数字型变量
+	value = object.at(value).value;
+	if (!string::isNumber(value))
+		throw std::string("动态键中存在非数字变量: " + value);
+
 	return std::stod(value);
 }
 
