@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <stack>
 #include <set>
 
 class Dict {
@@ -29,9 +30,9 @@ public:
     Checker(IniFile& configFile, IniFile& targetIni);
     void loadConfig(IniFile& configFile);
     void checkFile();
-	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 
 private:
+	friend ListChecker;
 	using Sections = std::unordered_map<std::string, Dict>;
 	using Limits = std::unordered_map<std::string, LimitChecker>;
 	using Lists = std::unordered_map<std::string, ListChecker>;
@@ -45,8 +46,11 @@ private:
 	IniFile* targetIni;		// 检查的ini
 
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
+	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 	std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& object) const;
 	double evaluateExpression(const std::string& expr, const Section& object) const;
+	double parseValue(size_t& i, const std::string& expr, const Section& object) const;
+	void applyOperation(std::stack<double>& values, std::stack<char>& operators) const;
 	
 	int isInteger(const Value& str);
 	float isFloat(const Value& str);

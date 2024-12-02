@@ -162,46 +162,23 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 		char c = expr[i];
 
 		// 如果是数字或变量名
-		if (std::isdigit(c) || std::isalpha(c)) {
-			std::string value;
-			while (i < expr.length() && (std::isalnum(expr[i]) || expr[i] == '.'))
-				value += expr[i++];
-			--i;
-
-			// 如果是变量名，查找对应的值
-			if (std::isalpha(value[0])) {
-				if (!object.count(value))
-					throw std::invalid_argument("动态键中存在未定义的变量: " + value);
-				value = object.at(value).value;
-				if (!string::isNumber(value))
-					throw std::string("动态键中存在非数字变量: " + value);
-			}
-
-			values.push(std::stod(value));
-		}
+		if (std::isdigit(c) || std::isalpha(c))
+			values.push(parseValue(i, expr, object));
 		// 如果是左括号，入栈
 		else if (c == '(')
 			operators.push(c);
 		// 如果是右括号，计算括号内的表达式
 		else if (c == ')') {
-			while (!operators.empty() && operators.top() != '(') {
-				double b = values.top(); values.pop();
-				double a = values.top(); values.pop();
-				char op = operators.top(); operators.pop();
-				values.push(math::applyOperation(a, b, op));
-			}
+			while (!operators.empty() && operators.top() != '(')
+				applyOperation(values, operators);
 			if (operators.empty() || operators.top() != '(')
 				throw std::string("动态键表达式中的括号不匹配: " + expr);
 			operators.pop(); // 弹出 '('
 		}
 		// 如果是运算符
 		else if (c == '+' || c == '-' || c == '*' || c == '/') {
-			while (!operators.empty() && math::precedence(operators.top()) >= math::precedence(c)) {
-				double b = values.top(); values.pop();
-				double a = values.top(); values.pop();
-				char op = operators.top(); operators.pop();
-				values.push(math::applyOperation(a, b, op));
-			}
+			while (!operators.empty() && math::precedence(operators.top()) >= math::precedence(c))
+				applyOperation(values, operators);
 			operators.push(c);
 		}
 		else
@@ -209,17 +186,37 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 	}
 
 	// 处理栈中剩余的操作符
-	while (!operators.empty()) {
-		double b = values.top(); values.pop();
-		double a = values.top(); values.pop();
-		char op = operators.top(); operators.pop();
-		values.push(math::applyOperation(a, b, op));
-	}
+	while (!operators.empty())
+		applyOperation(values, operators);
 
 	if (values.size() != 1)
 		throw std::string("动态键表达式无效: " + expr);
 
 	return values.top();
+}
+
+double Checker::parseValue(size_t& i, const std::string& expr, const Section& object) const {
+	std::string value;
+	while (i < expr.length() && (std::isalnum(expr[i]) || expr[i] == '.'))
+		value += expr[i++];
+	--i;
+
+	// 如果是变量名，查找对应的值
+	if (std::isalpha(value[0])) {
+		if (!object.count(value))
+			throw std::invalid_argument("动态键中存在未定义的变量: " + value);
+		value = object.at(value).value;
+		if (!string::isNumber(value))
+			throw std::string("动态键中存在非数字变量: " + value);
+	}
+	return std::stod(value);
+}
+
+void Checker::applyOperation(std::stack<double>& values, std::stack<char>& operators) const {
+	double b = values.top(); values.pop();
+	double a = values.top(); values.pop();
+	char op = operators.top(); operators.pop();
+	values.push(math::applyOperation(a, b, op));
 }
 
 // 验证键值对
