@@ -122,7 +122,7 @@ std::vector<std::string> Checker::generateKey(const std::string& dynamicKey, con
 
 	if (startPos != std::string::npos && endPos != std::string::npos && endPos > startPos) {
 		auto insideBrackets = dynamicKey.substr(startPos + 1, endPos - startPos - 1);  // 获取括号内的内容
-		auto parts = string::split(insideBrackets, ',');  // 按逗号分割
+		auto parts = string::split(insideBrackets);  // 按逗号分割
 		if (parts.size() == 2) {
 			// 解析起始值和终止值
 			double startValue = evaluateExpression(parts[0], object);

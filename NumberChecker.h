@@ -15,8 +15,8 @@ public:
 
 private:
 	std::string type; // 类型，如 int, short, double
-	int minRange = 0; // 最小值
-	int maxRange = 0; // 最大值
+	float minRange { 0.f }; // 最小值
+	float maxRange { 0.f }; // 最大值
 
 	bool checkRange(int value) const;
 };

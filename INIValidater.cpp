@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         if (argc >= 2)
             targetFilePath = argv[1];
         else {
-            LOG << "Enter the path to the target INI file: ";
+            LOG << "请输入要检查的INI文件路径: ";
             std::getline(std::cin, targetFilePath);
         }
 

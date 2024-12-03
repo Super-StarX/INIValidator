@@ -15,7 +15,7 @@ class LimitChecker {
 public:
 	LimitChecker(){};
 	LimitChecker(const Section& config);
-	void getToken(const Section& config, const std::string& key, std::vector<std::string>& vec);
+	std::vector<std::string> getToken(const Section& config, const std::string& key);
 	void validate(const std::string& value) const;
 	LimitChecker& operator=(const LimitChecker& other) {
 		if (this == &other) return *this;
@@ -29,10 +29,12 @@ private:
 	std::string matchesStart(const std::string& value) const;
 	std::string matchesEnd(const std::string& value) const;
 	std::string matchesList(const std::string& value) const;
+	std::string matchesLength(const std::string& value) const;
     std::string checkLower(const std::string& str) const;
 
 	std::vector<std::string> startWith;
 	std::vector<std::string> endWith;
 	std::vector<std::string> limitIn;
+	int maxLength;
 	bool ignoreCase = false;
 };
