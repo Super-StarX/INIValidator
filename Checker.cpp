@@ -260,11 +260,11 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 int Checker::isInteger(const Value& value) {
 	int base = 10;
 	std::string buffer = value;
-	if (*value.value.begin() == '$') {
+	if (*buffer.begin() == '$') {
 		buffer = buffer.substr(1, buffer.size());
 		base = 16;
 	}
-	else if (tolower(value.value.back()) == 'h') {
+	else if (tolower(buffer.back()) == 'h') {
 		buffer = buffer.substr(0, buffer.size() - 1);
 		base = 16;
 	}
@@ -281,6 +281,9 @@ float Checker::isFloat(const Value& value) {
 	std::string buffer = value;
 	if (buffer.back() == '%')
 		buffer = buffer.substr(0, buffer.size() - 1);
+	
+	if (*buffer.begin() == '.')
+		buffer = "0" + buffer;
 
 	std::size_t pos;
 	auto result = std::stof(value, &pos);

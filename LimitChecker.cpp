@@ -8,10 +8,9 @@ LimitChecker::LimitChecker(const Section& config) {
 	limitIn = getToken(config, "LimitIn");
 	if (config.count("MaxLength"))
 		maxLength = std::stoi(config.at("MaxLength"));
-	if (config.count("IgnoreCase")) {
-		// 似乎有专有名词"Case-insensitive"
-		char res = config.at("IgnoreCase").value[0];
-		ignoreCase = res == '1' || res == 'y' || res == 't';
+	if (config.count("CaseSenstive")) {
+		char res = config.at("CaseSenstive").value[0];
+		caseSensitive = res == '1' || res == 'y' || res == 't';
 	}
 }
 
@@ -69,7 +68,7 @@ std::string LimitChecker::matchesLength(const std::string& value) const {
 }
 
 std::string LimitChecker::checkLower(const std::string& str) const {
-	if (!ignoreCase)
+	if (caseSensitive)
 		return str;
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);

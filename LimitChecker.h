@@ -22,7 +22,7 @@ public:
 		startWith = other.startWith;
 		endWith = other.endWith;
 		limitIn = other.limitIn;
-		ignoreCase = other.ignoreCase;
+		caseSensitive = other.caseSensitive;
 		return *this;
 	}
 private:
@@ -36,5 +36,5 @@ private:
 	std::vector<std::string> endWith;
 	std::vector<std::string> limitIn;
 	int maxLength;
-	bool ignoreCase = false;
+	bool caseSensitive = false;
 };
