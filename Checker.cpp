@@ -1,4 +1,4 @@
-﻿#include "Checker.h"
+#include "Checker.h"
 #include "Log.h"
 #include "Helper.h"
 #include <iostream>
@@ -76,17 +76,17 @@ void Checker::checkFile() {
 				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
-			auto& objectData = targetIni->sections[name.value];
-			if (!objectData.isScanned) {
-				objectData.isScanned = true;
-				validateSection(name, objectData, type);
-			}
+
+			validateSection(name, targetIni->sections[name.value], type);
         }
     }
 }
 
 // 验证某个节
 void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
+	if (object.isScanned) return;
+	const_cast<Section&>(object).isScanned = true;
+
     const auto& dict = sections.at(type);
 	for (const auto& dynamicKey : dict.dynamicKeys) {
 		try {
@@ -227,6 +227,9 @@ void Checker::applyOperation(std::stack<double>& values, std::stack<char>& opera
 // 验证键值对
 void Checker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
 	try {
+		if (value.value.empty())
+			throw std::string("未填写值");
+
 		if (type == "int") isInteger(value);
 		else if (type == "float") isFloat(value);
 		else if (type == "double") isDouble(value);
@@ -268,7 +271,7 @@ int Checker::isInteger(const Value& value) {
 
 	std::size_t pos;
 	auto result = std::stoi(value, &pos);
-	if (pos != value.value.size())
+	if (pos != buffer.size())
 		throw std::string(value + "不是整数，非整数部分会被忽略");
 
 	return result;
@@ -281,7 +284,7 @@ float Checker::isFloat(const Value& value) {
 
 	std::size_t pos;
 	auto result = std::stof(value, &pos);
-	if (pos != value.value.size())
+	if (pos != buffer.size())
 		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 	if (value.value.back() == '%')
@@ -297,7 +300,7 @@ double Checker::isDouble(const Value& value) {
 
 	std::size_t pos;
 	auto result = std::stod(value, &pos);
-	if (pos != value.value.size())
+	if (pos != buffer.size())
 		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 	if (value.value.back() == '%')
