@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "IniFile.h"
+#include "TypeChecker.h"
 #include "ListChecker.h"
 #include "LimitChecker.h"
 #include "NumberChecker.h"
@@ -9,6 +10,14 @@
 #include <stack>
 #include <set>
 
+class DictData {
+public:
+	operator std::string() const { return value; }
+	std::string value;
+	std::vector<std::string> defaults;
+	std::string file;
+};
+
 class Dict {
 public:
 	auto begin() { return section.begin(); }
@@ -17,12 +26,12 @@ public:
 	auto end() const { return section.end(); }
 	void insert(const Section& other) { return section.insert(other.begin(), other.end()); }
 	size_t count(const std::string& key) const { return section.count(key); }
-	Value at(const std::string& key) const { return section.at(key); }
-	Value& at(const std::string& key) { return section.at(key); }
-	Value& operator[](const std::string& key) { return section[key]; }
+	DictData at(const std::string& key) const { return section.at(key); }
+	DictData& at(const std::string& key) { return section.at(key); }
+	DictData& operator[](const std::string& key) { return section[key]; }
 
 	std::vector<std::string> dynamicKeys;					// 存储所有需要动态生成的key
-	std::unordered_map<std::string, Value> section;			// key <-> 该key对应的自定义类型
+	std::unordered_map<std::string, DictData> section;			// key <-> 该key对应的自定义类型
 };
 
 class Checker {
@@ -33,6 +42,7 @@ public:
 
 private:
 	friend ListChecker;
+	friend TypeChecker;
 	using Sections = std::unordered_map<std::string, Dict>;
 	using Limits = std::unordered_map<std::string, LimitChecker>;
 	using Lists = std::unordered_map<std::string, ListChecker>;
@@ -45,6 +55,7 @@ private:
 	Sections sections;		// 常规类型限制: 类型名 <-> 自定义类型section
 	IniFile* targetIni;		// 检查的ini
 
+	DictData parseTypeValue(const std::string& str);
     void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
 	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 	std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& object) const;

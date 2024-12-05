@@ -130,6 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="TypeChecker.cpp" />
     <ClCompile Include="Checker.cpp" />
     <ClCompile Include="INIValidater.cpp" />
     <ClCompile Include="IniFile.cpp" />
@@ -139,6 +140,7 @@
     <ClCompile Include="NumberChecker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TypeChecker.h" />
     <ClInclude Include="Checker.h" />
     <ClInclude Include="IniFile.h" />
     <ClInclude Include="LimitChecker.h" />

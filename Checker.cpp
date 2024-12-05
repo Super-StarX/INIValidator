@@ -1,4 +1,4 @@
-#include "Checker.h"
+﻿#include "Checker.h"
 #include "Log.h"
 #include "Helper.h"
 #include <iostream>
@@ -46,10 +46,32 @@ void Checker::loadConfig(IniFile& configFile) {
 				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
 					targetSection.dynamicKeys.push_back(key);
 				
-				targetSection.section[key] = value;
+				targetSection.section[key] = parseTypeValue(value);
 			}
         }
     }
+}
+
+DictData Checker::parseTypeValue(const std::string& str) {
+	DictData retval;
+	std::istringstream ss(str);
+	std::string defaultsStr;
+	std::getline(ss, retval.value, ',');
+	std::getline(ss, defaultsStr, ',');
+	std::getline(ss, retval.file, ',');
+
+	if (!defaultsStr.empty()) {
+		// 按 || 分割 defaults
+		size_t pos = 0;
+		while ((pos = defaultsStr.find("||")) != std::string::npos) {
+			retval.defaults.push_back(defaultsStr.substr(0, pos));
+			defaultsStr.erase(0, pos + 2);
+		}
+		if (!defaultsStr.empty())
+			retval.defaults.push_back(defaultsStr);
+	}
+
+	return retval;
 }
 
 // 验证每个注册表的内容
@@ -260,7 +282,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 int Checker::isInteger(const Value& value) {
 	int base = 10;
 	std::string buffer = value;
-	if (*buffer.begin() == '$') {
+	if (buffer.front() == '$') {
 		buffer = buffer.substr(1, buffer.size());
 		base = 16;
 	}
@@ -282,7 +304,7 @@ float Checker::isFloat(const Value& value) {
 	if (buffer.back() == '%')
 		buffer = buffer.substr(0, buffer.size() - 1);
 	
-	if (*buffer.begin() == '.')
+	if (buffer.front() == '.')
 		buffer = "0" + buffer;
 
 	std::size_t pos;
