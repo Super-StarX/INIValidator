@@ -1,5 +1,6 @@
 ﻿#include "ListChecker.h"
 #include "Checker.h"
+#include "Helper.h"
 #include "Log.h"
 #include <sstream>
 
@@ -7,7 +8,7 @@ ListChecker::ListChecker(Checker* checker, const Section& config) :checker(check
 	// 加载 Type
 	if (!config.count("Type"))
 		throw std::runtime_error("ListChecker 配置缺少 Type");
-	type = config.at("Type").value;
+	types = string::splitAsString(config.at("Type").value);
 
 	// 加载 Range
 	if (config.count("Range")) {
@@ -36,5 +37,6 @@ void ListChecker::validate(const Section& section, const std::string& key, const
 
 	// 验证每个元素
 	for (const auto& element : values)
-		checker->validate(section, key, element, type);
+		for (const auto& type : types)
+			checker->validate(section, key, element, type);
 }

@@ -19,7 +19,7 @@ public:
 	
 private:
 	Checker* checker;
-	std::string type; // 列表中元素的类型
+	std::vector<std::string> types; // 列表中元素的类型
 	int minRange = 0;
 	int maxRange = INT_MAX;
 };

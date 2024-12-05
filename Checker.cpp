@@ -59,17 +59,7 @@ DictData Checker::parseTypeValue(const std::string& str) {
 	std::getline(ss, valueStr, ',');
 	std::getline(ss, retval.defaultValue, ',');
 	std::getline(ss, retval.file, ',');
-
-	if (!valueStr.empty()) {
-		// 按 || 分割 defaults
-		size_t pos = 0;
-		while ((pos = valueStr.find("||")) != std::string::npos) {
-			retval.types.push_back(valueStr.substr(0, pos));
-			valueStr.erase(0, pos + 2);
-		}
-		if (!valueStr.empty())
-			retval.types.push_back(valueStr);
-	}
+	retval.types = string::splitAsString(valueStr);
 
 	return retval;
 }
