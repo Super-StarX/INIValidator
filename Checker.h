@@ -12,9 +12,8 @@
 
 class DictData {
 public:
-	operator std::string() const { return value; }
-	std::string value;
-	std::vector<std::string> defaults;
+	std::vector<std::string> types;
+	std::string defaultValue;
 	std::string file;
 };
 

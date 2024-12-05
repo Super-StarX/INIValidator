@@ -55,20 +55,20 @@ void Checker::loadConfig(IniFile& configFile) {
 DictData Checker::parseTypeValue(const std::string& str) {
 	DictData retval;
 	std::istringstream ss(str);
-	std::string defaultsStr;
-	std::getline(ss, retval.value, ',');
-	std::getline(ss, defaultsStr, ',');
+	std::string valueStr;
+	std::getline(ss, valueStr, ',');
+	std::getline(ss, retval.defaultValue, ',');
 	std::getline(ss, retval.file, ',');
 
-	if (!defaultsStr.empty()) {
+	if (!valueStr.empty()) {
 		// 按 || 分割 defaults
 		size_t pos = 0;
-		while ((pos = defaultsStr.find("||")) != std::string::npos) {
-			retval.defaults.push_back(defaultsStr.substr(0, pos));
-			defaultsStr.erase(0, pos + 2);
+		while ((pos = valueStr.find("||")) != std::string::npos) {
+			retval.types.push_back(valueStr.substr(0, pos));
+			valueStr.erase(0, pos + 2);
 		}
-		if (!defaultsStr.empty())
-			retval.defaults.push_back(defaultsStr);
+		if (!valueStr.empty())
+			retval.types.push_back(valueStr);
 	}
 
 	return retval;
@@ -115,7 +115,8 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
 			auto keys = generateKey(dynamicKey, object);
 			for (const auto& key : keys)
 				if (object.count(key))
-					validate(object, key, object.at(key), dict.at(dynamicKey));
+					for (const auto& type : dict.at(dynamicKey).types)
+						validate(object, key, object.at(key), type);
 		}
 		catch (const std::string& e) {
 			WARNINGL(object.section.begin()->second.line) << e;
@@ -129,8 +130,9 @@ void Checker::validateSection(const std::string& sectionName, const Section& obj
         if (!dict.count(key))
 			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
             continue;
-		
-		validate(object, key, value, dict.at(key));
+
+		for (const auto& type : dict.at(key).types)
+			validate(object, key, value, type);
     }
 }
 
