@@ -40,6 +40,11 @@ namespace string {
 	inline bool isExpression(const std::string& str) {
 		return str.find_first_of("+-*/()") != std::string::npos;
 	}
+
+	inline bool isBool(const std::string& str) {
+		char c = str.front();
+		return str.find_first_of("+-*/()") != std::string::npos;
+	}
 }
 
 namespace math {

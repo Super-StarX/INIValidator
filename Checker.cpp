@@ -113,7 +113,7 @@ void Checker::checkFile() {
 			INFOL(-1) << "没有注册表：" << sectionName;
 			continue;
 		}
-		globals.at(sectionName).validateSection(targetIni->sections[sectionName], sectionName);
+		globals[sectionName].validateSection(targetIni->sections[sectionName], sectionName);
 	}
 
 	// [Registries] VehicleTypes=UnitType
@@ -136,7 +136,7 @@ void Checker::checkFile() {
 				return;
 			}
 
-			sections.at(type).validateSection(targetIni->sections[name.value], type);
+			sections[type].validateSection(targetIni->sections[name.value], type);
 		}
 	}
 }

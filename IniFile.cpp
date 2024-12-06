@@ -46,7 +46,7 @@ void IniFile::load(const std::string& filepath) {
         line = trim(line);
         if (line.empty()) continue;
 
-        if (line[0] == '[')
+        if (line.front() == '[')
             readSection(line, lineNumber, currentSection);
         else if (!currentSection.empty())
             readKeyValue(currentSection, line, lineNumber);
