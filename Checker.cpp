@@ -8,51 +8,16 @@
 #include <regex>
 #include <set>
 
-Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(&targetIni) {
-	loadConfig(configFile);
+Dict::Dict(const Section& config) {
+	for (const auto& [key, value] : config) {
+		if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
+			dynamicKeys.push_back(key);
+
+		section[key] = parseTypeValue(value);
+	}
 }
 
-// 加载配置文件
-void Checker::loadConfig(IniFile& configFile) {
-    // 加载 Limits
-    if (configFile.sections.count("Limits"))
-        for (const auto& [limitKey, _] : configFile.sections.at("Limits"))
-            if (configFile.sections.count(limitKey))
-                limits[limitKey] = LimitChecker(configFile.sections.at(limitKey));
-
-	// 加载 Lists
-	if (configFile.sections.count("Lists"))
-		for (const auto& [listKey, _] : configFile.sections.at("Lists"))
-			if (configFile.sections.count(listKey))
-				lists[listKey] = ListChecker(this, configFile.sections.at(listKey));
-
-	// 加载 NumberLimits
-	if (configFile.sections.count("NumberLimits"))
-		for (const auto& [numberKey, _] : configFile.sections.at("NumberLimits"))
-			if (configFile.sections.count(numberKey))
-				numberLimits[numberKey] = NumberChecker(configFile.sections.at(numberKey));
-
-    // 加载 Sections
-    if (configFile.sections.count("Sections")) {
-		registryMap = configFile.sections.at("Sections");
-        for (const auto& [type, registry] : registryMap) {
-			if (!configFile.sections.count(type)) {
-				INFOK(registryMap, registry) << "缺少配置注册节：" << registry;
-				continue;
-			}
-			// 检查所有 key，处理 dynamicKeys 和直接生成的 key
-			auto& targetSection = sections[type];
-			for (const auto& [key, value] : configFile.sections.at(type)) {
-				if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
-					targetSection.dynamicKeys.push_back(key);
-				
-				targetSection.section[key] = parseTypeValue(value);
-			}
-        }
-    }
-}
-
-DictData Checker::parseTypeValue(const std::string& str) {
+DictData Dict::parseTypeValue(const std::string& str) {
 	DictData retval;
 	std::istringstream ss(str);
 	std::string valueStr;
@@ -62,6 +27,47 @@ DictData Checker::parseTypeValue(const std::string& str) {
 	retval.types = string::splitAsString(valueStr);
 
 	return retval;
+}
+
+Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(&targetIni) {
+	loadConfig(configFile);
+}
+
+// 加载配置文件
+void Checker::loadConfig(IniFile& configFile) {
+    // 加载字符串限制器
+    if (configFile.sections.count("Limits"))
+        for (const auto& [key, _] : configFile.sections.at("Limits"))
+            if (configFile.sections.count(key))
+                limits[key] = LimitChecker(configFile.sections.at(key));
+
+	// 加载列表限制器
+	if (configFile.sections.count("Lists"))
+		for (const auto& [key, _] : configFile.sections.at("Lists"))
+			if (configFile.sections.count(key))
+				lists[key] = ListChecker(this, configFile.sections.at(key));
+
+	// 加载数值限制器
+	if (configFile.sections.count("NumberLimits"))
+		for (const auto& [key, _] : configFile.sections.at("NumberLimits"))
+			if (configFile.sections.count(key))
+				numberLimits[key] = NumberChecker(configFile.sections.at(key));
+	
+	// 加载注册表
+	if (configFile.sections.count("Registries"))
+		registryMap = configFile.sections.at("Registries");
+
+	// 加载全局类型
+	if (configFile.sections.count("Globals"))
+		for (const auto& [key, _] : configFile.sections.at("Globals"))
+			if (configFile.sections.count(key))
+				globals[key] = Dict(configFile.sections.at(key));
+
+    // 加载实例类型
+    if (configFile.sections.count("Sections"))
+        for (const auto& [key, _] : configFile.sections.at("Sections"))
+			if (configFile.sections.count(key))
+				sections[key] = Dict(configFile.sections.at(key));
 }
 
 // 验证每个注册表的内容
