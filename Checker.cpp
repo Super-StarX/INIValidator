@@ -72,11 +72,17 @@ void Checker::loadConfig(IniFile& configFile) {
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
-    for (const auto& [type, registryName] : registryMap) {
-		// 无注册表的项不检查
-		if (registryName.value.empty())
+	// [Globals] General
+	for (const auto& [sectionName, _] : globals) {
+		if (!targetIni->sections.count(sectionName)) {
+			INFOL(-1) << "没有注册表：" << sectionName;
 			continue;
+		}
+		validateSection(targetIni->sections[sectionName], sectionName);
+	}
 
+	// [Registries] VehicleTypes=UnitType
+    for (const auto& [registryName, type] : registryMap) {
 		// 检查注册表是否有使用
         if (!targetIni->sections.count(registryName)) {
             INFOL(-1) << "没有注册表：" << registryName;
@@ -95,13 +101,13 @@ void Checker::checkFile() {
 				return;
 			}
 
-			validateSection(name, targetIni->sections[name.value], type);
+			validateSection(targetIni->sections[name.value], type);
         }
     }
 }
 
 // 验证某个节
-void Checker::validateSection(const std::string& sectionName, const Section& object, const std::string& type) {
+void Checker::validateSection(const Section& object, const std::string& type) {
 	if (object.isScanned) return;
 	const_cast<Section&>(object).isScanned = true;
 
@@ -260,7 +266,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else if (sections.count(type)) {
 			if (!targetIni->sections.count(value))
 				throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
-			validateSection(value, targetIni->sections.at(value), type);
+			validateSection(targetIni->sections.at(value), type);
 		}
 	}
 	catch (const std::string& e) {

@@ -61,7 +61,7 @@ private:
 	Sections sections;		// 实例类型限制: 类型名 <-> 自定义类型section
 	IniFile* targetIni;		// 检查的ini
 
-    void validateSection(const std::string& sectionName, const Section& object, const std::string& type = "");
+    void validateSection(const Section& object, const std::string& type = "");
 	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 	std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& object) const;
 	double evaluateExpression(const std::string& expr, const Section& object) const;
