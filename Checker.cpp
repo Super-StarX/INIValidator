@@ -1,4 +1,5 @@
 ﻿#include "Checker.h"
+#include "Checker.h"
 #include "Log.h"
 #include "Helper.h"
 #include <iostream>
@@ -8,12 +9,45 @@
 #include <regex>
 #include <set>
 
+Checker* Checker::Instance = nullptr;
+
 Dict::Dict(const Section& config) {
 	for (const auto& [key, value] : config) {
 		if (key.find('(') != std::string::npos && key.find(')') != std::string::npos)
 			dynamicKeys.push_back(key);
 
 		section[key] = parseTypeValue(value);
+	}
+}
+
+void Dict::validateSection(const Section& object, const std::string& type) {
+	if (object.isScanned) return;
+	const_cast<Section&>(object).isScanned = true;
+	auto pChecker = Checker::Instance;
+
+	for (const auto& dynamicKey : this->dynamicKeys) {
+		try {
+			auto keys = pChecker->generateKey(dynamicKey, object);
+			for (const auto& key : keys)
+				if (object.count(key))
+					for (const auto& type : this->at(dynamicKey).types)
+						pChecker->validate(object, key, object.at(key), type);
+		}
+		catch (const std::string& e) {
+			WARNINGL(object.section.begin()->second.line) << e;
+		}
+		catch (const std::invalid_argument) {
+			// 不做任何处理
+		}
+	}
+
+	for (const auto& [key, value] : object) {
+		if (!this->count(key))
+			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
+			continue;
+
+		for (const auto& type : this->at(key).types)
+			pChecker->validate(object, key, value, type);
 	}
 }
 
@@ -29,17 +63,18 @@ DictData Dict::parseTypeValue(const std::string& str) {
 	return retval;
 }
 
-Checker::Checker(IniFile& configFile, IniFile& targetIni) :targetIni(&targetIni) {
+Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
+	Instance = this;
 }
 
 // 加载配置文件
 void Checker::loadConfig(IniFile& configFile) {
-    // 加载字符串限制器
-    if (configFile.sections.count("Limits"))
-        for (const auto& [key, _] : configFile.sections.at("Limits"))
-            if (configFile.sections.count(key))
-                limits[key] = LimitChecker(configFile.sections.at(key));
+	// 加载字符串限制器
+	if (configFile.sections.count("Limits"))
+		for (const auto& [key, _] : configFile.sections.at("Limits"))
+			if (configFile.sections.count(key))
+				limits[key] = LimitChecker(configFile.sections.at(key));
 
 	// 加载列表限制器
 	if (configFile.sections.count("Lists"))
@@ -52,7 +87,7 @@ void Checker::loadConfig(IniFile& configFile) {
 		for (const auto& [key, _] : configFile.sections.at("NumberLimits"))
 			if (configFile.sections.count(key))
 				numberLimits[key] = NumberChecker(configFile.sections.at(key));
-	
+
 	// 加载注册表
 	if (configFile.sections.count("Registries"))
 		registryMap = configFile.sections.at("Registries");
@@ -63,9 +98,9 @@ void Checker::loadConfig(IniFile& configFile) {
 			if (configFile.sections.count(key))
 				globals[key] = Dict(configFile.sections.at(key));
 
-    // 加载实例类型
-    if (configFile.sections.count("Sections"))
-        for (const auto& [key, _] : configFile.sections.at("Sections"))
+	// 加载实例类型
+	if (configFile.sections.count("Sections"))
+		for (const auto& [key, _] : configFile.sections.at("Sections"))
 			if (configFile.sections.count(key))
 				sections[key] = Dict(configFile.sections.at(key));
 }
@@ -78,22 +113,22 @@ void Checker::checkFile() {
 			INFOL(-1) << "没有注册表：" << sectionName;
 			continue;
 		}
-		validateSection(targetIni->sections[sectionName], sectionName);
+		globals.at(sectionName).validateSection(targetIni->sections[sectionName], sectionName);
 	}
 
 	// [Registries] VehicleTypes=UnitType
-    for (const auto& [registryName, type] : registryMap) {
+	for (const auto& [registryName, type] : registryMap) {
 		// 检查注册表是否有使用
-        if (!targetIni->sections.count(registryName)) {
-            INFOL(-1) << "没有注册表：" << registryName;
-            continue;
-        }
+		if (!targetIni->sections.count(registryName)) {
+			INFOL(-1) << "没有注册表：" << registryName;
+			continue;
+		}
 
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
-        for (const auto& [_, name] : registry) {
-			if(!targetIni->sections.count(name)) {
-				WARNINGF(registryName.value, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
+		for (const auto& [_, name] : registry) {
+			if (!targetIni->sections.count(name)) {
+				WARNINGF(registryName, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
 				continue;
 			}
 			if (!sections.count(type)) {
@@ -101,41 +136,9 @@ void Checker::checkFile() {
 				return;
 			}
 
-			validateSection(targetIni->sections[name.value], type);
-        }
-    }
-}
-
-// 验证某个节
-void Checker::validateSection(const Section& object, const std::string& type) {
-	if (object.isScanned) return;
-	const_cast<Section&>(object).isScanned = true;
-
-    const auto& dict = sections.at(type);
-	for (const auto& dynamicKey : dict.dynamicKeys) {
-		try {
-			auto keys = generateKey(dynamicKey, object);
-			for (const auto& key : keys)
-				if (object.count(key))
-					for (const auto& type : dict.at(dynamicKey).types)
-						validate(object, key, object.at(key), type);
-		}
-		catch (const std::string& e) {
-			WARNINGL(object.section.begin()->second.line) << e;
-		}
-		catch (const std::invalid_argument) {
-			// 不做任何处理
+			sections.at(type).validateSection(targetIni->sections[name.value], type);
 		}
 	}
-
-    for (const auto& [key, value] : object) {
-        if (!dict.count(key))
-			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
-            continue;
-
-		for (const auto& type : dict.at(key).types)
-			validate(object, key, value, type);
-    }
 }
 
 // 用于生成动态key
@@ -179,7 +182,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 	// 不是表达式, 尝试直接进行替换
 	if (!string::isExpression(expr))
 		if (object.count(expr))
-			return std::stod(object.at(expr).value); 
+			return std::stod(object.at(expr).value);
 
 	std::stack<double> values;
 	std::stack<char> operators;
@@ -264,9 +267,15 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else if (limits.count(type)) limits.at(type).validate(value);
 		else if (lists.count(type)) lists.at(type).validate(section, key, value); // 新增
 		else if (sections.count(type)) {
-			if (!targetIni->sections.count(value))
-				throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
-			validateSection(targetIni->sections.at(value), type);
+			if (value.value == "none" || value.value == "<none>")
+				return;
+
+			if (!targetIni->sections.count(value)) {
+				if (type != "AnimType")
+					throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
+			}
+			else
+				sections.at(type).validateSection(targetIni->sections.at(value), type);
 		}
 	}
 	catch (const std::string& e) {
@@ -296,7 +305,7 @@ int Checker::isInteger(const Value& value) {
 	}
 
 	std::size_t pos;
-	auto result = std::stoi(value, &pos);
+	auto result = std::stoi(buffer, &pos);
 	if (pos != buffer.size())
 		throw std::string(value + "不是整数，非整数部分会被忽略");
 
@@ -307,12 +316,12 @@ float Checker::isFloat(const Value& value) {
 	std::string buffer = value;
 	if (buffer.back() == '%')
 		buffer = buffer.substr(0, buffer.size() - 1);
-	
+
 	if (buffer.front() == '.')
 		buffer = "0" + buffer;
 
 	std::size_t pos;
-	auto result = std::stof(value, &pos);
+	auto result = std::stof(buffer, &pos);
 	if (pos != buffer.size())
 		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
@@ -328,7 +337,7 @@ double Checker::isDouble(const Value& value) {
 		buffer = buffer.substr(0, buffer.size() - 1);
 
 	std::size_t pos;
-	auto result = std::stod(value, &pos);
+	auto result = std::stod(buffer, &pos);
 	if (pos != buffer.size())
 		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
