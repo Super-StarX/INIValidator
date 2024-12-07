@@ -11,26 +11,26 @@ Settings::Settings(const IniFile& configFile) {
 
 #define READ(sections, variable)	\
     if (sections.contains(#variable))	\
-        variable = string::isBool(sections.at(#variable));
+        variable = sections.at(#variable);
 
 void Settings::load(const IniFile& configFile) {
-	if (configFile.sections.count("LogSetting")) {
+	if (configFile.sections.contains("LogSetting")) {
 		auto& sections = configFile.sections.at("LogSetting");
-		READ(sections, RecordKeyNotExist)
-		READ(sections, RecordTypeNotExist)
-		READ(sections, RecordDynamicKeyVariableError)
-		READ(sections, RecordDynamicKeyFormatError)
-		READ(sections, CheckUnusedGlobal)
-		READ(sections, CheckUnusedRegistry)
-		READ(sections, CheckSectionExsit)
-		READ(sections, CheckBracketClosed)
-		READ(sections, CheckDuplicateKey)
-		READ(sections, CheckSectionFormat)
-		READ(sections, CheckInheritanceFormat)
-		READ(sections, CheckInheritanceSectionExsit)
-		READ(sections, CheckSpaceExistBeforeEqualSign)
-		READ(sections, CheckSpaceExistAfterEqualSign)
-		READ(sections, CheckEmptyValue)
+		READ(sections, recordKeyNotExist)
+		READ(sections, recordTypeNotExist)
+		READ(sections, recordDynamicKeyVariableError)
+		READ(sections, recordDynamicKeyFormatError)
+		READ(sections, checkUnusedGlobal)
+		READ(sections, checkUnusedRegistry)
+		READ(sections, checkSectionExsit)
+		READ(sections, checkBracketClosed)
+		READ(sections, checkDuplicateKey)
+		READ(sections, checkSectionFormat)
+		READ(sections, checkInheritanceFormat)
+		READ(sections, checkInheritanceSectionExsit)
+		READ(sections, checkSpaceExistBeforeEqualSign)
+		READ(sections, checkSpaceExistAfterEqualSign)
+		READ(sections, checkEmptyValue)
 	}
 }
 #undef READ

@@ -12,27 +12,27 @@ public:
 	void load(const IniFile& configFile);
 private:
 	// 配置文件方面
-	bool RecordKeyNotExist{ false };				// 记录不存在的Key
-	bool RecordTypeNotExist{ true };				// 记录不存在的Type
-	bool RecordDynamicKeyVariableError{ true };		// 记录动态键变量错误
-	bool RecordDynamicKeyFormatError{ true };		// 记录动态键格式错误
+	std::string recordKeyNotExist{ };				// 记录不存在的Key
+	std::string recordTypeNotExist{ };				// 记录不存在的Type
+	std::string recordDynamicKeyVariableError{ };	// 记录动态键变量错误
+	std::string recordDynamicKeyFormatError{ };		// 记录动态键格式错误
 
 	// 整个文件方面
-	bool CheckUnusedGlobal{ true };					// 检测未使用的全局节
-	bool CheckUnusedRegistry{ true };				// 检测未使用的注册表
-	bool CheckSectionExsit{ true };					// 检测注册表注册项是否实现
+	std::string checkUnusedGlobal{ };				// 检测未使用的全局节
+	std::string checkUnusedRegistry{ };				// 检测未使用的注册表
+	std::string checkSectionExsit{ };				// 检测注册表注册项是否实现
 
 	// 节层面
-	bool CheckBracketClosed{ true };				// 检测括号闭合
-	bool CheckDuplicateKey{ true };					// 检测重复的Key
-	bool CheckSectionFormat{ true };				// 检测节格式
-	bool CheckInheritanceFormat{ true };			// 检测继承格式
-	bool CheckInheritanceSectionExsit{ true };		// 检测继承内容是否实现
+	std::string checkBracketClosed{ };				// 检测括号闭合
+	std::string checkDuplicateKey{ };				// 检测重复的Key
+	std::string checkSectionFormat{ };				// 检测节格式
+	std::string checkInheritanceFormat{ };			// 检测继承格式
+	std::string checkInheritanceSectionExsit{ };	// 检测继承内容是否实现
 
 	// 键层面
-	bool CheckSpaceExistBeforeEqualSign{ false };	// 检测等号前是否有空格
-	bool CheckSpaceExistAfterEqualSign{ false };	// 检测等号后是否有空格
+	std::string checkSpaceExistBeforeEqualSign{ };	// 检测等号前是否有空格
+	std::string checkSpaceExistAfterEqualSign{ };	// 检测等号后是否有空格
 
 	// 值层面
-	bool CheckEmptyValue{ true };					// 检测Value是否为空
+	std::string checkEmptyValue{ };					// 检测Value是否为空
 };
