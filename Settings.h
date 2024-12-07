@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IniFile.h"
 #include <iostream>
 #include <stdexcept>
@@ -7,10 +7,10 @@
 #include <vector>
 class Settings {
 public:
-	// 构造函数，读取 ini 文件
+	static Settings* Instance;
 	Settings(const IniFile& configFile);
 	void load(const IniFile& configFile);
-private:
+
 	// 配置文件方面
 	std::string recordKeyNotExist{ };				// 记录不存在的Key
 	std::string recordTypeNotExist{ };				// 记录不存在的Type

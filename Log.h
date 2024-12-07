@@ -6,24 +6,10 @@
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <thread>
-
-// L = Line
-// F = File
-// K = Key
-
-#define LOG Log::Instance->logstream(Severity::DEFAULT)
-#define INFOL(line) Log::Instance->stream(Severity::INFO, line)
-#define WARNINGL(line) Log::Instance->stream(Severity::WARNING, line)
-#define ERRORL(line) Log::Instance->stream(Severity::ERROR, line)
-#define INFOF(section, fileindex, line) Log::Instance->stream(Severity::INFO, section, fileindex, line)
-#define WARNINGF(section, fileindex, line) Log::Instance->stream(Severity::WARNING, section, fileindex, line)
-#define ERRORF(section, fileindex, line) Log::Instance->stream(Severity::ERROR, section, fileindex, line)
-#define INFOK(section, key) Log::Instance->stream(Severity::INFO, section, key)
-#define WARNINGK(section, key) Log::Instance->stream(Severity::WARNING, section, key)
-#define ERRORK(section, key) Log::Instance->stream(Severity::ERROR, section, key)
 
 // 日志级别
 enum class Severity {
@@ -37,60 +23,56 @@ enum class Severity {
 class LogStream;
 class Log {
 public:
+	friend LogStream;
     static Log* Instance; 
-	static std::vector<LogStream> Logs;
-	static bool CanOutput;
+	static std::set<LogStream, LogStream> Logs;
 
-    Log(const std::string& logFileName);
-    ~Log();
+    Log();
 
-	LogStream logstream(Severity severity);
-    LogStream& stream(Severity severity, int line = -2);
-    LogStream& stream(Severity severity, const Section& section, const std::string& key);
-	LogStream& stream(Severity severity, const std::string& section, const size_t& fileindex, const int& line);
+	void output(const std::string& logFileName);
 
-	void output();
-    void stop();
+	template<Severity severity = Severity::DEFAULT>
+	void operator()(int line) {
+		Log::Logs.emplace_back(this, severity, line);
+	};
+
+	template<Severity severity = Severity::DEFAULT>
+	void operator()(const Section& section, const std::string& key) {
+		const auto& value = section.at(key);
+		Log::Logs.emplace_back(this, severity, value.fileIndex, section.name, key, value.value, value.line);
+	};
+
+	template<Severity severity = Severity::DEFAULT>
+	void operator()(const std::string& section, const size_t& fileindex, const int& line) {
+		Log::Logs.emplace_back(this, severity, fileindex, section, std::string(), std::string(), line);
+	};
 
 private:
-    friend class LogStream;
-
-    void processLogQueue();
-    void writeLog(const std::string& message);
-    std::string getSeverityLabel(Severity severity);
-    std::string getPlainSeverityLabel(Severity severity);
-
-    std::ofstream logFile;
-    std::queue<std::string> logQueue;
-    std::mutex queueMutex;
-    std::condition_variable condition;
-    std::thread writerThread;
-    bool running;
-
+	std::ofstream logFile;
+	std::mutex logMutex; // 保护Logs
+	std::mutex fileMutex; // 保护logFile
+	static std::string getSeverityLabel(Severity severity);
+	static std::string getPlainSeverityLabel(Severity severity);
+	void writeLog(const std::string& log); // 写入文件
 };
 
-// 流式日志操作
+// 日志条
 class LogStream {
 public:
-	LogStream(Log* logger, Severity severity, int line);
-	LogStream(Log* logger, Severity severity, size_t fileindex, std::string section, std::string key, std::string value, int line);
-	~LogStream(); // 析构时提交日志
-
+	LogStream(Log* logger, Severity severity, int line, ...);
+	LogStream(Log* logger, Severity severity, size_t fileindex, 
+		std::string section, std::string key, std::string value, int line, ...);
+	~LogStream();
+	
+	std::string getFileMessage() const;
+	std::string getPrintMessage() const;
 	int getline() const { return line; }
 	size_t getindex() const { return fileindex; }
 
-	template <typename T>
-	LogStream& operator<<(const T& value) {
-		std::ostringstream oss;
-		oss << value;
-		buffer += oss.str();
-		return *this;
-	}
-	LogStream& operator<<(const Value& value) {
-		buffer += value.value;
-		return *this;
-	}
 private:
+	bool operator()(const LogStream& l, const LogStream& r);
+	std::string formatString(const char* format, va_list args);
+
 	Log* logger;
 	Severity severity;
 	int line;
@@ -98,5 +80,5 @@ private:
 	std::string section{};
 	std::string key{};
 	std::string value{};
-    std::string buffer;
+	std::string buffer;
 };

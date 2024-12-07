@@ -43,7 +43,7 @@ namespace string {
 
 	inline bool isBool(const std::string& str) {
 		char c = str.front();
-		return str.find_first_of("+-*/()") != std::string::npos;
+		return c == '1' || c == 'y' || c == 'Y' || c == 't' || c == 'T';
 	}
 }
 

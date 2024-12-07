@@ -5,10 +5,11 @@
 #include <sstream>
 #include <stdexcept>
 
+Settings* Settings::Instance = nullptr;
+
 Settings::Settings(const IniFile& configFile) {
 	load(configFile);
 }
-
 
 void Settings::load(const IniFile& configFile) {
 	if (configFile.sections.contains("LogSetting")) {
