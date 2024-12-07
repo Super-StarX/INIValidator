@@ -27,7 +27,7 @@ public:
 	auto end() { return section.end(); }
 	auto end() const { return section.end(); }
 	void insert(const Map& other) { return section.insert(other.begin(), other.end()); }
-	size_t count(const std::string& key) const { return section.count(key); }
+	bool contains(const std::string& key) const { return section.contains(key); }
 	DictData at(const std::string& key) const { return section.at(key); }
 	DictData& at(const std::string& key) { return section.at(key); }
 	DictData& operator[](const std::string& key) { return section[key]; }

@@ -1,7 +1,7 @@
 ﻿#include "NumberChecker.h"
 
 NumberChecker::NumberChecker(const Section& config) {
-	if (config.count("Range")) {
+	if (config.contains("Range")) {
 		std::string rangeStr = config.at("Range").value;
 		size_t commaPos = rangeStr.find(',');
 		if (commaPos != std::string::npos) {
@@ -10,7 +10,7 @@ NumberChecker::NumberChecker(const Section& config) {
 		}
 	}
 
-	if (config.count("Type")) {
+	if (config.contains("Type")) {
 		type = config.at("Type").value;
 	}
 }

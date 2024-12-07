@@ -29,7 +29,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 		try {
 			auto keys = pChecker->generateKey(dynamicKey, object);
 			for (const auto& key : keys)
-				if (object.count(key))
+				if (object.contains(key))
 					for (const auto& type : this->at(dynamicKey).types)
 						pChecker->validate(object, key, object.at(key), type);
 		}
@@ -42,7 +42,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 	}
 
 	for (const auto& [key, value] : object) {
-		if (!this->count(key))
+		if (!this->contains(key))
 			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
 			continue;
 
@@ -71,37 +71,37 @@ Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni
 // 加载配置文件
 void Checker::loadConfig(IniFile& configFile) {
 	// 加载字符串限制器
-	if (configFile.sections.count("Limits"))
+	if (configFile.sections.contains("Limits"))
 		for (const auto& [key, _] : configFile.sections.at("Limits"))
-			if (configFile.sections.count(key))
+			if (configFile.sections.contains(key))
 				limits[key] = LimitChecker(configFile.sections.at(key));
 
 	// 加载列表限制器
-	if (configFile.sections.count("Lists"))
+	if (configFile.sections.contains("Lists"))
 		for (const auto& [key, _] : configFile.sections.at("Lists"))
-			if (configFile.sections.count(key))
+			if (configFile.sections.contains(key))
 				lists[key] = ListChecker(this, configFile.sections.at(key));
 
 	// 加载数值限制器
-	if (configFile.sections.count("NumberLimits"))
+	if (configFile.sections.contains("NumberLimits"))
 		for (const auto& [key, _] : configFile.sections.at("NumberLimits"))
-			if (configFile.sections.count(key))
+			if (configFile.sections.contains(key))
 				numberLimits[key] = NumberChecker(configFile.sections.at(key));
 
 	// 加载注册表
-	if (configFile.sections.count("Registries"))
+	if (configFile.sections.contains("Registries"))
 		registryMap = configFile.sections.at("Registries");
 
 	// 加载全局类型
-	if (configFile.sections.count("Globals"))
+	if (configFile.sections.contains("Globals"))
 		for (const auto& [key, _] : configFile.sections.at("Globals"))
-			if (configFile.sections.count(key))
+			if (configFile.sections.contains(key))
 				globals[key] = Dict(configFile.sections.at(key));
 
 	// 加载实例类型
-	if (configFile.sections.count("Sections"))
+	if (configFile.sections.contains("Sections"))
 		for (const auto& [key, _] : configFile.sections.at("Sections"))
-			if (configFile.sections.count(key))
+			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
 }
 
@@ -109,7 +109,7 @@ void Checker::loadConfig(IniFile& configFile) {
 void Checker::checkFile() {
 	// [Globals] General
 	for (const auto& [sectionName, _] : globals) {
-		if (!targetIni->sections.count(sectionName)) {
+		if (!targetIni->sections.contains(sectionName)) {
 			INFOL(-1) << "没有注册表：" << sectionName;
 			continue;
 		}
@@ -119,7 +119,7 @@ void Checker::checkFile() {
 	// [Registries] VehicleTypes=UnitType
 	for (const auto& [registryName, type] : registryMap) {
 		// 检查注册表是否有使用
-		if (!targetIni->sections.count(registryName)) {
+		if (!targetIni->sections.contains(registryName)) {
 			INFOL(-1) << "没有注册表：" << registryName;
 			continue;
 		}
@@ -127,11 +127,11 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
 		for (const auto& [_, name] : registry) {
-			if (!targetIni->sections.count(name)) {
+			if (!targetIni->sections.contains(name)) {
 				WARNINGF(registryName, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
 				continue;
 			}
-			if (!sections.count(type)) {
+			if (!sections.contains(type)) {
 				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
 				return;
 			}
@@ -181,7 +181,7 @@ double Checker::evaluateExpression(const std::string& expr, const Section& objec
 
 	// 不是表达式, 尝试直接进行替换
 	if (!string::isExpression(expr))
-		if (object.count(expr))
+		if (object.contains(expr))
 			return std::stod(object.at(expr).value);
 
 	std::stack<double> values;
@@ -235,7 +235,7 @@ double Checker::parseValue(size_t& i, const std::string& expr, const Section& ob
 		return std::stod(value);
 
 	// 不是数字, 看看是否是变量
-	if (!object.count(value))
+	if (!object.contains(value))
 		throw std::invalid_argument("动态键中存在未定义的变量: " + value);
 
 	// 是否是数字型变量
@@ -263,14 +263,14 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 		else if (type == "float") isFloat(value);
 		else if (type == "double") isDouble(value);
 		else if (type == "string") isString(value);
-		else if (numberLimits.count(type)) numberLimits.at(type).validate(value.value);
-		else if (limits.count(type)) limits.at(type).validate(value);
-		else if (lists.count(type)) lists.at(type).validate(section, key, value); // 新增
-		else if (sections.count(type)) {
+		else if (numberLimits.contains(type)) numberLimits.at(type).validate(value.value);
+		else if (limits.contains(type)) limits.at(type).validate(value);
+		else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
+		else if (sections.contains(type)) {
 			if (value.value == "none" || value.value == "<none>")
 				return;
 
-			if (!targetIni->sections.count(value)) {
+			if (!targetIni->sections.contains(value)) {
 				if (type != "AnimType")
 					throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
 			}

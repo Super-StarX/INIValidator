@@ -1,4 +1,4 @@
-﻿#include "Settings.h"
+#include "Settings.h"
 #include "Helper.h"
 #include <fstream>
 #include <sstream>
@@ -10,7 +10,7 @@ Settings::Settings(const IniFile& configFile) {
 }
 
 #define READ(sections, variable)	\
-    if (sections.count(#variable))	\
+    if (sections.contains(#variable))	\
         variable = string::isBool(sections.at(#variable));
 
 void Settings::load(const IniFile& configFile) {

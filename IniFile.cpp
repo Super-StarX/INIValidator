@@ -80,7 +80,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			key = "var_" + std::to_string(var_num);
 			++var_num;
 		}
-		else if (section.count(key)) {
+		else if (section.contains(key)) {
 			auto& oldValue = section[key];
 			// 如果现存的值是继承来的值，则不报警，新值覆盖后会去掉继承标签
 			// 如果是同文件内的覆盖, 就报警, 跨文件不报
@@ -100,7 +100,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 // 处理#include
 void IniFile::processIncludes(const std::string& basePath) {
     // 找到名为#include的节
-    if (sections.count("#include")) {
+    if (sections.contains("#include")) {
         // 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
 		int curFileIndex = fileIndex;
 		auto& section = sections["#include"];
@@ -133,7 +133,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		}
 
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
-		if (!sections.count(inheritedName)) {
+		if (!sections.contains(inheritedName)) {
 			ERRORF(curSectionName, FileNames.size() - 1, lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
 			return;
 		}
@@ -141,7 +141,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		auto& curSection = sections[curSectionName];
 		auto& inheritedSection = sections[inheritedName];
 		for (const auto& [key, value] : inheritedSection) {
-			if (!curSection.count(key)) {
+			if (!curSection.contains(key)) {
 				Value inheritedValue = value;   // 复制原值
 				inheritedValue.isInheritance = true; // 设置继承标志
 				curSection[key] = inheritedValue; // 插入到当前节中

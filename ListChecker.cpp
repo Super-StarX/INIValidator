@@ -6,12 +6,12 @@
 
 ListChecker::ListChecker(Checker* checker, const Section& config) :checker(checker) {
 	// 加载 Type
-	if (!config.count("Type"))
+	if (!config.contains("Type"))
 		throw std::runtime_error("ListChecker 配置缺少 Type");
 	types = string::splitAsString(config.at("Type").value);
 
 	// 加载 Range
-	if (config.count("Range")) {
+	if (config.contains("Range")) {
 		std::istringstream rangeStream(config.at("Range"));
 		rangeStream >> minRange;
 		if (rangeStream.peek() == ',')

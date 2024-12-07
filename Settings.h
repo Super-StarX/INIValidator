@@ -1,11 +1,10 @@
-﻿#pragma once
+#pragma once
 #include "IniFile.h"
 #include <string>
 #include <unordered_map>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#define TO_STRING(x) #x
 class Settings {
 public:
 	// 构造函数，读取 ini 文件

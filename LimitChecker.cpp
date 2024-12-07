@@ -6,16 +6,16 @@ LimitChecker::LimitChecker(const Section& config) {
 	startWith = getToken(config, "StartWith");
 	endWith = getToken(config, "EndWith");
 	limitIn = getToken(config, "LimitIn");
-	if (config.count("MaxLength"))
+	if (config.contains("MaxLength"))
 		maxLength = std::stoi(config.at("MaxLength"));
-	if (config.count("CaseSenstive")) {
+	if (config.contains("CaseSenstive")) {
 		char res = config.at("CaseSenstive").value[0];
 		caseSensitive = res == '1' || res == 'y' || res == 't';
 	}
 }
 
 std::vector<std::string> LimitChecker::getToken(const Section& config, const std::string& key) {
-	if (!config.count(key))
+	if (!config.contains(key))
 		return std::vector<std::string>();
 	return string::split(config.at(key).value);
 }
