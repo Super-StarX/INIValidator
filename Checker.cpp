@@ -128,7 +128,7 @@ void Checker::checkFile() {
 	// [Globals] General
 	for (const auto& [sectionName, _] : globals) {
 		if (!targetIni->sections.contains(sectionName)) {
-			INFOL(-1) << "没有注册表：" << sectionName;
+			INFOL(-1) << "缺少全局节：" << sectionName;
 			continue;
 		}
 		globals[sectionName].validateSection(targetIni->sections[sectionName], sectionName);
