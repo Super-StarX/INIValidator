@@ -62,7 +62,6 @@ public:
 	LogStream(Log* logger, Severity severity, int line, ...);
 	LogStream(Log* logger, Severity severity, size_t fileindex, 
 		std::string section, std::string key, std::string value, int line, ...);
-	~LogStream();
 	
 	std::string getFileMessage() const;
 	std::string getPrintMessage() const;
@@ -70,7 +69,7 @@ public:
 	size_t getindex() const { return fileindex; }
 
 private:
-	bool operator()(const LogStream& l, const LogStream& r);
+	bool operator<(const LogStream& r);
 	std::string formatString(const char* format, va_list args);
 
 	Log* logger;

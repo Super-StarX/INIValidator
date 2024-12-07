@@ -39,12 +39,12 @@ void Log::output(const std::string& logFileName) {
 	if (!logFile.is_open())
 		throw std::runtime_error("Unable to open log file: " + logFileName);
 
+	// 写日志线程
 	std::thread fileWriter([&]() {
 		for (const auto& log : Logs)
 			writeLog(log.getFileMessage());
 	});
 
-	// 主线程负责屏幕输出
 	for (const auto& log : Logs)
 		std::cerr << log.getFileMessage() << std::endl;
 
@@ -66,7 +66,7 @@ LogStream::LogStream(Log* logger, Severity severity, int line, ...)
 	: logger(logger), severity(severity), line(line) {
 	va_list args;
 	va_start(args, Settings::Instance->recordKeyNotExist);
-	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);  // 调用格式化函数
+	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);
 	va_end(args);
 }
 
@@ -76,11 +76,9 @@ LogStream::LogStream(Log* logger, Severity severity, size_t fileindex,
 	section(section), key(key), value(value) {
 	va_list args;
 	va_start(args, Settings::Instance->recordKeyNotExist);
-	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);  // 调用格式化函数
+	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);
 	va_end(args);
 }
-
-LogStream::~LogStream() {}
 
 std::string LogStream::getFileMessage() const {
 	std::ostringstream plainMessage;
@@ -99,8 +97,8 @@ std::string LogStream::getPrintMessage() const {
 	return formattedMessage.str();
 }
 
-bool LogStream::operator()(const LogStream& l, const LogStream& r) {
-	return l.getindex() == r.getindex() ? l.getline() < r.getline() : l.getindex() < r.getindex();
+bool LogStream::operator<(const LogStream& r) {
+	return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
 }
 
 std::string LogStream::formatString(const char* format, va_list args) {
