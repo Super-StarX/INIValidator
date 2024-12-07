@@ -1,14 +1,14 @@
 ﻿#pragma once
 #include "IniFile.h"
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <queue>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
-#include <stdexcept>
+#include <fstream>
 #include <memory>
+#include <mutex>
+#include <queue>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <thread>
 
 // L = Line
 // F = File

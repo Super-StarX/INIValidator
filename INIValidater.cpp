@@ -1,8 +1,8 @@
-﻿#include "IniFile.h"
+﻿#include "Checker.h"
+#include "IniFile.h"
 #include "Log.h"
-#include "Checker.h"
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {

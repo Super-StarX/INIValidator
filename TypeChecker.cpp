@@ -1,7 +1,7 @@
-﻿#include "TypeChecker.h"
-#include "Checker.h"
+﻿#include "Checker.h"
 #include "Helper.h"
 #include "Log.h"
+#include "TypeChecker.h"
 
 TypeChecker::TypeChecker(Checker* checker):checker(checker) {
 }

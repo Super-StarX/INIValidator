@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include "IniFile.h"
-#include <string>
-#include <vector>
 #include <algorithm>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 // 用于对字符串类型的特殊判定
 // [Limits]

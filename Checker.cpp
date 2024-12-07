@@ -1,15 +1,17 @@
 ﻿#include "Checker.h"
 #include "Checker.h"
-#include "Log.h"
 #include "Helper.h"
-#include <iostream>
-#include <sstream>
+#include "Log.h"
 #include <algorithm>
 #include <cctype>
+#include <chrono>
+#include <iostream>
 #include <regex>
 #include <set>
+#include <sstream>
 
 Checker* Checker::Instance = nullptr;
+std::atomic<size_t> processedSections(0);
 
 Dict::Dict(const Section& config) {
 	for (const auto& [key, value] : config) {
@@ -22,6 +24,7 @@ Dict::Dict(const Section& config) {
 
 void Dict::validateSection(const Section& object, const std::string& type) {
 	if (object.isScanned) return;
+	++processedSections;
 	const_cast<Section&>(object).isScanned = true;
 	auto pChecker = Checker::Instance;
 
@@ -107,6 +110,21 @@ void Checker::loadConfig(IniFile& configFile) {
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
+	size_t totalSections = targetIni->sections.size();
+	bool stopProgress = false;
+	std::thread progressThread([&]() {
+		while (!stopProgress) {
+			double progress = (double)processedSections / totalSections * 100;
+			std::cout << "\rProgress: ["
+				<< std::string((int)(progress / 2), '=')
+				<< std::string(50 - (int)(progress / 2), ' ')
+				<< "] " << std::fixed << std::setprecision(2) << progress << "%";
+			std::flush(std::cout);
+			std::this_thread::sleep_for(std::chrono::milliseconds(15)); // 每15ms刷新一次
+		}
+		std::cout << "\rProgress: [==================================================] 100.00%\n";
+	});
+
 	// [Globals] General
 	for (const auto& [sectionName, _] : globals) {
 		if (!targetIni->sections.contains(sectionName)) {
@@ -139,6 +157,9 @@ void Checker::checkFile() {
 			sections[type].validateSection(targetIni->sections[name.value], type);
 		}
 	}
+
+	stopProgress = true;
+	progressThread.join();
 }
 
 // 用于生成动态key

@@ -1,12 +1,12 @@
 ﻿#include "IniFile.h"
 #include "Log.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <regex>
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
 
 static std::vector<std::string> FileNames;
 

@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include <vector>
 #include <sstream>
-#include <string>
 #include <stack>
+#include <string>
+#include <vector>
 
 namespace string {
 	inline std::vector<std::string> split(const std::string& str, char delimiter = ',') {

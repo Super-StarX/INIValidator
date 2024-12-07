@@ -1,6 +1,6 @@
-﻿#include "ListChecker.h"
-#include "Checker.h"
+﻿#include "Checker.h"
 #include "Helper.h"
+#include "ListChecker.h"
 #include "Log.h"
 #include <sstream>
 

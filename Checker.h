@@ -1,14 +1,14 @@
 ﻿#pragma once
 #include "IniFile.h"
-#include "TypeChecker.h"
-#include "ListChecker.h"
 #include "LimitChecker.h"
+#include "ListChecker.h"
 #include "NumberChecker.h"
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <stack>
+#include "TypeChecker.h"
 #include <set>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class DictData {
 public:
