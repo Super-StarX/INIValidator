@@ -37,8 +37,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 						pChecker->validate(object, key, object.at(key), type);
 		}
 		catch (const std::string& e) {
-			//WARNINGL(object.section.begin()->second.line) << e;
-			Log::warning<DynamicKeyVariableError>(object.section.begin()->second.line, e);
+			Log::warning<_DynamicKeyVariableError>(object.section.begin()->second.line, e);
 		}
 		catch (const std::invalid_argument) {
 			// 不做任何处理
@@ -47,7 +46,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 
 	for (const auto& [key, value] : object) {
 		if (!this->contains(key))
-			// LOG << "Key \"" << key << "\" in section \"" << sectionName << "\" is not defined in the configuration.";
+			Log::print<_KeyNotExist>({ object, value }, key);
 			continue;
 
 		for (const auto& type : this->at(key).types)
@@ -129,7 +128,7 @@ void Checker::checkFile() {
 	// [Globals] General
 	for (const auto& [sectionName, _] : globals) {
 		if (!targetIni->sections.contains(sectionName)) {
-			INFOL(-1) << "缺少全局节：" << sectionName;
+			Log::info<_UnusedGlobal>(-1, sectionName);
 			continue;
 		}
 		globals[sectionName].validateSection(targetIni->sections[sectionName], sectionName);
@@ -139,7 +138,7 @@ void Checker::checkFile() {
 	for (const auto& [registryName, type] : registryMap) {
 		// 检查注册表是否有使用
 		if (!targetIni->sections.contains(registryName)) {
-			INFOL(-1) << "没有注册表：" << registryName;
+			Log::info<_UnusedRegistry>(-1, registryName);
 			continue;
 		}
 
@@ -147,11 +146,11 @@ void Checker::checkFile() {
 		auto& registry = targetIni->sections.at(registryName);
 		for (const auto& [_, name] : registry) {
 			if (!targetIni->sections.contains(name)) {
-				WARNINGF(registryName, name.fileIndex, name.line) << "该注册表声明的 " << name << " 未被实现";
+				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name);
 				continue;
 			}
 			if (!sections.contains(type)) {
-				LOG << "\"" << name << "\"的类型\"" << type << "\"未知";
+				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type);
 				return;
 			}
 
@@ -277,101 +276,111 @@ void Checker::applyOperation(std::stack<double>& values, std::stack<char>& opera
 
 // 验证键值对
 void Checker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
-	try {
-		if (value.value.empty())
-			throw std::string("未填写值");
+	if (value.value.empty())
+		return Log::error<_EmptyValue>({ section, key }, key);
 
-		if (type == "int") isInteger(value);
-		else if (type == "float") isFloat(value);
-		else if (type == "double") isDouble(value);
-		else if (type == "string") isString(value);
-		else if (numberLimits.contains(type)) numberLimits.at(type).validate(value.value);
-		else if (limits.contains(type)) limits.at(type).validate(value);
-		else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
-		else if (sections.contains(type)) {
-			if (value.value == "none" || value.value == "<none>")
-				return;
+	if (type == "int") validateInteger(section, key, value);
+	else if (type == "float") validateFloat(section, key, value);
+	else if (type == "double") validateDouble(section, key, value);
+	else if (type == "string") validateString(section, key, value);
+	else if (numberLimits.contains(type)) numberLimits.at(type).validate(value.value);
+	else if (limits.contains(type)) limits.at(type).validate(value);
+	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
+	else if (sections.contains(type)) {
+		if (value.value == "none" || value.value == "<none>")
+			return;
 
-			if (!targetIni->sections.contains(value)) {
-				if (type != "AnimType")
-					throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
-			}
-			else
-				sections.at(type).validateSection(targetIni->sections.at(value), type);
+		if (!targetIni->sections.contains(value)) {
+			if (type != "AnimType")
+				throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
 		}
+		else
+			sections.at(type).validateSection(targetIni->sections.at(value), type);
 	}
-	catch (const std::string& e) {
-		ERRORK(section, key) << e;
+}
+
+int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {
+	try {
+		int base = 10;
+		std::string buffer = value;
+		if (buffer.front() == '$') {
+			buffer = buffer.substr(1, buffer.size());
+			base = 16;
+		}
+		else if (tolower(buffer.back()) == 'h') {
+			buffer = buffer.substr(0, buffer.size() - 1);
+			base = 16;
+		}
+
+		std::size_t pos;
+		auto result = std::stoi(buffer, &pos);
+		if (pos != buffer.size())
+			Log::error<_IntIllegal>({ section, key }, value);
+
+		return result;
 	}
 	catch (const std::invalid_argument) {
-		ERRORK(section, key) << value << "是非法参数";
+		Log::error<_IllegalValue>({ section, key }, value);
 	}
 	catch (const std::out_of_range) {
-		ERRORK(section, key) << value << "超过限制";
-	}
-	catch (...) {
-		ERRORK(section, key) << "非预期的错误";
+		Log::error<_OverlongValue>({ section, key }, value);
 	}
 }
 
-int Checker::isInteger(const Value& value) {
-	int base = 10;
-	std::string buffer = value;
-	if (buffer.front() == '$') {
-		buffer = buffer.substr(1, buffer.size());
-		base = 16;
+float Checker::validateFloat(const Section& section, const std::string& key, const Value& value) {
+	try {
+		std::string buffer = value;
+		if (buffer.back() == '%')
+			buffer = buffer.substr(0, buffer.size() - 1);
+
+		if (buffer.front() == '.')
+			buffer = "0" + buffer;
+
+		std::size_t pos;
+		auto result = std::stof(buffer, &pos);
+		if (pos != buffer.size())
+			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
+
+		if (value.value.back() == '%')
+			result /= 100;
+
+		return result;
 	}
-	else if (tolower(buffer.back()) == 'h') {
-		buffer = buffer.substr(0, buffer.size() - 1);
-		base = 16;
+	catch (const std::invalid_argument) {
+		Log::error<_IllegalValue>({ section, key }, value);
 	}
-
-	std::size_t pos;
-	auto result = std::stoi(buffer, &pos);
-	if (pos != buffer.size())
-		throw std::string(value + "不是整数，非整数部分会被忽略");
-
-	return result;
+	catch (const std::out_of_range) {
+		Log::error<_OverlongValue>({ section, key }, value);
+	}
 }
 
-float Checker::isFloat(const Value& value) {
-	std::string buffer = value;
-	if (buffer.back() == '%')
-		buffer = buffer.substr(0, buffer.size() - 1);
+double Checker::validateDouble(const Section& section, const std::string& key, const Value& value) {
+	try {
+		std::string buffer = value;
+		if (buffer.back() == '%')
+			buffer = buffer.substr(0, buffer.size() - 1);
 
-	if (buffer.front() == '.')
-		buffer = "0" + buffer;
+		std::size_t pos;
+		auto result = std::stod(buffer, &pos);
+		if (pos != buffer.size())
+			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
-	std::size_t pos;
-	auto result = std::stof(buffer, &pos);
-	if (pos != buffer.size())
-		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
+		if (value.value.back() == '%')
+			result /= 100;
 
-	if (value.value.back() == '%')
-		result /= 100;
-
-	return result;
+		return result;
+	}
+	catch (const std::invalid_argument) {
+		Log::error<_IllegalValue>({ section, key }, value);
+	}
+	catch (const std::out_of_range) {
+		Log::error<_OverlongValue>({ section, key }, value);
+	}
 }
 
-double Checker::isDouble(const Value& value) {
-	std::string buffer = value;
-	if (buffer.back() == '%')
-		buffer = buffer.substr(0, buffer.size() - 1);
-
-	std::size_t pos;
-	auto result = std::stod(buffer, &pos);
-	if (pos != buffer.size())
-		throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
-
-	if (value.value.back() == '%')
-		result /= 100;
-
-	return result;
-}
-
-std::string Checker::isString(const Value& value) {
+std::string Checker::validateString(const Section& section, const std::string& key, const Value& value) {
 	if (value.value.size() > 512)
-		throw std::string("值超过最大字数限制：" + value);
+		Log::error<_OverlongString>({ section, key }, value);
 
 	return value;
 }

@@ -30,11 +30,17 @@ void Settings::load(const IniFile& configFile) {
 		READ(sections, DuplicateKey)
 		READ(sections, SectionFormat)
 		READ(sections, InheritanceFormat)
+		READ(sections, InheritanceBracketClosed)
 		READ(sections, InheritanceSectionExsit)
-		READ(sections, SpaceExistBeforeEqualSign)
-		READ(sections, SpaceExistAfterEqualSign)
+		READ(sections, InheritanceDuplicateKey)
+		READ(sections, SpaceExistBetweenEqualSign)
+		READ(sections, SpaceLostBetweenEqualSign)
 		READ(sections, EmptyValue)
+		READ(sections, IllegalValue)
+		READ(sections, OverlongValue)
+		READ(sections, IntIllegal)
+		READ(sections, FloatIllegal)
+		READ(sections, OverlongString)
 		#undef READ
 	}
-
 }

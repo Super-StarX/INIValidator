@@ -70,8 +70,8 @@ private:
 	double evaluateExpression(const std::string& expr, const Section& object) const;
 	double parseValue(size_t& i, const std::string& expr, const Section& object) const;
 	void applyOperation(std::stack<double>& values, std::stack<char>& operators) const;
-	int isInteger(const Value& str);
-	float isFloat(const Value& str);
-	double isDouble(const Value& str);
-	std::string isString(const Value& str);
+	int validateInteger(const Section& section, const std::string& key, const Value& str);
+	float validateFloat(const Section& section, const std::string& key, const Value& str);
+	double validateDouble(const Section& section, const std::string& key, const Value& str);
+	std::string validateString(const Section& section, const std::string& key, const Value& str);
 };

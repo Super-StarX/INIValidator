@@ -58,7 +58,7 @@ void IniFile::load(const std::string& filepath) {
 void IniFile::readSection(std::string& line, int& lineNumber, std::string& currentSection) {
     size_t endPos = line.find(']');
 	if (endPos == std::string::npos)
-		ERRORF(currentSection, FileNames.size() - 1, lineNumber) << "中括号未闭合";
+		Log::error<_BracketClosed>({ currentSection, FileNames.size() - 1, lineNumber });
     else {
         currentSection = line.substr(1, endPos - 1);
 		sections[currentSection].name = currentSection;
@@ -85,16 +85,14 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			// 如果现存的值是继承来的值，则不报警，新值覆盖后会去掉继承标签
 			// 如果是同文件内的覆盖, 就报警, 跨文件不报
 			if (!oldValue.isInheritance && oldValue.fileIndex == fileIndex)
-				WARNINGF(section.name, oldValue.fileIndex, lineNumber) << "\"" << key << "\"重复设定，"
-					<< "第" << oldValue.line << "行的\"" << oldValue
-					<< "\"被覆盖为\"" << value << "\"。";
+				Log::error<_DuplicateKey>({ section.name, oldValue.fileIndex, lineNumber },
+					key, oldValue.line, oldValue, value);
 		}
 		section[key] = { value, lineNumber, fileIndex };
     }
-    else {
+    else
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
         section[line] = { "", lineNumber, fileIndex };
-    }
 }
 
 // 处理#include
@@ -108,11 +106,10 @@ void IniFile::processIncludes(const std::string& basePath) {
 		std::vector<std::pair<MapType::key_type, MapType::mapped_type>> include(section.begin(), section.end());
 		std::sort(include.begin(), include.end(), [](const auto& l, const auto& r) { return l.second.line < r.second.line; });
 
-        for (const auto& [key, value] : include) {
+        for (const auto& [key, value] : include)
             // 将新的ini载入到本ini中，并判断文件编号防止死循环
 			if (value.fileIndex == curFileIndex)
 				this->load(basePath + "/" + value.value);
-        }
     }
 }
 
@@ -121,22 +118,16 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	size_t colonPos = line.find(':', endPos + 1);
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
-		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[') {
-			WARNINGF(curSectionName, FileNames.size() - 1, lineNumber) << "继承格式不正确";
-			return;
-		}
+		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[')
+			return Log::error<_SectionFormat>({ curSectionName, FileNames.size() - 1, lineNumber });
 
 		size_t nextEndPos = line.find(']', colonPos + 2);
-		if (nextEndPos == std::string::npos) {
-			ERRORF(curSectionName, FileNames.size() - 1, lineNumber) << "继承对象的中括号未闭合";
-			return;
-		}
-
+		if (nextEndPos == std::string::npos)
+			return Log::error<_InheritanceBracketClosed>({ curSectionName, FileNames.size() - 1, lineNumber });
+		
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
-		if (!sections.contains(inheritedName)) {
-			ERRORF(curSectionName, FileNames.size() - 1, lineNumber) << "继承的节：\"" << inheritedName << "\"未找到";
-			return;
-		}
+		if (!sections.contains(inheritedName))
+			return Log::error<_InheritanceSectionExsit>({ curSectionName, FileNames.size() - 1, lineNumber }, inheritedName);
 
 		auto& curSection = sections[curSectionName];
 		auto& inheritedSection = sections[inheritedName];
@@ -147,11 +138,11 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 				curSection[key] = inheritedValue; // 插入到当前节中
 			}
 			else if (curSection[key].isInheritance)
-				WARNINGK(inheritedSection, key) << "重复的键，\"" << value << "\"被覆盖为\"" << inheritedSection[key] << "\".";
+				Log::error<_InheritanceDuplicateKey>({ inheritedSection, key }, value, inheritedSection[key]);
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		INFOF(curSectionName, FileNames.size() - 1, lineNumber) << "未以']'结尾";
+		Log::error<_InheritanceBracketClosed>({ curSectionName, FileNames.size() - 1, lineNumber });
 }
 
 // 去除注释
