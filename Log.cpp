@@ -1,13 +1,11 @@
 ﻿#include "Log.h"
-#include "Settings.h"
-#include <cstdarg>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
 
 Log* Log::Instance = nullptr;
-std::set<LogStream, LogStream> Log::Logs;
+std::set<LogStream> Log::Logs;
 
 Log::Log() {
 	Instance = this;
@@ -46,7 +44,7 @@ void Log::output(const std::string& logFileName) {
 	});
 
 	for (const auto& log : Logs)
-		std::cerr << log.getFileMessage() << std::endl;
+		std::cerr << log.getPrintMessage() << std::endl;
 
 	// 等待文件写入完成
 	fileWriter.join();
@@ -62,23 +60,8 @@ void Log::writeLog(const std::string& logLine) {
 		logFile << logLine << std::endl;
 }
 
-LogStream::LogStream(Log* logger, Severity severity, int line, ...)
-	: logger(logger), severity(severity), line(line) {
-	va_list args;
-	va_start(args, Settings::Instance->recordKeyNotExist);
-	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);
-	va_end(args);
-}
-
-LogStream::LogStream(Log* logger, Severity severity, size_t fileindex, 
-	std::string section, std::string key, std::string value, int line, ...)
-	: logger(logger), severity(severity), line(line), fileindex(fileindex), 
-	section(section), key(key), value(value) {
-	va_list args;
-	va_start(args, Settings::Instance->recordKeyNotExist);
-	buffer = formatString(Settings::Instance->recordKeyNotExist.c_str(), args);
-	va_end(args);
-}
+LogStream::LogStream(Severity severity, const LogData& logdata, std::string buffer)
+	: data(logdata), buffer(buffer) {}
 
 std::string LogStream::getFileMessage() const {
 	std::ostringstream plainMessage;
@@ -99,18 +82,4 @@ std::string LogStream::getPrintMessage() const {
 
 bool LogStream::operator<(const LogStream& r) {
 	return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
-}
-
-std::string LogStream::formatString(const char* format, va_list args) {
-	va_list argsCopy;
-	va_copy(argsCopy, args);
-	int size = std::vsnprintf(nullptr, 0, format, argsCopy) + 1; // 包括空终止符
-	va_end(argsCopy);
-
-	if (size <= 0)
-		throw std::runtime_error("Error formatting string");
-
-	std::vector<char> buffer(size);
-	std::vsnprintf(buffer.data(), size, format, args);
-	return std::string(buffer.data(), buffer.size() - 1); // 去掉空终止符
 }

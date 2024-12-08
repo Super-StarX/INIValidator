@@ -37,7 +37,8 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 						pChecker->validate(object, key, object.at(key), type);
 		}
 		catch (const std::string& e) {
-			WARNINGL(object.section.begin()->second.line) << e;
+			//WARNINGL(object.section.begin()->second.line) << e;
+			Log::warning<DynamicKeyVariableError>(object.section.begin()->second.line, e);
 		}
 		catch (const std::invalid_argument) {
 			// 不做任何处理
