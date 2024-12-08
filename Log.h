@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "IniFile.h"
 #include <condition_variable>
 #include <fstream>
@@ -65,8 +65,6 @@ public:
 	
 	std::string getFileMessage() const;
 	std::string getPrintMessage() const;
-	int getline() const { return line; }
-	size_t getindex() const { return fileindex; }
 
 private:
 	bool operator<(const LogStream& r);

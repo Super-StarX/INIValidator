@@ -1,13 +1,14 @@
 ﻿#include "Checker.h"
 #include "IniFile.h"
 #include "Log.h"
+#include "Settings.h"
 #include <filesystem>
 #include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
     try {
-        Log log("Checker.log");
+        auto log = Log();
         std::string targetFilePath;
         if (argc >= 2)
             targetFilePath = argv[1];
@@ -16,14 +17,14 @@ int main(int argc, char* argv[]) {
             std::getline(std::cin, targetFilePath);
         }
 
+		Settings setting(IniFile("Settings.ini", false));
 		IniFile configIni("INICodingCheck.ini", true);
-		IniFile targetIni(targetFilePath, false);;
+		IniFile targetIni(targetFilePath, false);
         Checker checker(configIni, targetIni);
         checker.checkFile();
 
-		log.output();
+		log.output("Checker.log");
         LOG << "\n检查完毕";
-        log.stop();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

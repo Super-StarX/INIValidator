@@ -19,21 +19,21 @@ void Settings::load(const IniFile& configFile) {
 			if (sections.contains(#variable))	\
 				variable = sections.at(#variable);
 
-		READ(sections, recordKeyNotExist)
-		READ(sections, recordTypeNotExist)
-		READ(sections, recordDynamicKeyVariableError)
-		READ(sections, recordDynamicKeyFormatError)
-		READ(sections, checkUnusedGlobal)
-		READ(sections, checkUnusedRegistry)
-		READ(sections, checkSectionExsit)
-		READ(sections, checkBracketClosed)
-		READ(sections, checkDuplicateKey)
-		READ(sections, checkSectionFormat)
-		READ(sections, checkInheritanceFormat)
-		READ(sections, checkInheritanceSectionExsit)
-		READ(sections, checkSpaceExistBeforeEqualSign)
-		READ(sections, checkSpaceExistAfterEqualSign)
-		READ(sections, checkEmptyValue)
+		READ(sections, KeyNotExist)
+		READ(sections, TypeNotExist)
+		READ(sections, DynamicKeyVariableError)
+		READ(sections, DynamicKeyFormatError)
+		READ(sections, UnusedGlobal)
+		READ(sections, UnusedRegistry)
+		READ(sections, SectionExsit)
+		READ(sections, BracketClosed)
+		READ(sections, DuplicateKey)
+		READ(sections, SectionFormat)
+		READ(sections, InheritanceFormat)
+		READ(sections, InheritanceSectionExsit)
+		READ(sections, SpaceExistBeforeEqualSign)
+		READ(sections, SpaceExistAfterEqualSign)
+		READ(sections, EmptyValue)
 		#undef READ
 	}
 
