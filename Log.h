@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IniFile.h"
 #include <condition_variable>
 #include <fstream>
@@ -25,15 +25,14 @@ class Log {
 public:
 	friend LogStream;
     static Log* Instance; 
-	static std::set<LogStream, LogStream> Logs;
+	static std::set<LogStream> Logs;
 
     Log();
 
 	void output(const std::string& logFileName);
 
-	template<Severity severity = Severity::DEFAULT>
-	void operator()(int line) {
-		Log::Logs.emplace_back(this, severity, line);
+	void operator()(...) {
+		Log::Logs.emplace(this, Severity::DEFAULT, -1);
 	};
 
 	template<Severity severity = Severity::DEFAULT>
@@ -46,7 +45,6 @@ public:
 	void operator()(const std::string& section, const size_t& fileindex, const int& line) {
 		Log::Logs.emplace_back(this, severity, fileindex, section, std::string(), std::string(), line);
 	};
-
 private:
 	std::ofstream logFile;
 	std::mutex logMutex; // 保护Logs
