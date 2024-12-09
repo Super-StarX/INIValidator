@@ -22,7 +22,7 @@ enum class Severity {
 
 struct LogData {
 	int line{ -2 };
-	char fileindex{ 0 };
+	size_t fileindex{ 0 };
 	std::string section{};
 	std::string key{};
 	std::string value{};
@@ -35,7 +35,7 @@ struct LogData {
 		this->value = value.line;
 		fileindex = value.fileIndex;
 	}
-	LogData(const std::string& section, const char& fileindex, const int& line) : fileindex(fileindex), section(section), line(line){}
+	LogData(const std::string& section, size_t fileindex, const int line) : fileindex(fileindex), section(section), line(line){}
 	
 	bool operator<(const LogData& r){
 		return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;

@@ -8,17 +8,21 @@
 #include <sstream>
 #include <stdexcept>
 
-static std::vector<std::string> FileNames;
+std::vector<std::string> IniFile::FileNames;
+size_t IniFile::FileIndex = 0;
 
 std::string IniFile::GetFileName(size_t index) {
 	return FileNames.at(index);
+}
+
+size_t IniFile::GetFileIndex() {
+	return FileNames.size() - 1;
 }
 
 IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
     load(filepath);
 }
 
-char fileIndex = -1;
 void IniFile::load(const std::string& filepath) {
 	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
 
@@ -34,7 +38,6 @@ void IniFile::load(const std::string& filepath) {
 	}
 
 	FileNames.push_back(std::filesystem::path(path).filename().string());
-	fileIndex++;
     std::string line, currentSection;
     int lineNumber = 0;
 
@@ -52,13 +55,14 @@ void IniFile::load(const std::string& filepath) {
             readKeyValue(currentSection, line, lineNumber);
     }
     processIncludes(std::filesystem::path(path).parent_path().string());
+	FileIndex++;
 }
 
 // 开头是[则为节名
 void IniFile::readSection(std::string& line, int& lineNumber, std::string& currentSection) {
     size_t endPos = line.find(']');
 	if (endPos == std::string::npos)
-		Log::error<_BracketClosed>({ currentSection, FileNames.size() - 1, lineNumber });
+		Log::error<_BracketClosed>({ currentSection, GetFileIndex(), lineNumber});
     else {
         currentSection = line.substr(1, endPos - 1);
 		sections[currentSection].name = currentSection;
@@ -84,15 +88,15 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 			auto& oldValue = section[key];
 			// 如果现存的值是继承来的值，则不报警，新值覆盖后会去掉继承标签
 			// 如果是同文件内的覆盖, 就报警, 跨文件不报
-			if (!oldValue.isInheritance && oldValue.fileIndex == fileIndex)
+			if (!oldValue.isInheritance && oldValue.fileIndex == FileIndex)
 				Log::error<_DuplicateKey>({ section.name, oldValue.fileIndex, lineNumber },
 					key, oldValue.line, oldValue, value);
 		}
-		section[key] = { value, lineNumber, fileIndex };
+		section[key] = { value, lineNumber, FileIndex };
     }
     else
         // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
-        section[line] = { "", lineNumber, fileIndex };
+        section[line] = { "", lineNumber, FileIndex };
 }
 
 // 处理#include
@@ -100,7 +104,7 @@ void IniFile::processIncludes(const std::string& basePath) {
     // 找到名为#include的节
     if (sections.contains("#include")) {
         // 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
-		int curFileIndex = fileIndex;
+		int curFileIndex = FileIndex;
 		auto& section = sections["#include"];
 		using MapType = decltype(section.section);
 		std::vector<std::pair<MapType::key_type, MapType::mapped_type>> include(section.begin(), section.end());
@@ -119,15 +123,15 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
 		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[')
-			return Log::error<_SectionFormat>({ curSectionName, FileNames.size() - 1, lineNumber });
+			return Log::error<_SectionFormat>({ curSectionName, GetFileIndex(), lineNumber });
 
 		size_t nextEndPos = line.find(']', colonPos + 2);
 		if (nextEndPos == std::string::npos)
-			return Log::error<_InheritanceBracketClosed>({ curSectionName, FileNames.size() - 1, lineNumber });
+			return Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
 		
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 		if (!sections.contains(inheritedName))
-			return Log::error<_InheritanceSectionExsit>({ curSectionName, FileNames.size() - 1, lineNumber }, inheritedName);
+			return Log::error<_InheritanceSectionExsit>({ curSectionName, GetFileIndex(), lineNumber }, inheritedName);
 
 		auto& curSection = sections[curSectionName];
 		auto& inheritedSection = sections[inheritedName];
@@ -142,7 +146,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		Log::error<_InheritanceBracketClosed>({ curSectionName, FileNames.size() - 1, lineNumber });
+		Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
 }
 
 // 去除注释
@@ -159,5 +163,5 @@ std::string IniFile::trim(const std::string& str) {
 }
 
 std::string Value::getFileName() const {
-	return FileNames.at(fileIndex); 
+	return IniFile::FileNames.at(fileIndex); 
 }

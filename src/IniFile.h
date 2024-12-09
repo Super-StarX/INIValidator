@@ -38,7 +38,7 @@ public:
 
 	std::string value { };
 	int line { -1 };
-	char fileIndex { -1 };
+	size_t fileIndex { 0 };
 	bool isInheritance { false };
 };
 
@@ -66,8 +66,10 @@ class IniFile {
 public:
 	using Sections = std::unordered_map<std::string, Section>;
 
-	static std::string argv0;
 	static std::string GetFileName(size_t index);
+	static size_t GetFileIndex();
+	static std::vector<std::string> FileNames;
+	static size_t FileIndex;
 
     IniFile(const std::string& filepath, bool isConfig);
 
