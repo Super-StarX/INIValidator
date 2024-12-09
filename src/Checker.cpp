@@ -1,5 +1,4 @@
 ﻿#include "Checker.h"
-#include "Checker.h"
 #include "Helper.h"
 #include "Log.h"
 #include <algorithm>

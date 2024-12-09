@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
         if (argc >= 2)
             targetFilePath = argv[1];
         else {
-            LOG << "请输入要检查的INI文件路径: ";
+            std::cout << "请输入要检查的INI文件路径: ";
             std::getline(std::cin, targetFilePath);
         }
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         checker.checkFile();
 
 		log.output("Checker.log");
-        LOG << "\n检查完毕";
+		std::cout << "\n检查完毕";
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

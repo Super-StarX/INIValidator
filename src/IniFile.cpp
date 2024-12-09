@@ -23,13 +23,13 @@ void IniFile::load(const std::string& filepath) {
 	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
 
 	if (!std::filesystem::exists(path)) {
-		LOG << "File not found: " << path;
+		std::cerr << "File not found: " << path;
 		return;
 	}
 
     std::ifstream file(path);
     if (!file.is_open()) {
-		LOG << "Failed to open file: " << path;
+		std::cerr << "Failed to open file: " << path;
 		return;
 	}
 

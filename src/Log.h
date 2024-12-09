@@ -22,7 +22,7 @@ enum class Severity {
 
 struct LogData {
 	int line{ -2 };
-	size_t fileindex{ 0 };
+	char fileindex{ 0 };
 	std::string section{};
 	std::string key{};
 	std::string value{};
@@ -35,8 +35,11 @@ struct LogData {
 		this->value = value.line;
 		fileindex = value.fileIndex;
 	}
-	LogData(const std::string& section, const size_t& fileindex, const int& line) : fileindex(fileindex), section(section), line(line){}
-
+	LogData(const std::string& section, const char& fileindex, const int& line) : fileindex(fileindex), section(section), line(line){}
+	
+	bool operator<(const LogData& r){
+		return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
+	}
 };
 
 // 日志类
@@ -53,53 +56,41 @@ public:
 
 	template <auto Member, typename... Args>
 	static void print(const LogData& logdata, Args&&... args) {
-		try {
-			Log::Logs.emplace_back(Severity::DEFAULT, logdata, std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
-		}
-		catch (const std::format_error& e) {
-			std::cerr << "格式错误：" << e.what() << std::endl;
-		}
+		stream<Member>(Severity::DEFAULT, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void info(const LogData& logdata, Args&&... args) {
-		try {
-			Log::Logs.emplace_back(Severity::INFO, logdata, std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
-		}
-		catch (const std::format_error& e) {
-			std::cerr << "格式错误：" << e.what() << std::endl;
-		}
+		stream<Member>(Severity::INFO, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void warning(const LogData& logdata, Args&&... args) {
-		try {
-			Log::Logs.emplace_back(Severity::WARNING, logdata, std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
-		}
-		catch (const std::format_error& e) {
-			std::cerr << "格式错误：" << e.what() << std::endl;
-		}
+		stream<Member>(Severity::WARNING, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void error(const LogData& logdata, Args&&... args) {
+		stream<Member>(Severity::ERROR, logdata, std::forward<Args>(args)...);
+	}
+
+private:
+	std::ofstream logFile;
+	std::mutex fileMutex;
+	static std::string getSeverityLabel(Severity severity);
+	static std::string getPlainSeverityLabel(Severity severity);
+	void writeLog(const std::string& log);
+
+	template <auto Member, typename... Args>
+	static void stream(Severity severity, const LogData& logdata, Args&&... args) {
 		try {
-			Log::Logs.emplace_back(Severity::ERROR, logdata, std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
+			auto format = std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
+			Log::Logs.emplace(severity, logdata, format);
 		}
 		catch (const std::format_error& e) {
 			std::cerr << "格式错误：" << e.what() << std::endl;
 		}
 	}
-
-
-
-private:
-	std::ofstream logFile;
-	std::mutex logMutex; // 保护Logs
-	std::mutex fileMutex; // 保护logFile
-	static std::string getSeverityLabel(Severity severity);
-	static std::string getPlainSeverityLabel(Severity severity);
-	void writeLog(const std::string& log); // 写入文件
 };
 
 // 日志条
@@ -112,7 +103,9 @@ public:
 	std::string getPrintMessage() const;
 
 private:
-	bool operator<(const LogStream& r);
+	bool operator<(const LogStream& r) {
+		return data < r.data;
+	}
 
 	Severity severity;
 	LogData data;

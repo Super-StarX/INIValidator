@@ -71,6 +71,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <SourcePath>$(VC_SourcePath);</SourcePath>
+    <IncludePath>$(SolutionDir)src;$(IncludePath);</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <SourcePath>$(VC_SourcePath);</SourcePath>
+    <IncludePath>$(SolutionDir)src;$(IncludePath);</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -106,6 +114,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,6 +130,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,29 +140,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Settings.cpp" />
-    <ClCompile Include="TypeChecker.cpp" />
-    <ClCompile Include="Checker.cpp" />
     <ClCompile Include="INIValidater.cpp" />
-    <ClCompile Include="IniFile.cpp" />
-    <ClCompile Include="LimitChecker.cpp" />
-    <ClCompile Include="ListChecker.cpp" />
-    <ClCompile Include="Log.cpp" />
-    <ClCompile Include="NumberChecker.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Settings.h" />
-    <ClInclude Include="TypeChecker.h" />
-    <ClInclude Include="Checker.h" />
-    <ClInclude Include="IniFile.h" />
-    <ClInclude Include="LimitChecker.h" />
-    <ClInclude Include="ListChecker.h" />
-    <ClInclude Include="Log.h" />
-    <ClInclude Include="NumberChecker.h" />
-    <ClInclude Include="Helper.h" />
+    <ClCompile Include="src\Checker.cpp" />
+    <ClCompile Include="src\Checker\LimitChecker.cpp" />
+    <ClCompile Include="src\Checker\ListChecker.cpp" />
+    <ClCompile Include="src\Checker\NumberChecker.cpp" />
+    <ClCompile Include="src\Checker\TypeChecker.cpp" />
+    <ClCompile Include="src\IniFile.cpp" />
+    <ClCompile Include="src\Log.cpp" />
+    <ClCompile Include="src\Settings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Checker.h" />
+    <ClInclude Include="src\Checker\LimitChecker.h" />
+    <ClInclude Include="src\Checker\ListChecker.h" />
+    <ClInclude Include="src\Checker\NumberChecker.h" />
+    <ClInclude Include="src\Checker\TypeChecker.h" />
+    <ClInclude Include="src\Helper.h" />
+    <ClInclude Include="src\IniFile.h" />
+    <ClInclude Include="src\Log.h" />
+    <ClInclude Include="src\Settings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

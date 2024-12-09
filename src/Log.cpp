@@ -48,9 +48,7 @@ void Log::output(const std::string& logFileName) {
 
 	// 等待文件写入完成
 	fileWriter.join();
-	std::lock_guard<std::mutex> lock(logMutex);
 	Logs.clear();
-	std::lock_guard<std::mutex> lock(fileMutex);
 	logFile.close();
 }
 
@@ -66,20 +64,16 @@ LogStream::LogStream(Severity severity, const LogData& logdata, std::string buff
 std::string LogStream::getFileMessage() const {
 	std::ostringstream plainMessage;
 	plainMessage << Log::getPlainSeverityLabel(severity) << " ";
-	if (line >= 0)
-		plainMessage << "第" << line << "行\t| ";
+	if (data.line >= 0)
+		plainMessage << "第" << data.line << "行\t| ";
 	return plainMessage.str();
 }
 
 std::string LogStream::getPrintMessage() const {
 	std::ostringstream formattedMessage;
 	formattedMessage << Log::getSeverityLabel(severity) << " ";
-	if (line >= 0)
-		formattedMessage << "第" << line << "行\t| ";
+	if (data.line >= 0)
+		formattedMessage << "第" << data.line << "行\t| ";
 
 	return formattedMessage.str();
-}
-
-bool LogStream::operator<(const LogStream& r) {
-	return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
 }

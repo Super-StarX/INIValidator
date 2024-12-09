@@ -1,9 +1,9 @@
 ﻿#pragma once
+#include "Checker/LimitChecker.h"
+#include "Checker/ListChecker.h"
+#include "Checker/NumberChecker.h"
+#include "Checker/TypeChecker.h"
 #include "IniFile.h"
-#include "LimitChecker.h"
-#include "ListChecker.h"
-#include "NumberChecker.h"
-#include "TypeChecker.h"
 #include <set>
 #include <stack>
 #include <string>
