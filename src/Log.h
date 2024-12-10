@@ -56,22 +56,22 @@ public:
 
 	template <auto Member, typename... Args>
 	static void print(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::DEFAULT, logdata, std::forward<Args>(args)...);
+		stream<Member>(Severity::DEFAULT, logdata, std::make_format_args(args...));
 	}
 
 	template <auto Member, typename... Args>
 	static void info(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::INFO, logdata, std::forward<Args>(args)...);
+		stream<Member>(Severity::INFO, logdata, std::make_format_args(args...));	
 	}
 
 	template <auto Member, typename... Args>
 	static void warning(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::WARNING, logdata, std::forward<Args>(args)...);
+		stream<Member>(Severity::WARNING, logdata, std::make_format_args(args...));
 	}
 
 	template <auto Member, typename... Args>
 	static void error(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::ERROR, logdata, std::forward<Args>(args)...);
+		stream<Member>(Severity::ERROR, logdata, std::make_format_args(args...));
 	}
 
 private:
@@ -82,9 +82,9 @@ private:
 	void writeLog(const std::string& log);
 
 	template <auto Member, typename... Args>
-	static void stream(Severity severity, const LogData& logdata, Args&&... args) {
+	static void stream(Severity severity, const LogData& logdata, auto args) {
 		try {
-			auto format = std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
+			auto format = std::vformat(Settings::Instance->*Member, args);
 			Log::Logs.emplace(severity, logdata, format);
 		}
 		catch (const std::format_error& e) {

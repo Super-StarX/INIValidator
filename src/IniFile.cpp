@@ -1,4 +1,4 @@
-﻿#include "IniFile.h"
+#include "IniFile.h"
 #include "Log.h"
 #include <algorithm>
 #include <filesystem>
@@ -37,6 +37,7 @@ void IniFile::load(const std::string& filepath) {
 		return;
 	}
 
+	FileIndex++;
 	FileNames.push_back(std::filesystem::path(path).filename().string());
     std::string line, currentSection;
     int lineNumber = 0;
@@ -55,7 +56,6 @@ void IniFile::load(const std::string& filepath) {
             readKeyValue(currentSection, line, lineNumber);
     }
     processIncludes(std::filesystem::path(path).parent_path().string());
-	FileIndex++;
 }
 
 // 开头是[则为节名

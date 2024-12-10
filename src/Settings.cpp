@@ -9,6 +9,7 @@ Settings* Settings::Instance = nullptr;
 
 Settings::Settings(const IniFile& configFile) {
 	load(configFile);
+	Instance = this;
 }
 
 void Settings::load(const IniFile& configFile) {

@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         checker.checkFile();
 
 		log.output("Checker.log");
-		std::cout << "\n检查完毕";
+		std::cout << "\n检查完毕" << std::endl;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

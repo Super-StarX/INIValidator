@@ -45,7 +45,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 
 	for (const auto& [key, value] : object) {
 		if (!this->contains(key))
-			Log::print<_KeyNotExist>({ object, value }, key);
+			Log::print<_KeyNotExist>({ object, key }, key);
 			continue;
 
 		for (const auto& type : this->at(key).types)
@@ -299,7 +299,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {
-	int result = 0.0;
+	int result = 0;
 	try {
 		int base = 10;
 		std::string buffer = value;
