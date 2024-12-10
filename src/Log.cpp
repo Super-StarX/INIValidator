@@ -32,23 +32,60 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 }
 
 void Log::output(const std::string& logFileName) {
-	std::lock_guard<std::mutex> lock(fileMutex);
-	logFile.open(logFileName, std::ios::out | std::ios::trunc);
+	// 共享资源和同步机制
+	std::queue<std::string> logQueue;
+	std::mutex queueMutex, fileMutex;
+	std::condition_variable cv;
+	bool stopFlag = false;
+
+	// 打开文件
+	std::ofstream logFile(logFileName, std::ios::out | std::ios::trunc);
 	if (!logFile.is_open())
 		throw std::runtime_error("Unable to open log file: " + logFileName);
 
 	// 写日志线程
-	std::thread fileWriter([&]() {
-		for (const auto& log : Logs)
-			writeLog(log.getFileMessage());
+	std::thread writerThread([&]() {
+		while (true) {
+			std::string log;
+			{
+				std::unique_lock<std::mutex> lock(queueMutex);
+				cv.wait(lock, [&]() { return stopFlag || !logQueue.empty(); });
+
+				if (stopFlag && logQueue.empty()) break; // 如果停止标志设定且队列为空，退出线程
+				log = logQueue.front();
+				logQueue.pop();
+			}
+
+			// 写日志到文件（受 fileMutex 保护）
+			{
+				std::lock_guard<std::mutex> lock(fileMutex);
+				logFile << log << std::endl;
+			}
+		}
 	});
 
+	// 将日志放入队列
+	for (const auto& log : Logs) {
+		{
+			std::lock_guard<std::mutex> lock(queueMutex);
+			logQueue.push(log.getFileMessage());
+		}
+		cv.notify_one(); // 通知写线程
+	}
+
+	// 打印到控制台
 	for (const auto& log : Logs)
 		std::cerr << log.getPrintMessage() << std::endl;
 
-	// 等待文件写入完成
-	fileWriter.join();
-	Logs.clear();
+	// 设置停止标志并等待线程完成
+	{
+		std::lock_guard<std::mutex> lock(queueMutex);
+		stopFlag = true;
+	}
+	cv.notify_all(); // 通知线程退出
+	writerThread.join();
+
+	// 关闭文件
 	logFile.close();
 }
 
