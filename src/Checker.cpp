@@ -145,15 +145,15 @@ void Checker::checkFile() {
 		auto& registry = targetIni->sections.at(registryName);
 		for (const auto& [_, name] : registry) {
 			if (!targetIni->sections.contains(name)) {
-				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name);
+				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
 				continue;
 			}
 			if (!sections.contains(type)) {
-				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type);
+				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type.value);
 				return;
 			}
 
-			sections[type].validateSection(targetIni->sections[name.value], type);
+			sections[type].validateSection(targetIni->sections[name.value], type.value);
 		}
 	}
 

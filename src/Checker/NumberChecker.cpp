@@ -21,6 +21,6 @@ void NumberChecker::validate(const std::string& value) const {
 		throw "值 " + value + " 不在范围 [" + std::to_string(minRange) + ", " + std::to_string(maxRange) + "] 内";
 }
 
-bool NumberChecker::checkRange(int value) const {
+bool NumberChecker::checkRange(float value) const {
 	return value >= minRange && value <= maxRange;
 }

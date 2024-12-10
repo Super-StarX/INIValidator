@@ -59,21 +59,47 @@ void Log::writeLog(const std::string& logLine) {
 }
 
 LogStream::LogStream(Severity severity, const LogData& logdata, std::string buffer)
-	: data(logdata), buffer(buffer) {}
+	: severity(severity), data(logdata), buffer(buffer) {}
 
 std::string LogStream::getFileMessage() const {
 	std::ostringstream plainMessage;
-	plainMessage << Log::getPlainSeverityLabel(severity) << " ";
-	if (data.line >= 0)
-		plainMessage << "第" << data.line << "行\t| ";
+	plainMessage << Log::getPlainSeverityLabel(severity) << " " << generateLogMessage();
 	return plainMessage.str();
 }
 
 std::string LogStream::getPrintMessage() const {
 	std::ostringstream formattedMessage;
-	formattedMessage << Log::getSeverityLabel(severity) << " ";
-	if (data.line >= 0)
-		formattedMessage << "第" << data.line << "行\t| ";
-
+	formattedMessage << Log::getSeverityLabel(severity) << " " << generateLogMessage();
 	return formattedMessage.str();
+}
+
+std::string LogStream::generateLogMessage() const {
+	std::string retval;
+
+	if (data.section.empty()) {
+		std::string line;
+
+		if (data.line >= 0)
+			line = std::format("第{}行\t| ");
+
+		retval = std::format("{}{}", line, buffer);
+	}
+	else {
+		auto linenumber = std::format("第{}行", data.line);
+		auto pair = std::format("[{}] ", data.section);
+		auto filename = IniFile::GetFileName(data.fileindex);
+
+		if (data.line < 0)
+			linenumber = "";
+
+		if (!data.key.empty())
+			pair += std::format("{}={}", data.key, data.value);
+		size_t blocksize = std::max(filename.size(), linenumber.size());
+
+		// 一共6个参数，其中1号和4号是blocksize（对齐大小），作为变参传入
+		// 0号和3号参数中，:代表其有填充需求，<代表左对齐，后边的数字是填充大小，即blocksize
+		retval = std::format("{0:<{1}} | {2}\n[详情] {3:<{4}} | {5}", filename, blocksize, pair, linenumber, blocksize, buffer);
+	}
+
+	return retval;
 }

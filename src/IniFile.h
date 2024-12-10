@@ -6,6 +6,10 @@
 class Value {
 public:
 	operator std::string() const { return value; }
+	std::string operator()() const {
+		return value;
+	}
+
 	std::string getFileName() const;
 
 	friend Value operator+(const Value& lhs, const std::string& rhs) {
@@ -40,6 +44,13 @@ public:
 	int line { -1 };
 	size_t fileIndex { 0 };
 	bool isInheritance { false };
+};
+
+template<>
+struct std::formatter<Value> : std::formatter<std::string> {
+	auto format(const Value& v, std::format_context& ctx) const {
+		return std::formatter<std::string>::format(v(), ctx);
+	}
 };
 
 class Section {

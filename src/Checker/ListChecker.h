@@ -18,8 +18,8 @@ public:
 	void validate(const Section& section, const std::string& key, const Value& value) const;
 	
 private:
-	Checker* checker;
+	Checker* checker{ nullptr };
 	std::vector<std::string> types; // 列表中元素的类型
-	int minRange = 0;
-	int maxRange = INT_MAX;
+	int minRange{ 0 };
+	int maxRange{ INT_MAX };
 };

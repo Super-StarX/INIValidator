@@ -37,7 +37,7 @@ struct LogData {
 	}
 	LogData(const std::string& section, size_t fileindex, const int line) : fileindex(fileindex), section(section), line(line){}
 	
-	bool operator<(const LogData& r){
+	bool operator<(const LogData& r) const{
 		return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
 	}
 };
@@ -102,10 +102,12 @@ public:
 	std::string getFileMessage() const;
 	std::string getPrintMessage() const;
 
-private:
-	bool operator<(const LogStream& r) {
+	bool operator<(const LogStream& r) const {
 		return data < r.data;
 	}
+
+private:
+	std::string generateLogMessage() const;
 
 	Severity severity;
 	LogData data;

@@ -104,7 +104,7 @@ void IniFile::processIncludes(const std::string& basePath) {
     // 找到名为#include的节
     if (sections.contains("#include")) {
         // 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
-		int curFileIndex = FileIndex;
+		size_t curFileIndex = FileIndex;
 		auto& section = sections["#include"];
 		using MapType = decltype(section.section);
 		std::vector<std::pair<MapType::key_type, MapType::mapped_type>> include(section.begin(), section.end());

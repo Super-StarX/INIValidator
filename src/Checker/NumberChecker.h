@@ -18,5 +18,5 @@ private:
 	float minRange { 0.f }; // 最小值
 	float maxRange { 0.f }; // 最大值
 
-	bool checkRange(int value) const;
+	bool checkRange(float value) const;
 };

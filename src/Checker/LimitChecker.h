@@ -13,7 +13,7 @@
 // IgnoreCase = 是否忽略大小写检查, 作用于前面三条
 class LimitChecker {
 public:
-	LimitChecker(){};
+	explicit LimitChecker(){};
 	LimitChecker(const Section& config);
 	std::vector<std::string> getToken(const Section& config, const std::string& key);
 	void validate(const std::string& value) const;
@@ -35,6 +35,6 @@ private:
 	std::vector<std::string> startWith;
 	std::vector<std::string> endWith;
 	std::vector<std::string> limitIn;
-	int maxLength;
-	bool caseSensitive = false;
+	int maxLength{};
+	bool caseSensitive{ false };
 };
