@@ -84,8 +84,10 @@ private:
 	template <auto Member, typename... Args>
 	static void stream(Severity severity, const LogData& logdata, auto args) {
 		try {
-			auto format = std::vformat(Settings::Instance->*Member, args);
-			Log::Logs.emplace(severity, logdata, format);
+			if (!(Settings::Instance->*Member).empty()) {
+				auto format = std::vformat(Settings::Instance->*Member, args);
+				Log::Logs.emplace(severity, logdata, format);
+			}
 		}
 		catch (const std::format_error& e) {
 			std::cerr << "格式错误：" << e.what() << std::endl;

@@ -1,4 +1,4 @@
-#include "IniFile.h"
+﻿#include "IniFile.h"
 #include "Log.h"
 #include <algorithm>
 #include <filesystem>

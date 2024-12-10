@@ -80,7 +80,7 @@ std::string LogStream::generateLogMessage() const {
 		std::string line;
 
 		if (data.line >= 0)
-			line = std::format("第{}行\t| ");
+			line = std::format("第{}行\t| ", data.line);
 
 		retval = std::format("{}{}", line, buffer);
 	}
