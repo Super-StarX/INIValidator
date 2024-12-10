@@ -299,6 +299,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {
+	int result = 0.0;
 	try {
 		int base = 10;
 		std::string buffer = value;
@@ -312,11 +313,9 @@ int Checker::validateInteger(const Section& section, const std::string& key, con
 		}
 
 		std::size_t pos;
-		auto result = std::stoi(buffer, &pos);
+		result = std::stoi(buffer, &pos);
 		if (pos != buffer.size())
 			Log::error<_IntIllegal>({ section, key }, value);
-
-		return result;
 	}
 	catch (const std::invalid_argument) {
 		Log::error<_IllegalValue>({ section, key }, value);
@@ -324,9 +323,11 @@ int Checker::validateInteger(const Section& section, const std::string& key, con
 	catch (const std::out_of_range) {
 		Log::error<_OverlongValue>({ section, key }, value);
 	}
+	return result;
 }
 
 float Checker::validateFloat(const Section& section, const std::string& key, const Value& value) {
+	float result = 0.0f;
 	try {
 		std::string buffer = value;
 		if (buffer.back() == '%')
@@ -336,14 +337,12 @@ float Checker::validateFloat(const Section& section, const std::string& key, con
 			buffer = "0" + buffer;
 
 		std::size_t pos;
-		auto result = std::stof(buffer, &pos);
+		result = std::stof(buffer, &pos);
 		if (pos != buffer.size())
 			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 		if (value.value.back() == '%')
 			result /= 100;
-
-		return result;
 	}
 	catch (const std::invalid_argument) {
 		Log::error<_IllegalValue>({ section, key }, value);
@@ -351,23 +350,23 @@ float Checker::validateFloat(const Section& section, const std::string& key, con
 	catch (const std::out_of_range) {
 		Log::error<_OverlongValue>({ section, key }, value);
 	}
+	return result;
 }
 
 double Checker::validateDouble(const Section& section, const std::string& key, const Value& value) {
+	double result = 0.0;
 	try {
 		std::string buffer = value;
 		if (buffer.back() == '%')
 			buffer = buffer.substr(0, buffer.size() - 1);
 
 		std::size_t pos;
-		auto result = std::stod(buffer, &pos);
+		result = std::stod(buffer, &pos);
 		if (pos != buffer.size())
 			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
 
 		if (value.value.back() == '%')
 			result /= 100;
-
-		return result;
 	}
 	catch (const std::invalid_argument) {
 		Log::error<_IllegalValue>({ section, key }, value);
@@ -375,6 +374,7 @@ double Checker::validateDouble(const Section& section, const std::string& key, c
 	catch (const std::out_of_range) {
 		Log::error<_OverlongValue>({ section, key }, value);
 	}
+	return result;
 }
 
 std::string Checker::validateString(const Section& section, const std::string& key, const Value& value) {
