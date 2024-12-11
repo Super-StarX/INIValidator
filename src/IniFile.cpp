@@ -40,6 +40,7 @@ void IniFile::load(const std::string& filepath) {
 	}
 
 	FileIndex++;
+	auto curFileIndex = FileIndex;
 	FileNames.push_back(std::filesystem::path(path).filename().string());
     std::string line, currentSection;
     int lineNumber = 0;
@@ -48,7 +49,8 @@ void IniFile::load(const std::string& filepath) {
 	file.clear();
 	file.seekg(0);
 
-	ProgressBar::INIFileProgress.addProgressBar(FileIndex, std::filesystem::path(path).filename().string(), totalLines);
+	std::string name = "[" + std::to_string(curFileIndex) + "] " + std::filesystem::path(path).filename().string() + " ";
+	ProgressBar::INIFileProgress.addProgressBar(curFileIndex, name, totalLines);
 
     // 逐行扫描加载ini
     while (std::getline(file, line)) {
@@ -62,10 +64,10 @@ void IniFile::load(const std::string& filepath) {
             readSection(line, lineNumber, currentSection);
         else if (!currentSection.empty())
             readKeyValue(currentSection, line, lineNumber);
-		ProgressBar::INIFileProgress.updateProgress(FileIndex, lineNumber);
+		ProgressBar::INIFileProgress.updateProgress(curFileIndex, lineNumber);
     }
     processIncludes(std::filesystem::path(path).parent_path().string());
-	ProgressBar::INIFileProgress.markFinished(FileIndex);
+	ProgressBar::INIFileProgress.markFinished(curFileIndex);
 }
 
 // 开头是[则为节名

@@ -14,6 +14,7 @@ struct ProgressData {
 	size_t total{ 0 };                    // 总项数
 	std::string name;                   // 进度条名称
 	std::chrono::steady_clock::time_point startTime; // 开始时间
+	std::chrono::steady_clock::time_point endTime; // 完成时间
 	bool finished{ false };               // 是否已完成
 };
 
@@ -44,12 +45,16 @@ public:
 
 	void markFinished(int id) {
 		std::lock_guard<std::mutex> lock(mutex);
-		if (progressBars.count(id))
+		if (progressBars.count(id)) {
+			progressBars[id].endTime = std::chrono::steady_clock::now();
 			progressBars[id].finished = true;
+			progressBars[id].processed = progressBars[id].total;
+		}
 	}
 
 	void stop() {
 		if (threadStarted) {
+			std::cout << "\033[?25h";
 			stopFlag = true;
 			if (displayThread.joinable())
 				displayThread.join();
@@ -65,6 +70,7 @@ private:
 
 	void start() {
 		if (!threadStarted) {
+			std::cout << "\033[?25l";
 			threadStarted = true;
 			displayThread = std::thread(&ProgressBar::run, this);
 		}
@@ -79,37 +85,31 @@ private:
 					double percent = progress.total > 0
 						? (double)progress.processed / progress.total * 100
 						: 0.0;
-					auto elapsed = std::chrono::steady_clock::now() - progress.startTime;
+					auto endTime = progressBars[id].finished ? progressBars[id].endTime : std::chrono::steady_clock::now();
+					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - progress.startTime).count();
 
-					// 输出到控制台
+					// 固定文件名宽度
+					constexpr size_t total = 50;
+					constexpr size_t fileNameWidth = 20;
+					auto name = progress.name;
+					if (name.size() > fileNameWidth)
+						name = name.substr(0, fileNameWidth - 3) + "..."; // 超出部分用省略号
+					else
+						name += std::string(fileNameWidth - name.size(), ' '); // 补齐空格
+
 					std::cout << "\033[" << ++line << ";0H"; // 定位光标到行首
-					std::cout << "[" << id << "] " << progress.name << " ";
 
 					// 渲染进度条
-					size_t barWidth = 50;
 					size_t completed = (size_t)(percent / 2);
-					std::cout << "\033[32m" // 绿色
-						<< std::string(completed, '━')
-						<< "\033[90m" // 灰色
-						<< std::string(barWidth - completed, '┈')
-						<< "\033[0m "; // 重置颜色
+					size_t remain = total - completed;
+					std::cout << name << std::format("\033[32m{0:━<{1}}\033[90m{2:┈<{3}}\033[0m", "", completed, "", remain);
 
 					// 显示百分比和时间
 					std::cout << std::fixed << std::setprecision(2) << percent << "% ("
-						<< formatTimeDuration(elapsed) << ")\n";
+						<< elapsed << "ms)\n";
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
-	}
-
-	static std::string formatTimeDuration(std::chrono::steady_clock::duration duration) {
-		using namespace std::chrono;
-		auto secs = duration_cast<seconds>(duration).count();
-		auto mins = secs / 60;
-		secs %= 60;
-		std::ostringstream oss;
-		oss << mins << "m " << secs << "s";
-		return oss.str();
 	}
 };
