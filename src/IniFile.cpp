@@ -14,7 +14,6 @@
 
 std::vector<std::string> IniFile::FileNames;
 size_t IniFile::FileIndex = ULLONG_MAX;
-ProgressBar ProgressBar::INIFileProgress;
 
 std::string IniFile::GetFileName(size_t index) {
 	return FileNames.at(index);

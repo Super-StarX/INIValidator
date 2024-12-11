@@ -10,18 +10,22 @@
 #include <sstream>
 
 struct ProgressData {
-	std::atomic<size_t> processed{ 0 };   // 已处理项
-	size_t total{ 0 };                    // 总项数
+	using time_point = std::chrono::steady_clock::time_point;
+
+	int line;							// 在第几行画
+	std::atomic<size_t> processed{ 0 }; // 已处理项
+	size_t total{ 0 };                  // 总项数
 	std::string name;                   // 进度条名称
-	std::chrono::steady_clock::time_point startTime; // 开始时间
-	std::chrono::steady_clock::time_point endTime; // 完成时间
-	bool finished{ false };               // 是否已完成
+	time_point startTime;				// 开始时间
+	time_point endTime;					// 完成时间
+	bool finished{ false };				// 是否已完成
 };
 
 class ProgressBar {
 public:
 	static ProgressBar INIFileProgress;
 	static ProgressBar CheckerProgress;
+	static int line;
 
 	ProgressBar() : stopFlag(false), threadStarted(false) {}
 
@@ -32,6 +36,7 @@ public:
 	void addProgressBar(int id, const std::string& name, size_t total) {
 		std::lock_guard<std::mutex> lock(mutex);
 		progressBars[id].total = total;
+		progressBars[id].line = ++line;
 		progressBars[id].name = name;
 		progressBars[id].startTime = std::chrono::steady_clock::now();
 		start(); // 启动显示线程
@@ -80,12 +85,11 @@ private:
 		while (!stopFlag) {
 			{
 				std::lock_guard<std::mutex> lock(mutex);
-				int line = 0;
 				for (const auto& [id, progress] : progressBars) {
 					double percent = progress.total > 0
 						? (double)progress.processed / progress.total * 100
 						: 0.0;
-					auto endTime = progressBars[id].finished ? progressBars[id].endTime : std::chrono::steady_clock::now();
+					auto endTime = progress.finished ? progress.endTime : std::chrono::steady_clock::now();
 					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - progress.startTime).count();
 
 					// 固定文件名宽度
@@ -97,7 +101,7 @@ private:
 					else
 						name += std::string(fileNameWidth - name.size(), ' '); // 补齐空格
 
-					std::cout << "\033[" << ++line << ";0H"; // 定位光标到行首
+					std::cout << "\033[" << progress.line << ";0H"; // 定位光标到行首
 
 					// 渲染进度条
 					size_t completed = (size_t)(percent / 2);

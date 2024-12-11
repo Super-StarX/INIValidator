@@ -152,6 +152,7 @@
     <ClCompile Include="src\Checker\TypeChecker.cpp" />
     <ClCompile Include="src\IniFile.cpp" />
     <ClCompile Include="src\Log.cpp" />
+    <ClCompile Include="src\ProgressBar.cpp" />
     <ClCompile Include="src\Settings.cpp" />
   </ItemGroup>
   <ItemGroup>
