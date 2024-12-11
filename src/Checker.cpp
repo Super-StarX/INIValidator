@@ -1,5 +1,6 @@
 ﻿#include "Checker.h"
 #include "Helper.h"
+#include "ProgressBar.h"
 #include "Log.h"
 #include <algorithm>
 #include <cctype>
@@ -11,6 +12,7 @@
 
 Checker* Checker::Instance = nullptr;
 std::atomic<size_t> processedSections(0);
+ProgressBar ProgressBar::CheckerProgress;
 
 Dict::Dict(const Section& config) {
 	for (const auto& [key, value] : config) {
@@ -68,6 +70,7 @@ DictData Dict::parseTypeValue(const std::string& str) {
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
 	Instance = this;
+	ProgressBar::INIFileProgress.stop();
 }
 
 // 加载配置文件
@@ -115,8 +118,8 @@ void Checker::checkFile() {
 		while (!stopProgress) {
 			double progress = (double)processedSections / totalSections * 100;
 			std::cout << "\rProgress: ["
-				<< std::string((int)(progress / 2), '=')
-				<< std::string(50 - (int)(progress / 2), ' ')
+				<< std::string((int)(progress / 2), '━')
+				<< std::string(50 - (int)(progress / 2), '┈')
 				<< "] " << std::fixed << std::setprecision(2) << progress << "%";
 			std::flush(std::cout);
 			std::this_thread::sleep_for(std::chrono::milliseconds(15)); // 每15ms刷新一次

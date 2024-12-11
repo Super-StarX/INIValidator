@@ -164,6 +164,7 @@
     <ClInclude Include="src\Helper.h" />
     <ClInclude Include="src\IniFile.h" />
     <ClInclude Include="src\Log.h" />
+    <ClInclude Include="src\ProgressBar.h" />
     <ClInclude Include="src\Settings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

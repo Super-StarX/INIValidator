@@ -1,4 +1,5 @@
 ﻿#include "IniFile.h"
+#include "ProgressBar.h"
 #include "Log.h"
 #include <algorithm>
 #include <filesystem>
@@ -10,6 +11,7 @@
 
 std::vector<std::string> IniFile::FileNames;
 size_t IniFile::FileIndex = 0;
+ProgressBar ProgressBar::INIFileProgress;
 
 std::string IniFile::GetFileName(size_t index) {
 	return FileNames.at(index);
@@ -42,6 +44,12 @@ void IniFile::load(const std::string& filepath) {
     std::string line, currentSection;
     int lineNumber = 0;
 
+	size_t totalLines = std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
+	file.clear();
+	file.seekg(0);
+
+	ProgressBar::INIFileProgress.addProgressBar(FileIndex, std::filesystem::path(path).filename().string(), totalLines);
+
     // 逐行扫描加载ini
     while (std::getline(file, line)) {
         lineNumber++;
@@ -54,8 +62,10 @@ void IniFile::load(const std::string& filepath) {
             readSection(line, lineNumber, currentSection);
         else if (!currentSection.empty())
             readKeyValue(currentSection, line, lineNumber);
+		ProgressBar::INIFileProgress.updateProgress(FileIndex, lineNumber);
     }
     processIncludes(std::filesystem::path(path).parent_path().string());
+	ProgressBar::INIFileProgress.markFinished(FileIndex);
 }
 
 // 开头是[则为节名
