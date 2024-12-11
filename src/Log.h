@@ -14,10 +14,10 @@
 
 // 日志级别
 enum class Severity {
-    DEFAULT,
-    INFO,
-    WARNING,
-    ERROR
+	DEFAULT,
+	INFO,
+	WARNING,
+	ERROR,
 };
 
 struct LogData {

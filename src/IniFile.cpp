@@ -8,9 +8,12 @@
 #include <regex>
 #include <sstream>
 #include <stdexcept>
+#include <locale>
+#include <codecvt>
+#include <Windows.h>
 
 std::vector<std::string> IniFile::FileNames;
-size_t IniFile::FileIndex = 0;
+size_t IniFile::FileIndex = ULLONG_MAX;
 ProgressBar ProgressBar::INIFileProgress;
 
 std::string IniFile::GetFileName(size_t index) {
@@ -33,7 +36,7 @@ void IniFile::load(const std::string& filepath) {
 		return;
 	}
 
-    std::ifstream file(path);
+    std::wifstream file(path);
     if (!file.is_open()) {
 		std::cerr << "Failed to open file: " << path;
 		return;
@@ -45,15 +48,27 @@ void IniFile::load(const std::string& filepath) {
     std::string line, currentSection;
     int lineNumber = 0;
 
-	size_t totalLines = std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
+	size_t totalLines = std::count(std::istreambuf_iterator<wchar_t>(file), std::istreambuf_iterator<wchar_t>(), '\n');
 	file.clear();
 	file.seekg(0);
+	file.imbue(std::locale("zh_CN.UTF-8"));
 
 	std::string name = "[" + std::to_string(curFileIndex) + "] " + std::filesystem::path(path).filename().string() + " ";
 	ProgressBar::INIFileProgress.addProgressBar(curFileIndex, name, totalLines);
 
+	auto convertStringFromUTF8 = [](const std::wstring& wstr) {
+		// Get required buffer size for conversion
+		int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		std::string result(sizeNeeded - 1, 0); // -1 是为了去掉 null 终止符
+		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], sizeNeeded, nullptr, nullptr);
+
+		return result;
+	};
+
+	std::wstring wline;
     // 逐行扫描加载ini
-    while (std::getline(file, line)) {
+    while (std::getline(file, wline)) {
+		line = convertStringFromUTF8(wline);
         lineNumber++;
         // 移除注释之后的东西,并掐头去尾
         line = removeInlineComment(line);
