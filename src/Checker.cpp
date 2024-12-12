@@ -70,7 +70,6 @@ DictData Dict::parseTypeValue(const std::string& str) {
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
 	Instance = this;
-	ProgressBar::INIFileProgress.stop();
 }
 
 // 加载配置文件
@@ -112,6 +111,7 @@ void Checker::loadConfig(IniFile& configFile) {
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
+	ProgressBar::INIFileProgress.stop();
 	ProgressBar::CheckerProgress.addProgressBar(0, "Checker", targetIni->sections.size());
 
 	// [Globals] General
