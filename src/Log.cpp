@@ -1,6 +1,8 @@
 ﻿#include "Log.h"
+#include "Helper.h"
 #include <queue>
 #include <sstream>
+#include <iomanip>
 
 Log* Log::Instance = nullptr;
 std::set<LogStream> Log::Logs;
@@ -93,19 +95,51 @@ void Log::output(const std::string& logFileName) {
 }
 
 void Log::summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount) {
-	std::cerr << "\n======== 日志总结表格 ========" << std::endl;
-	std::cerr << "文件\t\t建议\t非法\t错误" << std::endl;
-	std::cerr << std::string(40, '-') << std::endl;
-	auto getCount = [](const std::map<Severity, int> &map, Severity key) {
+	const int colWidth1 = 25; // 文件名列宽
+	const int colWidth2 = 10; // 建议列宽
+	const int colWidth3 = 10; // 非法列宽
+	const int colWidth4 = 10; // 错误列宽
+
+	auto getCount = [](const std::map<Severity, int>& map, Severity key) {
 		return map.contains(key) ? map.at(key) : 0;
 	};
+
+	// 输出表头
+	std::cerr << std::endl
+		<< "┏" << std::format("{:━<{}}", "", colWidth1)
+		<< "┳" << std::format("{:━<{}}", "", colWidth2)
+		<< "┳" << std::format("{:━<{}}", "", colWidth3)
+		<< "┳" << std::format("{:━<{}}", "", colWidth4)
+		<< "┓" << std::endl;
+	std::cerr
+		<< "┃" << std::setw(colWidth1 + 2) << std::internal << "文件"
+		<< "┃" << std::setw(colWidth2 + 2) << "建议"
+		<< "┃" << std::setw(colWidth3 + 2) << "警告"
+		<< "┃" << std::setw(colWidth4 + 2) << "错误"
+		<< "┃" << std::endl;
+	std::cerr
+		<< "┣" << std::format("{:━<{}}", "", colWidth1)
+		<< "╋" << std::format("{:━<{}}", "", colWidth2)
+		<< "╋" << std::format("{:━<{}}", "", colWidth3)
+		<< "╋" << std::format("{:━<{}}", "", colWidth4)
+		<< "┫" << std::endl;
+
+	// 输出表格内容
 	for (const auto& [filename, severityCount] : fileSeverityCount) {
-		std::cerr << filename
-			<< "\t" << getCount(severityCount, Severity::INFO)
-			<< "\t" << getCount(severityCount, Severity::WARNING)
-			<< "\t" << getCount(severityCount, Severity::ERROR) << std::endl;
+		std::cerr
+			<< "┃" << std::setw(colWidth1) << std::internal << string::clamp(filename, colWidth1 - 1)
+			<< "┃" << std::setw(colWidth2) << getCount(severityCount, Severity::INFO)
+			<< "┃" << std::setw(colWidth3) << getCount(severityCount, Severity::WARNING)
+			<< "┃" << std::setw(colWidth4) << getCount(severityCount, Severity::ERROR) << "┃" << std::endl;
 	}
-	std::cerr << "=============================" << std::endl;
+
+	// 输出表尾
+	std::cerr
+		<< "┗" << std::format("{:━<{}}", "", colWidth1)
+		<< "┻" << std::format("{:━<{}}", "", colWidth2)
+		<< "┻" << std::format("{:━<{}}", "", colWidth3)
+		<< "┻" << std::format("{:━<{}}", "", colWidth4)
+		<< "┛" << std::endl;
 }
 
 void Log::writeLog(const std::string& logLine) {
