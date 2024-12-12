@@ -1,4 +1,6 @@
-﻿#include "ProgressBar.h"
+﻿#include "Helper.h"
+#include "ProgressBar.h"
+#include <iostream>
 
 ProgressBar ProgressBar::INIFileProgress;
 ProgressBar ProgressBar::CheckerProgress;
@@ -17,7 +19,7 @@ ProgressBar::~ProgressBar() {
 	stop(); // 确保析构时停止线程
 }
 
-void ProgressBar::addProgressBar(int id, const std::string& name, size_t total) {
+void ProgressBar::addProgressBar(size_t id, const std::string& name, size_t total) {
 	std::lock_guard<std::mutex> lock(mutex);
 	progressBars[id].total = total;
 	progressBars[id].line = line++;
@@ -26,13 +28,13 @@ void ProgressBar::addProgressBar(int id, const std::string& name, size_t total) 
 	start(); // 启动显示线程
 }
 
-void ProgressBar::updateProgress(int id, size_t processed) {
+void ProgressBar::updateProgress(size_t id, size_t processed) {
 	std::lock_guard<std::mutex> lock(mutex);
 	if (progressBars.count(id))
 		progressBars[id].processed = processed;
 }
 
-void ProgressBar::markFinished(int id) {
+void ProgressBar::markFinished(size_t id) {
 	std::lock_guard<std::mutex> lock(mutex);
 	if (progressBars.count(id)) {
 		progressBars[id].endTime = std::chrono::steady_clock::now();
@@ -68,18 +70,17 @@ void ProgressBar::run() {
 		// 固定文件名宽度
 		constexpr size_t total = 50;
 		constexpr size_t fileNameWidth = 25;
-		std::string name = progress.name;
-		if (name.size() > fileNameWidth)
-			name = name.substr(0, fileNameWidth - 3) + "..."; // 超出部分用省略号
-		else
-			name += std::string(fileNameWidth - name.size(), ' '); // 补齐空格
 
 		std::cout << "\033[" << progress.line << ";0H"; // 定位光标到行首
 
 		// 渲染进度条
 		size_t completed = (size_t)(percent / 2);
 		size_t remain = total - completed;
-		std::cout << name << std::format("[\033[32m{0:━<{1}}\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+		std::string name = string::clamp(progress.name, fileNameWidth);
+		if (progress.finished)
+			std::cout << name << std::format("[\033[32m{0:━<{1}}>\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+		else
+			std::cout << name << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 
 		// 显示百分比和时间
 		std::cout << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)\n";

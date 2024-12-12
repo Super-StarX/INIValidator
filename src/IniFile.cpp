@@ -1,15 +1,15 @@
 ﻿#include "IniFile.h"
-#include "ProgressBar.h"
 #include "Log.h"
+#include "ProgressBar.h"
 #include <algorithm>
+#include <codecvt>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
-#include <locale>
-#include <codecvt>
 #include <Windows.h>
 
 std::vector<std::string> IniFile::FileNames;

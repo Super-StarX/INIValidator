@@ -1,8 +1,6 @@
 ﻿#include "Log.h"
-#include <iomanip>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
+#include <queue>
+#include <sstream>
 
 Log* Log::Instance = nullptr;
 std::set<LogStream> Log::Logs;
@@ -74,8 +72,13 @@ void Log::output(const std::string& logFileName) {
 	}
 
 	// 打印到控制台
-	for (const auto& log : Logs)
+	std::map<std::string, std::map<Severity, int>> fileSeverityCount;
+	for (const auto& log : Logs) {
+		auto filename = IniFile::GetFileName(log.data.fileindex);
+		fileSeverityCount[filename][log.severity]++;
 		std::cerr << log.getPrintMessage() << std::endl;
+	}
+	summary(fileSeverityCount);
 
 	// 设置停止标志并等待线程完成
 	{
@@ -87,6 +90,22 @@ void Log::output(const std::string& logFileName) {
 
 	// 关闭文件
 	logFile.close();
+}
+
+void Log::summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount) {
+	std::cerr << "\n======== 日志总结表格 ========" << std::endl;
+	std::cerr << "文件\t\t建议\t非法\t错误" << std::endl;
+	std::cerr << std::string(40, '-') << std::endl;
+	auto getCount = [](const std::map<Severity, int> &map, Severity key) {
+		return map.contains(key) ? map.at(key) : 0;
+	};
+	for (const auto& [filename, severityCount] : fileSeverityCount) {
+		std::cerr << filename
+			<< "\t" << getCount(severityCount, Severity::INFO)
+			<< "\t" << getCount(severityCount, Severity::WARNING)
+			<< "\t" << getCount(severityCount, Severity::ERROR) << std::endl;
+	}
+	std::cerr << "=============================" << std::endl;
 }
 
 void Log::writeLog(const std::string& logLine) {

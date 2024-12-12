@@ -1,30 +1,16 @@
 ﻿#pragma once
+#include <codecvt>
 #include <sstream>
 #include <stack>
 #include <string>
 #include <vector>
-#include <codecvt>
 
 namespace string {
-	static std::wstring wstring(const std::string& str) {
-		if (str.empty())
-			return L"";
-		std::mbstate_t state = std::mbstate_t();
-		const char* src = str.c_str();
-		size_t len = 0;
+	static std::string clamp(const std::string& str, const size_t length) {
+		if (str.size() > length)
+			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
 
-		// 第一次调用获取所需缓冲区大小
-		errno_t err = mbsrtowcs_s(&len, nullptr, 0, &src, 0, &state);
-		if (err != 0)
-			throw std::runtime_error("Invalid multibyte sequence");
-		// 分配缓冲区并转换
-		std::wstring wstr(len, L'\0');
-		err = mbsrtowcs_s(&len, &wstr[0], len, &src, len, &state);
-		if (err != 0)
-			throw std::runtime_error("Conversion failed");
-		// 去除尾部的空字符
-		wstr.resize(len - 1);
-		return wstr;
+		return str + std::string(length - str.size(), ' '); // 补齐空格
 	}
 
 	inline std::vector<std::string> split(const std::string& str, char delimiter = ',') {

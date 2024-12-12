@@ -1,9 +1,4 @@
-﻿#include "Helper.h"
-#include "Settings.h"
-#include <algorithm>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
+﻿#include "Settings.h"
 
 Settings* Settings::Instance = nullptr;
 

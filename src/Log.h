@@ -1,19 +1,14 @@
 ﻿#pragma once
 #include "IniFile.h"
 #include "Settings.h"
-#include <condition_variable>
 #include <fstream>
-#include <memory>
+#include <iostream>
+#include <map>
 #include <mutex>
-#include <queue>
-#include <sstream>
 #include <set>
-#include <stdexcept>
-#include <string>
-#include <thread>
 
 // 日志级别
-enum class Severity {
+enum class Severity : int {
 	DEFAULT,
 	INFO,
 	WARNING,
@@ -80,6 +75,7 @@ private:
 	static std::string getSeverityLabel(Severity severity);
 	static std::string getPlainSeverityLabel(Severity severity);
 	void writeLog(const std::string& log);
+	void summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount);
 
 	template <auto Member, typename... Args>
 	static void stream(Severity severity, const LogData& logdata, auto args) {
@@ -98,6 +94,7 @@ private:
 // 日志条
 class LogStream {
 public:
+	friend Log;
 	explicit LogStream() = default;
 	LogStream(Severity severity, const LogData& logdata, std::string buffer);
 	

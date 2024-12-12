@@ -1,12 +1,8 @@
 ﻿#include "Checker.h"
 #include "Helper.h"
-#include "ProgressBar.h"
 #include "Log.h"
-#include <algorithm>
-#include <cctype>
-#include <chrono>
+#include "ProgressBar.h"
 #include <iostream>
-#include <regex>
 #include <set>
 #include <sstream>
 

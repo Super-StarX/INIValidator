@@ -1,13 +1,9 @@
 ﻿#pragma once
-#include <iostream>
-#include <iomanip>
-#include <thread>
-#include <mutex>
-#include <map>
 #include <atomic>
 #include <chrono>
+#include <map>
+#include <mutex>
 #include <string>
-#include <sstream>
 
 class ProgressData {
 public:
@@ -16,7 +12,7 @@ public:
 	double getPercent() const;
 	auto getElapsed() const;
 
-	int line;							// 在第几行画
+	int line{ 0 };						// 在第几行画
 	std::atomic<size_t> processed{ 0 }; // 已处理项
 	size_t total{ 0 };                  // 总项数
 	std::string name;                   // 进度条名称
@@ -32,16 +28,15 @@ public:
 	static int line;
 
 	ProgressBar() : stopFlag(false), threadStarted(false) {}
-
 	~ProgressBar();
 
-	void addProgressBar(int id, const std::string& name, size_t total);
-	void updateProgress(int id, size_t processed);
-	void markFinished(int id);
+	void addProgressBar(size_t id, const std::string& name, size_t total);
+	void updateProgress(size_t id, size_t processed);
+	void markFinished(size_t id);
 	void stop();
 
 private:
-	std::map<int, ProgressData> progressBars; // 进度条集合
+	std::map<size_t, ProgressData> progressBars; // 进度条集合
 	std::mutex mutex;
 	std::thread displayThread;
 	std::atomic<bool> stopFlag;

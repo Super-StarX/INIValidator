@@ -1,8 +1,8 @@
 ﻿#include "Checker.h"
+#include "Helper.h"
 #include "IniFile.h"
 #include "Log.h"
 #include "Settings.h"
-#include "Helper.h"
 #include <filesystem>
 #include <iostream>
 #include <string>

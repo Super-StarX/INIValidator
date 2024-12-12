@@ -1,10 +1,6 @@
 ﻿#pragma once
 #include "IniFile.h"
-#include <iostream>
-#include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 class Settings {
 public:
