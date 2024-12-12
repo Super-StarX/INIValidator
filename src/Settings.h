@@ -18,7 +18,7 @@ public:
 	std::string UnusedGlobal{ };				// 检测未使用的全局节
 	std::string UnusedRegistry{ };				// 检测未使用的注册表
 	std::string SectionExsit{ };				// 检测注册表注册项是否实现
-	std::string UnreachableSection{ };				// 检测未收录没检测的节
+	std::string UnreachableSection{ };			// 检测未收录没检测的节
 
 	// 节层面
 	std::string BracketClosed{ };				// 检测括号闭合
@@ -40,6 +40,19 @@ public:
 	std::string IntIllegal{ };					// 不是整数
 	std::string FloatIllegal{ };				// 不是浮点数
 	std::string OverlongString{ };				// 字符串超过最大字数限制
+
+	std::string TypeCheckerTypeNotExist{ };		// 检查关联的类型不存在
+
+	std::string NumberCheckerOverRange{ };
+
+	std::string LimitCheckerPrefixIllegal{ };
+	std::string LimitCheckerSuffixIllegal{ };
+	std::string LimitCheckerValueIllegal{ };
+	std::string LimitCheckerOverRange{ };
+
+	std::string ListCheckerUnknownType{ };
+	std::string ListCheckerRangeIllegal{ };
+	std::string ListCheckerOverRange{ };
 };
 
 #define _KeyNotExist &Settings::KeyNotExist
@@ -70,3 +83,16 @@ public:
 #define _IntIllegal &Settings::IntIllegal
 #define _FloatIllegal &Settings::FloatIllegal
 #define _OverlongString &Settings::OverlongString
+
+#define _TypeCheckerTypeNotExist &Settings::TypeCheckerTypeNotExist
+
+#define _NumberCheckerOverRange &Settings::NumberCheckerOverRange
+
+#define _LimitCheckerPrefixIllegal &Settings::LimitCheckerPrefixIllegal
+#define _LimitCheckerSuffixIllegal &Settings::LimitCheckerSuffixIllegal
+#define _LimitCheckerValueIllegal &Settings::LimitCheckerValueIllegal
+#define _LimitCheckerOverRange &Settings::LimitCheckerOverRange
+
+#define _ListCheckerUnknownType &Settings::ListCheckerUnknownType
+#define _ListCheckerRangeIllegal &Settings::ListCheckerRangeIllegal
+#define _ListCheckerOverRange &Settings::ListCheckerOverRange

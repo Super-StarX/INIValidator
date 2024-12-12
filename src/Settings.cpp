@@ -42,6 +42,19 @@ void Settings::load(const IniFile& configFile) {
 		READ(sections, IntIllegal)
 		READ(sections, FloatIllegal)
 		READ(sections, OverlongString)
+		
+		READ(sections, TypeCheckerTypeNotExist)
+
+		READ(sections, NumberCheckerOverRange)
+
+		READ(sections, LimitCheckerPrefixIllegal)
+		READ(sections, LimitCheckerSuffixIllegal)
+		READ(sections, LimitCheckerValueIllegal)
+		READ(sections, LimitCheckerOverRange)
+		READ(sections, ListCheckerUnknownType)
+		READ(sections, ListCheckerRangeIllegal)
+		READ(sections, ListCheckerOverRange)
+
 		#undef READ
 	}
 }

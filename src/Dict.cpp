@@ -17,6 +17,7 @@ Dict::Dict(const Section& config) {
 void Dict::validateSection(const Section& object, const std::string& type) {
 	if (object.isScanned) 
 		return;
+	const_cast<Section&>(object).isScanned = true;
 
 	auto pChecker = Checker::Instance;
 	for (const auto& dynamicKey : this->dynamicKeys) {
@@ -36,15 +37,15 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 	}
 
 	for (const auto& [key, value] : object) {
-		if (!this->contains(key))
+		if (!this->contains(key)) {
 			Log::print<_KeyNotExist>({ object, key }, key);
-		continue;
+			continue;
+		}
 
 		for (const auto& type : this->at(key).types)
 			pChecker->validate(object, key, value, type);
 	}
 
-	const_cast<Section&>(object).isScanned = true;
 	ProgressBar::CheckerProgress.updateProgress(0, ++Checker::ProcessedSections);
 }
 
@@ -159,8 +160,10 @@ double Dict::parseValue(size_t& i, const std::string& expr, const Section& objec
 
 	// 是否是数字型变量
 	value = object.at(value).value;
-	if (!string::isNumber(value))
-		throw std::string("动态键中存在非数字变量: " + value);
+	if (!string::isNumber(value)) {
+		Log::error<_DynamicKeyVariableError>({ object,value }, value);
+		return 0;
+	}
 
 	return std::stod(value);
 }

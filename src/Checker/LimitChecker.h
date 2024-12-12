@@ -16,7 +16,7 @@ public:
 	explicit LimitChecker(){};
 	LimitChecker(const Section& config);
 	std::vector<std::string> getToken(const Section& config, const std::string& key);
-	void validate(const std::string& value) const;
+	void validate(const Section& section, const std::string& key, const std::string& value) const;
 	LimitChecker& operator=(const LimitChecker& other) {
 		if (this == &other) return *this;
 		startWith = other.startWith;
@@ -26,10 +26,10 @@ public:
 		return *this;
 	}
 private:
-	std::string matchesStart(const std::string& value) const;
-	std::string matchesEnd(const std::string& value) const;
-	std::string matchesList(const std::string& value) const;
-	std::string matchesLength(const std::string& value) const;
+	bool matchesStart(const Section& section, const std::string& key, const std::string& value) const;
+	bool matchesEnd(const Section& section, const std::string& key, const std::string& value) const;
+	bool matchesList(const Section& section, const std::string& key, const std::string& value) const;
+	void matchesLength(const Section& section, const std::string& key, const std::string& value) const;
     std::string checkLower(const std::string& str) const;
 
 	std::vector<std::string> startWith;

@@ -1,5 +1,6 @@
 ﻿#include "Helper.h"
 #include "LimitChecker.h"
+#include "Log.h"
 #include <sstream>
 
 LimitChecker::LimitChecker(const Section& config) {
@@ -20,51 +21,56 @@ std::vector<std::string> LimitChecker::getToken(const Section& config, const std
 	return string::split(config.at(key).value);
 }
 
-void LimitChecker::validate(const std::string& value) const {
-	auto result = matchesStart(value) + matchesEnd(value) + matchesList(value);
-	if (!result.empty())
-		throw result;
+void LimitChecker::validate(const Section& section, const std::string& key, const std::string& value) const {
+	if (matchesStart(section, key, value))
+		if (matchesEnd(section, key, value))
+			matchesList(section, key, value);
 }
 
-std::string LimitChecker::matchesStart(const std::string& value) const {
-    if (startWith.empty()) return std::string();
+bool LimitChecker::matchesStart(const Section& section, const std::string& key, const std::string& value) const {
+    if (startWith.empty()) return true;
     auto target = checkLower(value);
     for (const auto& prefix : startWith) {
 		auto checkPrefix = checkLower(prefix);
         if (target.rfind(checkPrefix, 0) == 0) // 检查是否以 prefix 开头
-            return std::string();
+            return true;
     }
-	return value + "前缀不符合规则";
+
+	Log::error<_LimitCheckerPrefixIllegal>({ section,key }, value);
+	return false;
 }
 
-std::string LimitChecker::matchesEnd(const std::string& value) const {
-    if (endWith.empty()) return std::string();
+bool LimitChecker::matchesEnd(const Section& section, const std::string& key, const std::string& value) const {
+    if (endWith.empty()) return true;
 	auto target = checkLower(value);
     for (const auto& suffix : endWith) {
 		auto checkSuffix = checkLower(suffix);
         if (target.size() >= checkSuffix.size() &&
             target.compare(target.size() - checkSuffix.size(), checkSuffix.size(), checkSuffix) == 0) {
-            return std::string();
+            return true;
         }
     }
-    return value + "后缀不符合规则";
+
+	Log::error<_LimitCheckerSuffixIllegal>({ section,key }, value);
+	return false;
 }
 
-std::string LimitChecker::matchesList(const std::string& value) const {
-    if (limitIn.empty()) return std::string();
+bool LimitChecker::matchesList(const Section& section, const std::string& key, const std::string& value) const {
+    if (limitIn.empty()) return true;
 	auto target = checkLower(value);
     for (const auto& item : limitIn) {
 		auto checkItem = checkLower(item);
         if (target == checkItem)
-            return std::string();
+            return true;
     }
-	return value + "不属于限定范围内的值";
+
+	Log::error<_LimitCheckerValueIllegal>({ section,key }, value);
+	return false;
 }
 
-std::string LimitChecker::matchesLength(const std::string& value) const {
-	return value.length() > maxLength ? 
-		value + "长度超过最大值: 当前(" + std::to_string(value.length()) + ") > 最大(" + std::to_string(maxLength) + ")" :
-		std::string();
+void LimitChecker::matchesLength(const Section& section, const std::string& key, const std::string& value) const {
+	if (value.length() > maxLength)
+		Log::error<_LimitCheckerOverRange>({ section,key }, value.length(), maxLength);
 }
 
 std::string LimitChecker::checkLower(const std::string& str) const {

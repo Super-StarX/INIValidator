@@ -111,7 +111,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	else if (type == "double") validateDouble(section, key, value);
 	else if (type == "string") validateString(section, key, value);
 	else if (numberLimits.contains(type)) numberLimits.at(type).validate(value.value);
-	else if (limits.contains(type)) limits.at(type).validate(value);
+	else if (limits.contains(type)) limits.at(type).validate(section, key, value);
 	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
 	else if (sections.contains(type)) {
 		if (value.value == "none" || value.value == "<none>")
@@ -119,7 +119,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 
 		if (!targetIni->sections.contains(value)) {
 			if (type != "AnimType")
-				throw std::string("\"" + type + "\"中声明的\"" + value + "\"未被实现");
+				Log::error< _TypeCheckerTypeNotExist>({ section,key }, type, value);
 		}
 		else
 			sections.at(type).validateSection(targetIni->sections.at(value), type);
@@ -167,7 +167,7 @@ float Checker::validateFloat(const Section& section, const std::string& key, con
 		std::size_t pos;
 		result = std::stof(buffer, &pos);
 		if (pos != buffer.size())
-			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
+			Log::error<_FloatIllegal>({ section,key }, value);
 
 		if (value.value.back() == '%')
 			result /= 100;
@@ -191,7 +191,7 @@ double Checker::validateDouble(const Section& section, const std::string& key, c
 		std::size_t pos;
 		result = std::stod(buffer, &pos);
 		if (pos != buffer.size())
-			throw std::string(value + "不是浮点数，非浮点数部分会被忽略");
+			Log::error<_FloatIllegal>({ section,key }, value);
 
 		if (value.value.back() == '%')
 			result /= 100;
