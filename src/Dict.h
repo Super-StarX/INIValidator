@@ -38,4 +38,3 @@ private:
 	static double parseValue(size_t& i, const std::string& expr, const Section& object);
 	static void applyOperation(std::stack<double>& values, std::stack<char>& operators);
 };
-

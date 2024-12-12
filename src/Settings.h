@@ -18,6 +18,7 @@ public:
 	std::string UnusedGlobal{ };				// 检测未使用的全局节
 	std::string UnusedRegistry{ };				// 检测未使用的注册表
 	std::string SectionExsit{ };				// 检测注册表注册项是否实现
+	std::string UnreachableSection{ };				// 检测未收录没检测的节
 
 	// 节层面
 	std::string BracketClosed{ };				// 检测括号闭合
@@ -45,9 +46,11 @@ public:
 #define _TypeNotExist &Settings::TypeNotExist
 #define _DynamicKeyVariableError &Settings::DynamicKeyVariableError
 #define _DynamicKeyFormatError &Settings::DynamicKeyFormatError
+
 #define _UnusedGlobal &Settings::UnusedGlobal
 #define _UnusedRegistry &Settings::UnusedRegistry
 #define _SectionExsit &Settings::SectionExsit
+#define _UnreachableSection &Settings::UnreachableSection
 
 #define _BracketClosed &Settings::BracketClosed
 #define _BracketClosed &Settings::BracketClosed

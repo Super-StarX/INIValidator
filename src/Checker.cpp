@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <windows.h>
 
 Checker* Checker::Instance = nullptr;
 std::atomic<size_t> Checker::ProcessedSections(0);
@@ -86,6 +87,14 @@ void Checker::checkFile() {
 			}
 
 			sections[type].validateSection(targetIni->sections[name.value], type.value);
+		}
+	}
+
+	for (const auto& [name, section] : targetIni->sections) {
+		if (!section.isScanned) {
+			//std::this_thread::sleep_for(std::chrono::microseconds(1));
+			Log::info<_UnreachableSection>({ section.headLine }, section.name);
+			ProgressBar::CheckerProgress.updateProgress(0, ++Checker::ProcessedSections);
 		}
 	}
 

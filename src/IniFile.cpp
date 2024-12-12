@@ -92,6 +92,7 @@ void IniFile::readSection(std::string& line, int& lineNumber, std::string& curre
     else {
         currentSection = line.substr(1, endPos - 1);
 		sections[currentSection].name = currentSection;
+		sections[currentSection].headLine = lineNumber;
 		processInheritance(line, endPos, lineNumber, currentSection);
     }
 }

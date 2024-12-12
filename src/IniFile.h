@@ -68,6 +68,7 @@ public:
 	Value& operator[](const std::string& key) { return section[key]; }
 
 	bool isScanned { false };
+	int headLine { 0 };
 	int inheritanceLevel { 0 };
 	std::string name { };
 	std::unordered_map<Key, Value> section;

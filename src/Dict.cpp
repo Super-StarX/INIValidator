@@ -15,9 +15,10 @@ Dict::Dict(const Section& config) {
 }
 
 void Dict::validateSection(const Section& object, const std::string& type) {
-	if (object.isScanned) return;
-	auto pChecker = Checker::Instance;
+	if (object.isScanned) 
+		return;
 
+	auto pChecker = Checker::Instance;
 	for (const auto& dynamicKey : this->dynamicKeys) {
 		try {
 			auto keys = generateKey(dynamicKey, object);

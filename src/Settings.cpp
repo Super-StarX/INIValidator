@@ -19,9 +19,12 @@ void Settings::load(const IniFile& configFile) {
 		READ(sections, TypeNotExist)
 		READ(sections, DynamicKeyVariableError)
 		READ(sections, DynamicKeyFormatError)
+
 		READ(sections, UnusedGlobal)
 		READ(sections, UnusedRegistry)
 		READ(sections, SectionExsit)
+		READ(sections, UnreachableSection)
+
 		READ(sections, BracketClosed)
 		READ(sections, DuplicateKey)
 		READ(sections, SectionFormat)
@@ -29,8 +32,10 @@ void Settings::load(const IniFile& configFile) {
 		READ(sections, InheritanceBracketClosed)
 		READ(sections, InheritanceSectionExsit)
 		READ(sections, InheritanceDuplicateKey)
+
 		READ(sections, SpaceExistBetweenEqualSign)
 		READ(sections, SpaceLostBetweenEqualSign)
+
 		READ(sections, EmptyValue)
 		READ(sections, IllegalValue)
 		READ(sections, OverlongValue)
