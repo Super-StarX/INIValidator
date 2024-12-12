@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Dict.cpp" />
     <ClCompile Include="INIValidater.cpp" />
     <ClCompile Include="src\Checker.cpp" />
     <ClCompile Include="src\Checker\LimitChecker.cpp" />
@@ -159,6 +160,7 @@
     <None Include=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Dict.h" />
     <ClInclude Include="src\Checker.h" />
     <ClInclude Include="src\Checker\LimitChecker.h" />
     <ClInclude Include="src\Checker\ListChecker.h" />
