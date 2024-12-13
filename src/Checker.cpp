@@ -68,12 +68,12 @@ void Checker::checkFile() {
 	ProgressBar::CheckerProgress.addProgressBar(0, "Checker", targetIni->sections.size());
 
 	// [Globals] General
-	for (const auto& [sectionName, _] : globals) {
-		if (!targetIni->sections.contains(sectionName)) {
-			Log::info<_UnusedGlobal>(-1, sectionName);
+	for (const auto& [globalName, _] : globals) {
+		if (!targetIni->sections.contains(globalName)) {
+			Log::info<_UnusedGlobal>(-1, globalName);
 			continue;
 		}
-		globals[sectionName].validateSection(targetIni->sections[sectionName], sectionName);
+		globals[globalName].validateSection(targetIni->sections.at(globalName), globalName);
 	}
 
 	// [Registries] VehicleTypes=UnitType
@@ -86,6 +86,7 @@ void Checker::checkFile() {
 
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
+		registry.isScanned = true;
 		for (const auto& [_, name] : registry) {
 			if (!targetIni->sections.contains(name) && type.checkExsit) {
 				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);

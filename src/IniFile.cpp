@@ -1,5 +1,6 @@
-#include "IniFile.h"
+﻿#include "IniFile.h"
 #include "Log.h"
+#include "Helper.h"
 #include "ProgressBar.h"
 #include <algorithm>
 #include <codecvt>
