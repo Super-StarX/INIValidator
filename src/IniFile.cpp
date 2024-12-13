@@ -1,4 +1,4 @@
-﻿#include "IniFile.h"
+#include "IniFile.h"
 #include "Log.h"
 #include "ProgressBar.h"
 #include <algorithm>
@@ -9,7 +9,6 @@
 #include <locale>
 #include <regex>
 #include <sstream>
-#include <stdexcept>
 #include <Windows.h>
 
 std::vector<std::string> IniFile::FileNames;
@@ -43,7 +42,8 @@ void IniFile::load(const std::string& filepath) {
 
 	FileIndex++;
 	auto curFileIndex = FileIndex;
-	FileNames.push_back(std::filesystem::path(path).filename().string());
+	auto fileName = std::filesystem::path(path).filename().string();
+	FileNames.push_back(fileName);
     std::string line, currentSection;
     int lineNumber = 0;
 
@@ -52,10 +52,10 @@ void IniFile::load(const std::string& filepath) {
 	file.seekg(0);
 	file.imbue(std::locale("zh_CN.UTF-8"));
 
-	std::string name = "[" + std::to_string(curFileIndex) + "] " + std::filesystem::path(path).filename().string() + " ";
+	std::string name = "[" + std::to_string(curFileIndex) + "] " + fileName + " ";
 	ProgressBar::INIFileProgress.addProgressBar(curFileIndex, name, totalLines);
 
-	auto convertStringFromUTF8 = [](const std::wstring& wstr) {
+	auto fromWString = [](const std::wstring& wstr) {
 		// Get required buffer size for conversion
 		int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
 		std::string result(sizeNeeded - 1, 0); // -1 是为了去掉 null 终止符
@@ -67,11 +67,11 @@ void IniFile::load(const std::string& filepath) {
 	std::wstring wline;
     // 逐行扫描加载ini
     while (std::getline(file, wline)) {
-		line = convertStringFromUTF8(wline);
+		line = fromWString(wline);
         lineNumber++;
         // 移除注释之后的东西,并掐头去尾
-        line = removeInlineComment(line);
-        line = trim(line);
+        line = string::removeInlineComment(line);
+        line = string::trim(line);
         if (line.empty()) continue;
 
         if (line.front() == '[')
@@ -103,8 +103,8 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
     auto delimiterPos = line.find('=');
     if (delimiterPos != std::string::npos) {
         // 传统键值对
-		auto key = trim(line.substr(0, delimiterPos));
-		auto value = trim(line.substr(delimiterPos + 1));
+		auto key = string::trim(line.substr(0, delimiterPos));
+		auto value = string::trim(line.substr(delimiterPos + 1));
 		// += 的特殊处理
 		if (key == "+") {
 			static int var_num = 0;
@@ -174,19 +174,6 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
 		Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
-}
-
-// 去除注释
-std::string IniFile::removeInlineComment(const std::string& str) {
-    size_t commentPos = str.find(';');
-    return commentPos != std::string::npos ? str.substr(0, commentPos) : str;
-}
-
-// 去除字符串开头结尾
-std::string IniFile::trim(const std::string& str) {
-    size_t start = str.find_first_not_of(" \t\r\n");
-    size_t end = str.find_last_not_of(" \t\r\n");
-    return (start == std::string::npos || end == std::string::npos) ? "" : str.substr(start, end - start + 1);
 }
 
 std::string Value::getFileName() const {

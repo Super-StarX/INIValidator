@@ -36,8 +36,18 @@ void Checker::loadConfig(IniFile& configFile) {
 				numberLimits[key] = NumberChecker(configFile.sections.at(key));
 
 	// 加载注册表
-	if (configFile.sections.contains("Registries"))
-		registryMap = configFile.sections.at("Registries");
+	if (configFile.sections.contains("Registries")) {
+		for (const auto& [name, type] : configFile.sections.at("Registries")) {
+			registryMap[name].type = type;
+			if (configFile.sections.contains(name)) {
+				const auto& registry = configFile.sections.at(name);
+				if (registry.contains("Type"))
+					registryMap[name].type = registry.at("Type");
+				if (registry.contains("CheckExist"))
+					registryMap[name].checkExsit = string::isBool(registry.at("CheckExist"));
+			}
+		}
+	}
 
 	// 加载全局类型
 	if (configFile.sections.contains("Globals"))
@@ -77,16 +87,16 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
 		for (const auto& [_, name] : registry) {
-			if (!targetIni->sections.contains(name)) {
+			if (!targetIni->sections.contains(name) && type.checkExsit) {
 				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
 				continue;
 			}
 			if (!sections.contains(type)) {
-				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type.value);
+				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type.type);
 				return;
 			}
 
-			sections[type].validateSection(targetIni->sections[name.value], type.value);
+			sections[type].validateSection(targetIni->sections[name.value], type.type);
 		}
 	}
 

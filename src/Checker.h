@@ -8,6 +8,15 @@
 #include <string>
 #include <unordered_map>
 
+class Registry {
+public:
+	operator std::string() const { return type; }
+
+	std::string type;
+	// int defaultFile;
+	bool checkExsit;
+};
+
 class Checker {
 public:
 	static Checker* Instance;
@@ -22,13 +31,16 @@ public:
 private:
 	friend ListChecker;
 	friend TypeChecker;
-	using Globals = std::unordered_map<std::string, Dict>;
-	using Sections = std::unordered_map<std::string, Dict>;
-	using Limits = std::unordered_map<std::string, LimitChecker>;
-	using Lists = std::unordered_map<std::string, ListChecker>;
-	using Numbers = std::unordered_map<std::string, NumberChecker>;
+	template<class T>
+	using map = std::unordered_map<std::string, T>;
+	using Registrys = map<Registry>;
+	using Globals = map<Dict>;
+	using Sections = map<Dict>;
+	using Limits = map<LimitChecker>;
+	using Lists = map<ListChecker>;
+	using Numbers = map<NumberChecker>;
 
-	Section registryMap;	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
+	Registrys registryMap;	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
 	Numbers numberLimits;	// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Limits limits;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Lists lists;			// 特殊类型限制: 类型名 <-> 特殊限制类型section

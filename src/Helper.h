@@ -1,19 +1,10 @@
 ﻿#pragma once
-#include <codecvt>
-#include <sstream>
-#include <stack>
 #include <string>
 #include <vector>
+#include <sstream>
 
 namespace string {
-	static std::string clamp(const std::string& str, const size_t length) {
-		if (str.size() > length)
-			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
-
-		return str + std::string(length - str.size(), ' '); // 补齐空格
-	}
-
-	inline std::vector<std::string> split(const std::string& str, char delimiter = ',') {
+	inline static std::vector<std::string> split(const std::string& str, char delimiter = ',') {
 		std::vector<std::string> tokens;
 		std::string token;
 		std::istringstream tokenStream(str);
@@ -22,7 +13,7 @@ namespace string {
 		return tokens;
 	}
 
-	inline std::vector<std::string> splitAsString(const std::string& input, const std::string& delimiter = "||") {
+	inline static std::vector<std::string> splitAsString(const std::string& input, const std::string& delimiter = "||") {
 		std::vector<std::string> result;
 		size_t start = 0, end = 0;
 
@@ -37,6 +28,26 @@ namespace string {
 			result.push_back(input.substr(start));
 
 		return result;
+	}
+
+	inline static std::string clamp(const std::string& str, const size_t length) {
+		if (str.size() > length)
+			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
+
+		return str + std::string(length - str.size(), ' '); // 补齐空格
+	}
+
+	// 去除注释
+	inline std::string removeInlineComment(const std::string& str) {
+		size_t commentPos = str.find(';');
+		return commentPos != std::string::npos ? str.substr(0, commentPos) : str;
+	}
+
+	// 去除字符串开头结尾
+	inline std::string trim(const std::string& str) {
+		size_t start = str.find_first_not_of(" \t\r\n");
+		size_t end = str.find_last_not_of(" \t\r\n");
+		return (start == std::string::npos || end == std::string::npos) ? "" : str.substr(start, end - start + 1);
 	}
 
 	// 判断是否是包含数学表达式的字符串

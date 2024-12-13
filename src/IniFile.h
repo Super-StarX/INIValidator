@@ -94,6 +94,4 @@ public:
 private:
     void processIncludes(const std::string& basePath);
 	void processInheritance(std::string& line, size_t endPos, int& lineNumber, std::string& currentSection);
-    std::string removeInlineComment(const std::string& str);
-    std::string trim(const std::string& str);
 };
