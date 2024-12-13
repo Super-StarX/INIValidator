@@ -1,4 +1,5 @@
 ﻿#include "NumberChecker.h"
+#include "Log.h"
 
 NumberChecker::NumberChecker(const Section& config) {
 	if (config.contains("Range")) {
@@ -15,10 +16,10 @@ NumberChecker::NumberChecker(const Section& config) {
 	}
 }
 
-void NumberChecker::validate(const std::string& value) const {
+void NumberChecker::validate(const Section& section, const std::string& key, const std::string& value) const {
 	float intValue = std::stof(value);
 	if (!checkRange(intValue))
-		throw "值 " + value + " 不在范围 [" + std::to_string(minRange) + ", " + std::to_string(maxRange) + "] 内";
+		Log::error<_NumberCheckerOverRange>({ section,key }, value, minRange, maxRange);
 }
 
 bool NumberChecker::checkRange(float value) const {

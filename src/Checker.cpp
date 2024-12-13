@@ -120,20 +120,10 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	else if (type == "float") validateFloat(section, key, value);
 	else if (type == "double") validateDouble(section, key, value);
 	else if (type == "string") validateString(section, key, value);
-	else if (numberLimits.contains(type)) numberLimits.at(type).validate(value.value);
+	else if (numberLimits.contains(type)) numberLimits.at(type).validate(section, key, value);
 	else if (limits.contains(type)) limits.at(type).validate(section, key, value);
 	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
-	else if (sections.contains(type)) {
-		if (value.value == "none" || value.value == "<none>")
-			return;
-
-		if (!targetIni->sections.contains(value)) {
-			if (type != "AnimType")
-				Log::error< _TypeCheckerTypeNotExist>({ section,key }, type, value);
-		}
-		else
-			sections.at(type).validateSection(targetIni->sections.at(value), type);
-	}
+	else if (sections.contains(type)) TypeChecker::validate(section, key, value, type);
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {

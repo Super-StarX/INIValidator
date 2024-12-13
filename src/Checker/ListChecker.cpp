@@ -6,8 +6,10 @@
 
 ListChecker::ListChecker(Checker* checker, const Section& config) :checker(checker) {
 	// 加载 Type
-	if (!config.contains("Type"))
-		throw std::runtime_error("ListChecker 配置缺少 Type");
+	if (!config.contains("Type")) {
+		Log::error<_ListCheckerUnknownType>(config.headLine);
+		return;
+	}
 	types = string::splitAsString(config.at("Type").value);
 
 	// 加载 Range
@@ -17,8 +19,10 @@ ListChecker::ListChecker(Checker* checker, const Section& config) :checker(check
 		if (rangeStream.peek() == ',')
 			rangeStream.ignore();
 		rangeStream >> maxRange;
-		if (minRange > maxRange)
-			throw std::runtime_error("Range 配置错误：最小值大于最大值");
+		if (minRange > maxRange) {
+			Log::error<_ListCheckerRangeIllegal>(config.headLine);
+			return;
+		}
 	}
 }
 
@@ -32,8 +36,10 @@ void ListChecker::validate(const Section& section, const std::string& key, const
 		values.push_back(Value(item, line));
 
 	// 验证 Range
-	if (values.size() < minRange || values.size() > maxRange)
-		throw key + " 列表项数超出范围，应在 [" + std::to_string(minRange) + "," + std::to_string(maxRange) + "] 内";
+	if (values.size() < minRange || values.size() > maxRange) {
+		Log::error<_ListCheckerOverRange>({ section,key }, minRange, maxRange);
+		return;
+	}
 
 	// 验证每个元素
 	for (const auto& element : values)

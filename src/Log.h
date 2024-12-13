@@ -27,7 +27,7 @@ struct LogData {
 	LogData(const Section& section, const std::string& key) : key(key), section(section.name) {
 		const auto& value = section.at(key);
 		line = value.line;
-		this->value = value.line;
+		this->value = value;
 		fileindex = value.fileIndex;
 	}
 	LogData(const std::string& section, size_t fileindex, const int line) : fileindex(fileindex), section(section), line(line){}

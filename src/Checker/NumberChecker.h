@@ -11,7 +11,7 @@ public:
 	NumberChecker(const Section& config);
 
 	// 检查数字是否在指定范围内
-	void validate(const std::string& value) const;
+	void validate(const Section& section, const std::string& key, const std::string& value) const;
 
 private:
 	std::string type; // 类型，如 int, short, double
