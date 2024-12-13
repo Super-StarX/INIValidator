@@ -103,13 +103,15 @@ void Log::summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCo
 	auto getCount = [](const std::map<Severity, int>& map, Severity key) {
 		return map.contains(key) ? map.at(key) : 0;
 	};
+	
+	auto border = [](int width) {
+		return std::format("{:━<{}}", "", width);
+	};
 
 	// 输出表头
 	std::cerr << std::endl
-		<< "┏" << std::format("{:━<{}}", "", colWidth1)
-		<< "┳" << std::format("{:━<{}}", "", colWidth2)
-		<< "┳" << std::format("{:━<{}}", "", colWidth3)
-		<< "┳" << std::format("{:━<{}}", "", colWidth4)
+		<< "┏" << border(colWidth1) << "┳" << border(colWidth2)
+		<< "┳" << border(colWidth3) << "┳" << border(colWidth4)
 		<< "┓" << std::endl;
 	std::cerr
 		<< "┃" << std::setw(colWidth1 + 2) << std::internal << "文件"
@@ -118,10 +120,8 @@ void Log::summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCo
 		<< "┃" << std::setw(colWidth4 + 2) << "错误"
 		<< "┃" << std::endl;
 	std::cerr
-		<< "┣" << std::format("{:━<{}}", "", colWidth1)
-		<< "╋" << std::format("{:━<{}}", "", colWidth2)
-		<< "╋" << std::format("{:━<{}}", "", colWidth3)
-		<< "╋" << std::format("{:━<{}}", "", colWidth4)
+		<< "┣" << border(colWidth1) << "╋" << border(colWidth2)
+		<< "╋" << border(colWidth3) << "╋" << border(colWidth4)
 		<< "┫" << std::endl;
 
 	// 输出表格内容
@@ -135,10 +135,8 @@ void Log::summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCo
 
 	// 输出表尾
 	std::cerr
-		<< "┗" << std::format("{:━<{}}", "", colWidth1)
-		<< "┻" << std::format("{:━<{}}", "", colWidth2)
-		<< "┻" << std::format("{:━<{}}", "", colWidth3)
-		<< "┻" << std::format("{:━<{}}", "", colWidth4)
+		<< "┗" << border(colWidth1) << "┻" << border(colWidth2)
+		<< "┻" << border(colWidth3) << "┻" << border(colWidth4)
 		<< "┛" << std::endl;
 }
 
