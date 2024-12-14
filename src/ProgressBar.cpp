@@ -76,19 +76,19 @@ void ProgressBar::run() {
 			constexpr size_t total = 50;
 			constexpr size_t fileNameWidth = 25;
 
-			std::cout << "\033[" << progress.line << ";0H"; // 定位光标到行首
+			std::cerr << "\033[" << progress.line << ";0H"; // 定位光标到行首
 
 			// 渲染进度条
 			size_t completed = (size_t)(percent / 2);
 			size_t remain = total - completed;
 			std::string name = string::clamp(progress.name, fileNameWidth);
 			if (progress.finished)
-				std::cout << name << std::format("[\033[32m{0:━<{1}}>\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+				std::cerr << name << std::format("[\033[32m{0:━<{1}}>\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 			else
-				std::cout << name << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+				std::cerr << name << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 
 			// 显示百分比和时间
-			std::cout << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)\n";
+			std::cerr << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)\n";
 		}
 	}
 	catch (const std::exception&) {
