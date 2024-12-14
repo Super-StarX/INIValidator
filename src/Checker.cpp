@@ -10,6 +10,18 @@
 Checker* Checker::Instance = nullptr;
 std::atomic<size_t> Checker::ProcessedSections(0);
 
+Registry::Registry(const Sections& config, const std::string& name, const Value& value): type(value) {
+	if (config.contains(name)) {
+		const auto& registry = config.at(name);
+		if (registry.contains("Type"))
+			type = registry.at("Type");
+		if (registry.contains("CheckExist"))
+			checkExsit = string::isBool(registry.at("CheckExist"));
+		if (registry.contains("PresetItems"))
+			presetItems = string::split(registry.at("PresetItems"));
+	}
+}
+
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
 	Instance = this;
@@ -36,20 +48,9 @@ void Checker::loadConfig(IniFile& configFile) {
 				numberLimits[key] = NumberChecker(configFile.sections.at(key));
 
 	// 加载注册表
-	if (configFile.sections.contains("Registries")) {
-		for (const auto& [name, type] : configFile.sections.at("Registries")) {
-			registryMap[name].type = type;
-			if (configFile.sections.contains(name)) {
-				const auto& registry = configFile.sections.at(name);
-				if (registry.contains("Type"))
-					registryMap[name].type = registry.at("Type");
-				if (registry.contains("CheckExist"))
-					registryMap[name].checkExsit = string::isBool(registry.at("CheckExist"));
-				if (registry.contains("PresetItems"))
-					registryMap[name].presetItems = string::split(registry.at("PresetItems"));
-			}
-		}
-	}
+	if (configFile.sections.contains("Registries"))
+		for (const auto& [name, type] : configFile.sections.at("Registries"))
+			registries[name] = Registry(configFile.sections, name, type);
 
 	// 加载全局类型
 	if (configFile.sections.contains("Globals"))
@@ -79,7 +80,8 @@ void Checker::checkFile() {
 	}
 
 	// [Registries] VehicleTypes=UnitType
-	for (const auto& [registryName, type] : registryMap) {
+	for (const auto& [registryName, type] : registries) {
+		// 检查预注册项
 		for (const auto& item : type.presetItems) {
 			if (!targetIni->sections.contains(item) && type.checkExsit) {
 				Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
@@ -87,7 +89,7 @@ void Checker::checkFile() {
 			}
 			if (!sections.contains(type)) {
 				Log::print<_TypeNotExist>({ registryName, 1, -1 }, type.type);
-				return;
+				continue;
 			}
 
 			sections[type].validateSection(targetIni->sections[item], type);
@@ -109,7 +111,7 @@ void Checker::checkFile() {
 			}
 			if (!sections.contains(type)) {
 				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type.type);
-				return;
+				continue;
 			}
 
 			sections[type].validateSection(targetIni->sections[name.value], type);
@@ -139,6 +141,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	else if (numberLimits.contains(type)) numberLimits.at(type).validate(section, key, value);
 	else if (limits.contains(type)) limits.at(type).validate(section, key, value);
 	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
+	//else if (registries.contains(type)) registries.at(type).validate(section, key, value, type);
 	else if (sections.contains(type)) TypeChecker::validate(section, key, value, type);
 }
 

@@ -10,7 +10,11 @@
 
 class Registry {
 public:
+	using Sections = std::unordered_map<std::string, Section>;
 	operator std::string() const { return type; }
+
+	Registry() = default;
+	Registry(const Sections& config, const std::string& name, const Value& value);
 
 	std::string type;
 	// int defaultFile;
@@ -41,7 +45,7 @@ private:
 	using Lists = map<ListChecker>;
 	using Numbers = map<NumberChecker>;
 
-	Registrys registryMap;	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
+	Registrys registries;	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
 	Numbers numberLimits;	// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Limits limits;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Lists lists;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
