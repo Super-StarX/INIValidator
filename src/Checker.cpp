@@ -17,6 +17,7 @@ Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni
 
 // 加载配置文件
 void Checker::loadConfig(IniFile& configFile) {
+	ProgressBar::INIFileProgress.stop();
 	ProgressBar::CheckerProgress.addProgressBar(0, "初始化检查器", targetIni->sections.size());
 	// 加载字符串限制器
 	if (configFile.sections.contains("Limits"))
