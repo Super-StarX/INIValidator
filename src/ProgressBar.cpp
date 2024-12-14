@@ -20,10 +20,12 @@ ProgressBar::~ProgressBar() {
 }
 
 void ProgressBar::addProgressBar(size_t id, const std::string& name, size_t total) {
+	constexpr size_t fileNameWidth = 25;
+
 	std::lock_guard<std::mutex> lock(mutex);
 	progressBars[id].total = total;
 	progressBars[id].line = line++;
-	progressBars[id].name = name;
+	progressBars[id].name = string::clamp(name, 25);
 	progressBars[id].startTime = std::chrono::steady_clock::now();
 	start(); // 启动显示线程
 }
@@ -74,18 +76,16 @@ void ProgressBar::run() {
 
 			// 固定文件名宽度
 			constexpr size_t total = 50;
-			constexpr size_t fileNameWidth = 25;
 
 			std::cerr << "\033[" << progress.line << ";0H"; // 定位光标到行首
 
 			// 渲染进度条
 			size_t completed = (size_t)(percent / 2);
 			size_t remain = total - completed;
-			std::string name = string::clamp(progress.name, fileNameWidth);
 			if (progress.finished)
-				std::cerr << name << std::format("[\033[32m{0:━<{1}}>\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+				std::cerr << progress.name << std::format("[\033[32m{0:━<{1}}>\033[91m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 			else
-				std::cerr << name << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+				std::cerr << progress.name << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 
 			// 显示百分比和时间
 			std::cerr << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)\n";

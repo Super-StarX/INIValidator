@@ -30,11 +30,41 @@ namespace string {
 		return result;
 	}
 
+	inline size_t calculateUTF8Width(const std::string& input) {
+		size_t width = 0;
+		for (size_t i = 0; i < input.length(); ) {
+			unsigned char c = input[i];
+			if ((c & 0x80) == 0) {
+				// ASCII字符：1字节宽度
+				width += 1;
+				++i;
+			}
+			else if ((c & 0xE0) == 0xC0) {
+				// 2字节字符
+				width += 1;
+				i += 2;
+			}
+			else if ((c & 0xF0) == 0xE0) {
+				// 3字节字符：中文字符
+				width += 2;
+				i += 3;
+			}
+			else if ((c & 0xF8) == 0xF0) {
+				// 4字节字符
+				width += 2;
+				i += 4;
+			}
+		}
+		return width;
+	}
+
 	static std::string clamp(const std::string& str, const size_t length) {
-		if (str.size() > length)
+		size_t size = calculateUTF8Width(str);
+
+		if (size > length)
 			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
 
-		return str + std::string(length - str.size(), ' '); // 补齐空格
+		return str + std::string(length - size, ' '); // 补齐空格
 	}
 
 	// 去除注释
