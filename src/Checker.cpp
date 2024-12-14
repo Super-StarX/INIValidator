@@ -107,6 +107,7 @@ void Checker::checkFile() {
 		}
 	}
 	ProgressBar::CheckerProgress.markFinished(4);
+	ProgressBar::CheckerProgress.markFinished(1);
 }
 
 // 验证键值对

@@ -45,11 +45,6 @@ void ProgressBar::markFinished(size_t id) {
 		progressBars[id].finished = true;
 		progressBars[id].processed = progressBars[id].total;
 	}
-	// 若进度条已全部完毕, 关闭线程
-	for (const auto& [_, data] : progressBars)
-		if (!data.finished)
-			return;
-	stop();
 }
 
 void ProgressBar::stop() {

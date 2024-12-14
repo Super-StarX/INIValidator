@@ -1,5 +1,6 @@
 ﻿#include "Log.h"
 #include "Helper.h"
+#include "ProgressBar.h"
 #include <queue>
 #include <sstream>
 #include <iomanip>
@@ -32,6 +33,8 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 }
 
 void Log::output(const std::string& logFileName) {
+	ProgressBar::INIFileProgress.stop();
+	ProgressBar::CheckerProgress.stop();
 	// 共享资源和同步机制
 	std::queue<std::string> logQueue;
 	std::mutex queueMutex, fileMutex;
