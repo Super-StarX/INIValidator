@@ -144,33 +144,35 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Dict.cpp" />
     <ClCompile Include="INIValidater.cpp" />
-    <ClCompile Include="src\Checker.cpp" />
-    <ClCompile Include="src\Checker\LimitChecker.cpp" />
-    <ClCompile Include="src\Checker\ListChecker.cpp" />
-    <ClCompile Include="src\Checker\NumberChecker.cpp" />
-    <ClCompile Include="src\Checker\TypeChecker.cpp" />
+    <ClCompile Include="src\Dict.cpp" />
     <ClCompile Include="src\IniFile.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\ProgressBar.cpp" />
     <ClCompile Include="src\Settings.cpp" />
+    <ClCompile Include="src\Checker.cpp" />
+    <ClCompile Include="src\Checker\RegistryChecker.cpp" />
+    <ClCompile Include="src\Checker\LimitChecker.cpp" />
+    <ClCompile Include="src\Checker\ListChecker.cpp" />
+    <ClCompile Include="src\Checker\NumberChecker.cpp" />
+    <ClCompile Include="src\Checker\TypeChecker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Dict.h" />
-    <ClInclude Include="src\Checker.h" />
-    <ClInclude Include="src\Checker\LimitChecker.h" />
-    <ClInclude Include="src\Checker\ListChecker.h" />
-    <ClInclude Include="src\Checker\NumberChecker.h" />
-    <ClInclude Include="src\Checker\TypeChecker.h" />
     <ClInclude Include="src\Helper.h" />
     <ClInclude Include="src\IniFile.h" />
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\ProgressBar.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\Checker.h" />
+    <ClInclude Include="src\Checker\RegistryChecker.h" />
+    <ClInclude Include="src\Checker\LimitChecker.h" />
+    <ClInclude Include="src\Checker\ListChecker.h" />
+    <ClInclude Include="src\Checker\NumberChecker.h" />
+    <ClInclude Include="src\Checker\TypeChecker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-#include "Checker.h"
+﻿#include "Checker.h"
 #include "Helper.h"
 #include "Log.h"
 #include "ProgressBar.h"
@@ -9,18 +9,6 @@
 
 Checker* Checker::Instance = nullptr;
 std::atomic<size_t> Checker::ProcessedSections(0);
-
-Registry::Registry(const Sections& config, const std::string& name, const Value& value): type(value) {
-	if (config.contains(name)) {
-		const auto& registry = config.at(name);
-		if (registry.contains("Type"))
-			type = registry.at("Type");
-		if (registry.contains("CheckExist"))
-			checkExsit = string::isBool(registry.at("CheckExist"));
-		if (registry.contains("PresetItems"))
-			presetItems = string::split(registry.at("PresetItems"));
-	}
-}
 
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
@@ -50,7 +38,7 @@ void Checker::loadConfig(IniFile& configFile) {
 	// 加载注册表
 	if (configFile.sections.contains("Registries"))
 		for (const auto& [name, type] : configFile.sections.at("Registries"))
-			registries[name] = Registry(configFile.sections, name, type);
+			registries[name] = RegistryChecker(this, configFile.sections, name, type);
 
 	// 加载全局类型
 	if (configFile.sections.contains("Globals"))
@@ -82,18 +70,7 @@ void Checker::checkFile() {
 	// [Registries] VehicleTypes=UnitType
 	for (const auto& [registryName, type] : registries) {
 		// 检查预注册项
-		for (const auto& item : type.presetItems) {
-			if (!targetIni->sections.contains(item) && type.checkExsit) {
-				Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
-				continue;
-			}
-			if (!sections.contains(type)) {
-				Log::print<_TypeNotExist>({ registryName, 1, -1 }, type.type);
-				continue;
-			}
-
-			sections[type].validateSection(targetIni->sections[item], type);
-		}
+		type.validateAllPreserItems(registryName);
 
 		// 检查注册表是否有使用
 		if (!targetIni->sections.contains(registryName)) {
@@ -104,18 +81,8 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
 		registry.isScanned = true;
-		for (const auto& [_, name] : registry) {
-			if (!targetIni->sections.contains(name) && type.checkExsit) {
-				Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
-				continue;
-			}
-			if (!sections.contains(type)) {
-				Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type.type);
-				continue;
-			}
-
-			sections[type].validateSection(targetIni->sections[name.value], type);
-		}
+		for (const auto& [_, name] : registry)
+			type.validateSection(registryName, name);
 	}
 
 	for (const auto& [name, section] : targetIni->sections) {
