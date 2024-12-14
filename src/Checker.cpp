@@ -1,4 +1,4 @@
-﻿#include "Checker.h"
+#include "Checker.h"
 #include "Helper.h"
 #include "Log.h"
 #include "ProgressBar.h"
@@ -45,6 +45,8 @@ void Checker::loadConfig(IniFile& configFile) {
 					registryMap[name].type = registry.at("Type");
 				if (registry.contains("CheckExist"))
 					registryMap[name].checkExsit = string::isBool(registry.at("CheckExist"));
+				if (registry.contains("PresetItems"))
+					registryMap[name].presetItems = string::split(registry.at("PresetItems"));
 			}
 		}
 	}
@@ -78,6 +80,19 @@ void Checker::checkFile() {
 
 	// [Registries] VehicleTypes=UnitType
 	for (const auto& [registryName, type] : registryMap) {
+		for (const auto& item : type.presetItems) {
+			if (!targetIni->sections.contains(item) && type.checkExsit) {
+				Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
+				continue;
+			}
+			if (!sections.contains(type)) {
+				Log::print<_TypeNotExist>({ registryName, 1, -1 }, type.type);
+				return;
+			}
+
+			sections[type].validateSection(targetIni->sections[item], type);
+		}
+
 		// 检查注册表是否有使用
 		if (!targetIni->sections.contains(registryName)) {
 			Log::info<_UnusedRegistry>(-1, registryName);
@@ -97,7 +112,7 @@ void Checker::checkFile() {
 				return;
 			}
 
-			sections[type].validateSection(targetIni->sections[name.value], type.type);
+			sections[type].validateSection(targetIni->sections[name.value], type);
 		}
 	}
 

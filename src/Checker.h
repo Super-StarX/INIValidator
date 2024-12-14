@@ -15,6 +15,7 @@ public:
 	std::string type;
 	// int defaultFile;
 	bool checkExsit;
+	std::vector<std::string> presetItems;
 };
 
 class Checker {
