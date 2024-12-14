@@ -30,17 +30,26 @@ void ProgressBar::addProgressBar(size_t id, const std::string& name, size_t tota
 
 void ProgressBar::updateProgress(size_t id, size_t processed) {
 	std::lock_guard<std::mutex> lock(mutex);
-	if (progressBars.count(id))
+	if (progressBars.contains(id))
 		progressBars[id].processed = processed;
+}
+
+double ProgressBar::getPercent(size_t id) {
+	return progressBars.contains(id) ? progressBars[id].getPercent() : 100.0;
 }
 
 void ProgressBar::markFinished(size_t id) {
 	std::lock_guard<std::mutex> lock(mutex);
-	if (progressBars.count(id)) {
+	if (progressBars.contains(id)) {
 		progressBars[id].endTime = std::chrono::steady_clock::now();
 		progressBars[id].finished = true;
 		progressBars[id].processed = progressBars[id].total;
 	}
+	// 若进度条已全部完毕, 关闭线程
+	for (const auto& [_, data] : progressBars)
+		if (!data.finished)
+			return;
+	stop();
 }
 
 void ProgressBar::stop() {
@@ -87,7 +96,7 @@ void ProgressBar::run() {
 			std::cout << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)\n";
 		}
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception&) {
 	}
 }
 

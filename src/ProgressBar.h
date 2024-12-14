@@ -32,6 +32,7 @@ public:
 
 	void addProgressBar(size_t id, const std::string& name, size_t total);
 	void updateProgress(size_t id, size_t processed);
+	double getPercent(size_t id);
 	void markFinished(size_t id);
 	void stop();
 

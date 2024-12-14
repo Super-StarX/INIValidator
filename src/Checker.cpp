@@ -17,6 +17,7 @@ Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni
 
 // 加载配置文件
 void Checker::loadConfig(IniFile& configFile) {
+	ProgressBar::CheckerProgress.addProgressBar(0, "初始化检查器", targetIni->sections.size());
 	// 加载字符串限制器
 	if (configFile.sections.contains("Limits"))
 		for (const auto& [key, _] : configFile.sections.at("Limits"))
@@ -51,24 +52,32 @@ void Checker::loadConfig(IniFile& configFile) {
 		for (const auto& [key, _] : configFile.sections.at("Sections"))
 			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
+	ProgressBar::CheckerProgress.markFinished(0);
 }
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
-	ProgressBar::INIFileProgress.stop();
-	ProgressBar::CheckerProgress.addProgressBar(0, "Checker", targetIni->sections.size());
+	size_t totalProcessed = targetIni->sections.size();
+	ProgressBar::CheckerProgress.addProgressBar(1, "检查文件中", totalProcessed);
 
 	// [Globals] General
+	int processed = 0;
+	ProgressBar::CheckerProgress.addProgressBar(2, "检查全局部分", globals.size());
 	for (const auto& [globalName, _] : globals) {
+		ProgressBar::CheckerProgress.updateProgress(2, processed++);
 		if (!targetIni->sections.contains(globalName)) {
 			Log::info<_UnusedGlobal>(-1, globalName);
 			continue;
 		}
 		globals[globalName].validateSection(targetIni->sections.at(globalName), globalName);
 	}
+	ProgressBar::CheckerProgress.markFinished(2);
 
 	// [Registries] VehicleTypes=UnitType
+	processed = 0;
+	ProgressBar::CheckerProgress.addProgressBar(3, "检查注册节", registries.size());
 	for (const auto& [registryName, type] : registries) {
+		ProgressBar::CheckerProgress.updateProgress(3, processed++);
 		// 检查预注册项
 		type.validateAllPreserItems(registryName);
 
@@ -84,16 +93,20 @@ void Checker::checkFile() {
 		for (const auto& [_, name] : registry)
 			type.validateSection(registryName, name);
 	}
+	ProgressBar::CheckerProgress.markFinished(3);
 
+	// 检查剩余未检测的节
+	processed = 0;
+	ProgressBar::CheckerProgress.addProgressBar(4, "检查剩余未注册节",
+		totalProcessed - totalProcessed * ProgressBar::CheckerProgress.getPercent(1));
 	for (const auto& [name, section] : targetIni->sections) {
 		if (!section.isScanned) {
+			ProgressBar::CheckerProgress.updateProgress(4, processed++);
 			//std::this_thread::sleep_for(std::chrono::microseconds(1));
 			Log::info<_UnreachableSection>({ section.headLine }, section.name);
-			ProgressBar::CheckerProgress.updateProgress(0, ++Checker::ProcessedSections);
 		}
 	}
-
-	ProgressBar::CheckerProgress.stop();
+	ProgressBar::CheckerProgress.markFinished(4);
 }
 
 // 验证键值对

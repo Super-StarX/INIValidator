@@ -46,7 +46,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 			pChecker->validate(object, key, value, type);
 	}
 
-	ProgressBar::CheckerProgress.updateProgress(0, ++Checker::ProcessedSections);
+	ProgressBar::CheckerProgress.updateProgress(1, ++Checker::ProcessedSections);
 }
 
 DictData Dict::parseTypeValue(const std::string& str) {
