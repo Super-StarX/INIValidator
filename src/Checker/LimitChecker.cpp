@@ -24,7 +24,8 @@ std::vector<std::string> LimitChecker::getToken(const Section& config, const std
 void LimitChecker::validate(const Section& section, const std::string& key, const std::string& value) const {
 	if (matchesStart(section, key, value))
 		if (matchesEnd(section, key, value))
-			matchesList(section, key, value);
+			if (matchesList(section, key, value))
+				matchesLength(section, key, value);
 }
 
 bool LimitChecker::matchesStart(const Section& section, const std::string& key, const std::string& value) const {

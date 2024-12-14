@@ -35,6 +35,6 @@ private:
 	std::vector<std::string> startWith;
 	std::vector<std::string> endWith;
 	std::vector<std::string> limitIn;
-	int maxLength{};
+	int maxLength{ INT_MAX };
 	bool caseSensitive{ false };
 };
