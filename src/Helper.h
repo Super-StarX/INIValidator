@@ -68,7 +68,7 @@ namespace string {
 	}
 
 	// 去除注释
-	inline std::string removeInlineComment(const std::string& str) {
+	inline std::string removeComment(const std::string& str) {
 		size_t commentPos = str.find(';');
 		return commentPos != std::string::npos ? str.substr(0, commentPos) : str;
 	}

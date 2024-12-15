@@ -40,10 +40,11 @@ public:
 		return *this;
 	}
 
-	std::string value { };
-	int line { -1 };
-	size_t fileIndex { 0 };
-	bool isInheritance { false };
+	std::string value{ };
+	int line{ -1 };
+	std::string origin{ };
+	size_t fileIndex{ 0 };
+	bool isInheritance{ false };
 };
 
 template<>
@@ -67,10 +68,11 @@ public:
 	Value& at(const std::string& key) { return section.at(key); }
 	Value& operator[](const std::string& key) { return section[key]; }
 
-	bool isScanned { false };
-	int headLine { 0 };
-	int inheritanceLevel { 0 };
-	std::string name { };
+	std::string name{ };
+	int line{ 0 };
+	std::string origin{ };
+	bool isScanned{ false };
+	int inheritanceLevel{ 0 };
 	std::unordered_map<Key, Value> section;
 };
 
@@ -83,15 +85,15 @@ public:
 	static std::vector<std::string> FileNames;
 	static size_t FileIndex;
 
-    IniFile(const std::string& filepath, bool isConfig);
+	IniFile(const std::string& filepath, bool isConfig);
 
-    void load(const std::string& filepath);
-    void readSection(std::string& line, int& lineNumber, std::string& currentSection);
-    void readKeyValue(std::string& currentSection, std::string& line, int lineNumber);
+	void load(const std::string& filepath);
+	void readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber);
+	void readKeyValue(std::string& currentSection, std::string& line, std::string origin, int lineNumber);
 
-	bool isConfig { false };
-    Sections sections;
+	bool isConfig{ false };
+	Sections sections;
 private:
-    void processIncludes(const std::string& basePath);
+	void processIncludes(const std::string& basePath);
 	void processInheritance(std::string& line, size_t endPos, int& lineNumber, std::string& currentSection);
 };

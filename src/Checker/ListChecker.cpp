@@ -7,7 +7,7 @@
 ListChecker::ListChecker(Checker* checker, const Section& config) :checker(checker) {
 	// 加载 Type
 	if (!config.contains("Type")) {
-		Log::error<_ListCheckerUnknownType>(config.headLine);
+		Log::error<_ListCheckerUnknownType>(config.line);
 		return;
 	}
 	types = string::splitAsString(config.at("Type").value);
@@ -20,7 +20,7 @@ ListChecker::ListChecker(Checker* checker, const Section& config) :checker(check
 			rangeStream.ignore();
 		rangeStream >> maxRange;
 		if (minRange > maxRange) {
-			Log::error<_ListCheckerRangeIllegal>(config.headLine);
+			Log::error<_ListCheckerRangeIllegal>(config.line);
 			return;
 		}
 	}

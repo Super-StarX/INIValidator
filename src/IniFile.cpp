@@ -1,6 +1,6 @@
-﻿#include "IniFile.h"
+﻿#include "Helper.h"
+#include "IniFile.h"
 #include "Log.h"
-#include "Helper.h"
 #include "ProgressBar.h"
 #include <algorithm>
 #include <codecvt>
@@ -24,7 +24,7 @@ size_t IniFile::GetFileIndex() {
 }
 
 IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
-    load(filepath);
+	load(filepath);
 }
 
 void IniFile::load(const std::string& filepath) {
@@ -35,8 +35,8 @@ void IniFile::load(const std::string& filepath) {
 		return;
 	}
 
-    std::wifstream file(path);
-    if (!file.is_open()) {
+	std::wifstream file(path);
+	if (!file.is_open()) {
 		std::cerr << "Failed to open file: " << path;
 		return;
 	}
@@ -45,8 +45,8 @@ void IniFile::load(const std::string& filepath) {
 	auto curFileIndex = FileIndex;
 	auto fileName = std::filesystem::path(path).filename().string();
 	FileNames.push_back(fileName);
-    std::string line, currentSection;
-    int lineNumber = 0;
+	std::string origin, currentSection;
+	int lineNumber = 0;
 
 	size_t totalLines = std::count(std::istreambuf_iterator<wchar_t>(file), std::istreambuf_iterator<wchar_t>(), '\n');
 	file.clear();
@@ -66,44 +66,43 @@ void IniFile::load(const std::string& filepath) {
 	};
 
 	std::wstring wline;
-    // 逐行扫描加载ini
-    while (std::getline(file, wline)) {
-		line = fromWString(wline);
-        lineNumber++;
-        // 移除注释之后的东西,并掐头去尾
-        line = string::removeInlineComment(line);
-        line = string::trim(line);
-        if (line.empty()) continue;
+	// 逐行扫描加载ini
+	while (std::getline(file, wline)) {
+		origin = fromWString(wline);
+		lineNumber++;
+		// 移除注释之后的东西,并掐头去尾
+		auto line = string::removeComment(origin);
+		line = string::trim(line);
+		if (line.empty()) continue;
 
-        if (line.front() == '[')
-            readSection(line, lineNumber, currentSection);
-        else if (!currentSection.empty())
-            readKeyValue(currentSection, line, lineNumber);
+		if (line.front() == '[')
+			readSection(currentSection, line, origin, lineNumber);
+		else if (!currentSection.empty())
+			readKeyValue(currentSection, line, origin, lineNumber);
 		ProgressBar::INIFileProgress.updateProgress(curFileIndex, lineNumber);
-    }
-    processIncludes(std::filesystem::path(path).parent_path().string());
+	}
+	processIncludes(std::filesystem::path(path).parent_path().string());
 	ProgressBar::INIFileProgress.markFinished(curFileIndex);
 }
 
 // 开头是[则为节名
-void IniFile::readSection(std::string& line, int& lineNumber, std::string& currentSection) {
-    size_t endPos = line.find(']');
+void IniFile::readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber) {
+	size_t endPos = line.find(']');
 	if (endPos == std::string::npos)
-		Log::error<_BracketClosed>({ currentSection, GetFileIndex(), lineNumber});
-    else {
-        currentSection = line.substr(1, endPos - 1);
-		sections[currentSection].name = currentSection;
-		sections[currentSection].headLine = lineNumber;
+		Log::error<_BracketClosed>({ currentSection, GetFileIndex(), lineNumber });
+	else {
+		currentSection = line.substr(1, endPos - 1);
+		sections[currentSection] = { currentSection, lineNumber, origin };
 		processInheritance(line, endPos, lineNumber, currentSection);
-    }
+	}
 }
 
 // 读取键值对
-void IniFile::readKeyValue(std::string& currentSection, std::string& line, int lineNumber) {
-    auto& section = sections[currentSection];
-    auto delimiterPos = line.find('=');
-    if (delimiterPos != std::string::npos) {
-        // 传统键值对
+void IniFile::readKeyValue(std::string& currentSection, std::string& line, std::string origin, int lineNumber) {
+	auto& section = sections[currentSection];
+	auto delimiterPos = line.find('=');
+	if (delimiterPos != std::string::npos) {
+		// 传统键值对
 		auto key = string::trim(line.substr(0, delimiterPos));
 		auto value = string::trim(line.substr(delimiterPos + 1));
 		// += 的特殊处理
@@ -120,29 +119,29 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, int l
 				Log::error<_DuplicateKey>({ section.name, oldValue.fileIndex, lineNumber },
 					key, oldValue.line, oldValue, value);
 		}
-		section[key] = { value, lineNumber, FileIndex };
-    }
-    else
-        // 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
-        section[line] = { "", lineNumber, FileIndex };
+		section[key] = { value, lineNumber, origin, FileIndex };
+	}
+	else
+		// 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
+		section[line] = { "", lineNumber, origin, FileIndex };
 }
 
 // 处理#include
 void IniFile::processIncludes(const std::string& basePath) {
-    // 找到名为#include的节
-    if (sections.contains("#include")) {
-        // 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
+	// 找到名为#include的节
+	if (sections.contains("#include")) {
+		// 遍历#include里的所有键值对，因为unordered_map没有顺序，所以重新按顺序遍历
 		size_t curFileIndex = FileIndex;
 		auto& section = sections["#include"];
 		using MapType = decltype(section.section);
 		std::vector<std::pair<MapType::key_type, MapType::mapped_type>> include(section.begin(), section.end());
 		std::sort(include.begin(), include.end(), [](const auto& l, const auto& r) { return l.second.line < r.second.line; });
 
-        for (const auto& [key, value] : include)
-            // 将新的ini载入到本ini中，并判断文件编号防止死循环
+		for (const auto& [key, value] : include)
+			// 将新的ini载入到本ini中，并判断文件编号防止死循环
 			if (value.fileIndex == curFileIndex)
 				this->load(basePath + "/" + value.value);
-    }
+	}
 }
 
 // 处理[]:[]
@@ -156,7 +155,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		size_t nextEndPos = line.find(']', colonPos + 2);
 		if (nextEndPos == std::string::npos)
 			return Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
-		
+
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 		if (!sections.contains(inheritedName))
 			return Log::error<_InheritanceSectionExsit>({ curSectionName, GetFileIndex(), lineNumber }, inheritedName);
@@ -178,5 +177,5 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 }
 
 std::string Value::getFileName() const {
-	return IniFile::FileNames.at(fileIndex); 
+	return IniFile::FileNames.at(fileIndex);
 }

@@ -104,7 +104,7 @@ void Checker::checkFile() {
 		if (!section.isScanned) {
 			ProgressBar::CheckerProgress.updateProgress(4, processed++);
 			//std::this_thread::sleep_for(std::chrono::microseconds(1));
-			Log::info<_UnreachableSection>({ section.headLine }, section.name);
+			Log::info<_UnreachableSection>({ section.line }, section.name);
 		}
 	}
 	ProgressBar::CheckerProgress.markFinished(4);
