@@ -10,7 +10,7 @@ LimitChecker::LimitChecker(const Section& config) {
 	if (config.contains("MaxLength"))
 		maxLength = std::stoi(config.at("MaxLength"));
 	if (config.contains("CaseSenstive")) {
-		char res = config.at("CaseSenstive").value[0];
+		char res = config.at("CaseSenstive")().front();
 		caseSensitive = res == '1' || res == 'y' || res == 't';
 	}
 }

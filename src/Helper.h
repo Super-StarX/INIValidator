@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <filesystem>
 
 namespace string {
 	static std::vector<std::string> split(const std::string& str, char delimiter = ',') {
@@ -78,6 +79,12 @@ namespace string {
 		size_t start = str.find_first_not_of(" \t\r\n");
 		size_t end = str.find_last_not_of(" \t\r\n");
 		return (start == std::string::npos || end == std::string::npos) ? "" : str.substr(start, end - start + 1);
+	}
+	
+	// 绑定超链接
+	inline std::string linkTo(const std::string& str, const std::string& path, const size_t line) {
+		std::string absolutePath = std::filesystem::absolute(path).string();
+		return std::format("\033]8;;file:///{}:{}\033\\{}\033]8;;\033\\", absolutePath, line, str);
 	}
 
 	// 判断是否是包含数学表达式的字符串

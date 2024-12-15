@@ -6,39 +6,9 @@
 class Value {
 public:
 	operator std::string() const { return value; }
-	std::string operator()() const {
-		return value;
-	}
+	std::string operator()() const { return value; }
 
 	std::string getFileName() const;
-
-	friend Value operator+(const Value& lhs, const std::string& rhs) {
-		Value result = lhs;
-		result.value += rhs;
-		return result;
-	}
-
-	friend Value operator+(const std::string& lhs, const Value& rhs) {
-		Value result = rhs;
-		result.value = lhs + result.value;
-		return result;
-	}
-
-	friend Value operator+(const Value& lhs, const Value& rhs) {
-		Value result = lhs;
-		result.value += rhs.value;
-		return result;
-	}
-
-	Value& operator+=(const std::string& rhs) {
-		value += rhs;
-		return *this;
-	}
-
-	Value& operator+=(const Value& rhs) {
-		value += rhs.value;
-		return *this;
-	}
 
 	std::string value{ };
 	int line{ -1 };
@@ -58,9 +28,7 @@ class Section {
 public:
 	using Key = std::string;
 
-	auto begin() { return section.begin(); }
 	auto begin() const { return section.begin(); }
-	auto end() { return section.end(); }
 	auto end() const { return section.end(); }
 	void insert(const Section& other) { return section.insert(other.begin(), other.end()); }
 	bool contains(const std::string& key) const { return section.contains(key); }
