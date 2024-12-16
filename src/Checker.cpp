@@ -82,7 +82,7 @@ void Checker::checkFile() {
 		// 检查预注册项
 		type.validateAllPreserItems(registryName);
 
-		// 检查注册表是否有使用
+		// 检查在ini里是否存在这个注册表
 		if (!targetIni->sections.contains(registryName)) {
 			Log::info<_UnusedRegistry>(-1, registryName);
 			continue;

@@ -23,8 +23,9 @@ void RegistryChecker::validateAllPreserItems(const Section::Key& registryName) c
 }
 
 void RegistryChecker::validatePreserItem(const Section::Key& registryName, const std::string& item) const {
-	if (!checker->targetIni->sections.contains(item) && checkExsit) {
-		Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
+	if (!checker->targetIni->sections.contains(item)) {
+		if (checkExsit)
+			Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
 		return;
 	}
 	if (!checker->sections.contains(type)) {
@@ -36,8 +37,9 @@ void RegistryChecker::validatePreserItem(const Section::Key& registryName, const
 }
 
 void RegistryChecker::validateSection(const Section::Key& registryName, const Value& name) const {
-	if (!checker->targetIni->sections.contains(name) && checkExsit) {
-		Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
+	if (!checker->targetIni->sections.contains(name)) {
+		if (checkExsit)
+			Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
 		return;
 	}
 	if (!checker->sections.contains(type)) {
