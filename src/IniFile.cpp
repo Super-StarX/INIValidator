@@ -88,13 +88,15 @@ void IniFile::load(const std::string& filepath) {
 // 开头是[则为节名
 void IniFile::readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber) {
 	size_t endPos = line.find(']');
-	if (endPos == std::string::npos)
+	if (endPos == std::string::npos) {
 		Log::error<_BracketClosed>({ currentSection, GetFileIndex(), lineNumber });
-	else {
-		currentSection = line.substr(1, endPos - 1);
-		sections[currentSection] = { currentSection, lineNumber, origin };
-		processInheritance(line, endPos, lineNumber, currentSection);
+		return;
 	}
+	currentSection = line.substr(1, endPos - 1);
+	sections[currentSection].name = currentSection;
+	sections[currentSection].line = lineNumber;
+	sections[currentSection].origin = origin;
+	processInheritance(line, endPos, lineNumber, currentSection);
 }
 
 // 读取键值对
