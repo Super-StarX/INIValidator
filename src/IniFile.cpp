@@ -31,13 +31,13 @@ void IniFile::load(const std::string& filepath) {
 	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
 
 	if (!std::filesystem::exists(path)) {
-		std::cerr << "File not found: " << path;
+		std::cerr << "File not found: " << path << std::endl;
 		return;
 	}
 
 	std::wifstream file(path);
 	if (!file.is_open()) {
-		std::cerr << "Failed to open file: " << path;
+		std::cerr << "Failed to open file: " << path << std::endl;
 		return;
 	}
 
@@ -54,7 +54,7 @@ void IniFile::load(const std::string& filepath) {
 	file.imbue(std::locale("zh_CN.UTF-8"));
 
 	std::string name = "[" + std::to_string(curFileIndex) + "] " + fileName + " ";
-	ProgressBar::INIFileProgress.addProgressBar(curFileIndex, name, totalLines);
+	auto progress = Progress(name, totalLines);
 
 	auto fromWString = [](const std::wstring& wstr) {
 		// Get required buffer size for conversion
@@ -79,9 +79,9 @@ void IniFile::load(const std::string& filepath) {
 			readSection(currentSection, line, origin, lineNumber);
 		else if (!currentSection.empty())
 			readKeyValue(currentSection, line, origin, lineNumber);
-		ProgressBar::INIFileProgress.updateProgress(curFileIndex, lineNumber);
+		progress.update();
 	}
-	ProgressBar::INIFileProgress.markFinished(curFileIndex);
+	progress.stop();
 	processIncludes(std::filesystem::path(path).parent_path().string());
 }
 
