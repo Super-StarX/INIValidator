@@ -10,6 +10,7 @@
 // StartWith = 前缀的限定内容, 不填则不检查
 // EndWith = 后缀的限定内容, 不填则不检查
 // LimitIn = 整体的限定内容, 不填则不检查
+// MaxLength = 字符串的长度限制
 // IgnoreCase = 是否忽略大小写检查, 作用于前面三条
 class LimitChecker {
 public:

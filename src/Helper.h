@@ -61,10 +61,8 @@ namespace string {
 
 	static std::string clamp(const std::string& str, const size_t length) {
 		size_t size = calculateUTF8Width(str);
-
 		if (size > length)
 			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
-
 		return str + std::string(length - size, ' '); // 补齐空格
 	}
 

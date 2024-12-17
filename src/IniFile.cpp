@@ -81,8 +81,8 @@ void IniFile::load(const std::string& filepath) {
 			readKeyValue(currentSection, line, origin, lineNumber);
 		ProgressBar::INIFileProgress.updateProgress(curFileIndex, lineNumber);
 	}
-	processIncludes(std::filesystem::path(path).parent_path().string());
 	ProgressBar::INIFileProgress.markFinished(curFileIndex);
+	processIncludes(std::filesystem::path(path).parent_path().string());
 }
 
 // 开头是[则为节名
