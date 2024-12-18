@@ -1,5 +1,10 @@
-#include "ProgressBar.h"
+﻿#include "ProgressBar.h"
 #include "Helper.h"
+
+// 文件名宽度
+constexpr size_t fileNameWidth = 25;
+// 进度条宽度
+constexpr size_t totalLength = 50;
 
 Progress::Progress() {}
 
@@ -27,7 +32,6 @@ void Progress::stop() {
 void Progress::_start(const std::string& name, size_t total) {
 	stop(); // 确保上一个进度条结束
 
-	constexpr size_t fileNameWidth = 25;
 	std::lock_guard<std::mutex> lock(mtx);
 	this->startName = string::clamp(name, fileNameWidth);
 	this->total = total;
@@ -68,16 +72,13 @@ void Progress::draw() {
 	double percent = getPercent();
 	auto elapsed = getElapsed();
 
-	// 固定文件名宽度
-	constexpr size_t total = 50;
-
 	// 渲染进度条
 	size_t completed = (size_t)(percent / 2);
-	size_t remain = total - completed;
+	size_t remain = totalLength - completed;
 	std::cerr << "\r" << startName << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 
 	// 显示百分比和时间
-	std::cerr << std::fixed << std::setprecision(2) << percent << "% (" << elapsed << "ms)";
+	std::cerr << std::fixed << std::setprecision(2) << processed << "/" << total << " (" << percent << "% " << elapsed << "ms)";
 }
 
 double Progress::getPercent() const {
