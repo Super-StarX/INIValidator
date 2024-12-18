@@ -9,11 +9,11 @@
 
 class Progress {
 public:
-	static Progress& getInstance();  // 单实例获取
+	static Progress& instance();  // 单实例获取
 
-	void start(const std::string& name, size_t total);
-	void update();
-	void stop();
+	static void start(const std::string& name, size_t total);
+	static void update();
+	static void stop();
 
 	~Progress();
 
@@ -25,6 +25,9 @@ private:
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
 
+	void _start(const std::string& name, size_t total);
+	void _update();
+	void _stop();
 	void draw();         // 渲染进度条
 	void stopDrawing();  // 停止刷新线程
 	double getPercent() const;

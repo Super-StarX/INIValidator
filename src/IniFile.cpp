@@ -54,7 +54,7 @@ void IniFile::load(const std::string& filepath) {
 	file.imbue(std::locale("zh_CN.UTF-8"));
 
 	std::string name = "[" + std::to_string(curFileIndex) + "] " + fileName + " ";
-	Progress::getInstance().start(name, totalLines);
+	Progress::start(name, totalLines);
 
 	auto fromWString = [](const std::wstring& wstr) {
 		// Get required buffer size for conversion
@@ -79,9 +79,9 @@ void IniFile::load(const std::string& filepath) {
 			readSection(currentSection, line, origin, lineNumber);
 		else if (!currentSection.empty())
 			readKeyValue(currentSection, line, origin, lineNumber);
-		Progress::getInstance().update();
+		Progress::update();
 	}
-	Progress::getInstance().stop();
+	Progress::stop();
 	processIncludes(std::filesystem::path(path).parent_path().string());
 }
 

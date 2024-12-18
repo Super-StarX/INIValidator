@@ -18,7 +18,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 	if (object.isScanned) 
 		return;
 
-	Progress::getInstance().update();
+	Progress::update();
 	const_cast<Section&>(object).isScanned = true;
 
 	auto pChecker = Checker::Instance;

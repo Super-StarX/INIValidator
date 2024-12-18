@@ -1,4 +1,4 @@
-﻿#include "ProgressBar.h"
+#include "ProgressBar.h"
 #include "Helper.h"
 
 Progress::Progress() {}
@@ -7,12 +7,24 @@ Progress::~Progress() {
 	stopDrawing();
 }
 
-Progress& Progress::getInstance() {
+Progress& Progress::instance() {
 	static Progress instance;
 	return instance;
 }
 
 void Progress::start(const std::string& name, size_t total) {
+	instance()._start(name, total);
+}
+
+void Progress::update() {
+	instance()._update();
+}
+
+void Progress::stop() {
+	instance()._stop();
+}
+
+void Progress::_start(const std::string& name, size_t total) {
 	stop(); // 确保上一个进度条结束
 
 	constexpr size_t fileNameWidth = 25;
@@ -32,11 +44,11 @@ void Progress::start(const std::string& name, size_t total) {
 	});
 }
 
-void Progress::update() {
+void Progress::_update() {
 	++processed;
 }
 
-void Progress::stop() {
+void Progress::_stop() {
 	if (!stopFlag) {
 		processed = total;
 		stopDrawing();
@@ -81,8 +93,8 @@ long Progress::getElapsed() const {
 template <typename Container, typename Func>
 void Progress::forEach(const std::string& name, const Container& container, Func func) {
 	start(name, container.size());
-	for (const auto& item : container) {
-		func(item);
+	for (const auto& [key, value] : container) {
+		func(key, value);
 		update();
 	}
 	stop();

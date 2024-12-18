@@ -33,6 +33,7 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 }
 
 void Log::output(const std::string& logFileName) {
+	Progress::stop();
 	// 共享资源和同步机制
 	std::queue<std::string> logQueue;
 	std::mutex queueMutex, fileMutex;
