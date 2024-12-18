@@ -113,6 +113,10 @@ private:
 		}
 		catch (const std::format_error& e) {
 			std::cerr << "格式错误：" << e.what() << "\n输入参数：";
+
+			if constexpr (Member != 0) 
+				std::cerr << Settings::Instance->*Member << " ";
+
 			((std::cerr << args << " "), ...);
 			std::cerr << std::endl;
 		}
