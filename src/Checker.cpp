@@ -17,7 +17,7 @@ Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni
 
 // 加载配置文件
 void Checker::loadConfig(IniFile& configFile) {
-	auto progress = Progress("初始化检查器", targetIni->sections.size());
+	Progress::getInstance().start("初始化检查器", targetIni->sections.size());
 	// 加载字符串限制器
 	if (configFile.sections.contains("Limits"))
 		for (const auto& [key, _] : configFile.sections.at("Limits"))
@@ -57,21 +57,21 @@ void Checker::loadConfig(IniFile& configFile) {
 // 验证每个注册表的内容
 void Checker::checkFile() {
 	// [Globals] General
-	auto progress = Progress("检查全局部分", globals.size());
+	Progress::getInstance().start("检查全局部分", globals.size());
 	for (const auto& [globalName, _] : globals) {
-		progress.update();
+		Progress::getInstance().update();
 		if (!targetIni->sections.contains(globalName)) {
 			Log::info<_UnusedGlobal>(-1, globalName);
 			continue;
 		}
 		globals[globalName].validateSection(targetIni->sections.at(globalName), globalName);
 	}
-	progress.stop();
+	Progress::getInstance().stop();
 
 	// [Registries] VehicleTypes=UnitType
-	auto progress2 = Progress("检查注册节", registries.size());
+	Progress::getInstance().start("检查注册节", registries.size());
 	for (const auto& [registryName, type] : registries) {
-		progress2.update();
+		Progress::getInstance().update();
 		// 检查预注册项
 		type.validateAllPreserItems(registryName);
 
@@ -87,18 +87,18 @@ void Checker::checkFile() {
 		for (const auto& [_, name] : registry)
 			type.validateSection(registryName, name);
 	}
-	progress2.stop();
+	Progress::getInstance().stop();
 
 	// 检查剩余未检测的节
-	auto progress3 = Progress("检查剩余未注册节", targetIni->sections.size());
+	Progress::getInstance().start("检查剩余未注册节", targetIni->sections.size());
 	for (const auto& [name, section] : targetIni->sections) {
 		if (!section.isScanned) {
-			progress3.update();
+			Progress::getInstance().update();
 			//std::this_thread::sleep_for(std::chrono::microseconds(1));
 			Log::info<_UnreachableSection>({ section.line }, section.name);
 		}
 	}
-	progress3.stop();
+	Progress::getInstance().stop();
 }
 
 // 验证键值对

@@ -1,26 +1,41 @@
 ﻿#pragma once
 #include <atomic>
 #include <chrono>
-#include <map>
 #include <mutex>
 #include <string>
+#include <thread>
+#include <vector>
+#include <iostream>
 
 class Progress {
 public:
-	Progress(const std::string& name, size_t total);
-	~Progress();
+	static Progress& getInstance();  // 单实例获取
+
+	void start(const std::string& name, size_t total);
 	void update();
 	void stop();
-private:
-	using time_point = std::chrono::steady_clock::time_point;
 
-	void draw(bool redraw = true);
+	~Progress();
+
+	template <typename Container, typename Func>
+	void forEach(const std::string& name, const Container& container, Func func);
+
+private:
+	Progress(); // 私有构造函数
+	Progress(const Progress&) = delete;
+	Progress& operator=(const Progress&) = delete;
+
+	void draw();         // 渲染进度条
+	void stopDrawing();  // 停止刷新线程
 	double getPercent() const;
 	long getElapsed() const;
 
+	std::string startName;           // 进度条名称
+	size_t total{ 0 };               // 总项数
 	std::atomic<size_t> processed{ 0 }; // 已处理项
-	size_t total{ 0 };                  // 总项数
-	std::string start;                  // 进度条名称
-	time_point startTime;				// 开始时间
-	time_point endTime;					// 完成时间
+	std::chrono::steady_clock::time_point startTime;
+
+	std::mutex mtx;
+	std::atomic<bool> stopFlag{ true };
+	std::thread drawThread;  // 渲染线程
 };
