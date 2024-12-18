@@ -8,6 +8,11 @@ public:
 	operator std::string() const { return value; }
 	std::string operator()() const { return value; }
 
+	friend std::ostream& operator<<(std::ostream& os, const Value& v) {
+		os << v.value;
+		return os;
+	}
+
 	std::string getFileName() const;
 
 	std::string value{ };

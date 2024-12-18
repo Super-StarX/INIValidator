@@ -89,7 +89,7 @@ void IniFile::load(const std::string& filepath) {
 void IniFile::readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber) {
 	size_t endPos = line.find(']');
 	if (endPos == std::string::npos) {
-		Log::error<_BracketClosed>({ currentSection, GetFileIndex(), lineNumber });
+		Log::error<_BracketClosed>({ origin, GetFileIndex(), lineNumber });
 		return;
 	}
 	currentSection = line.substr(1, endPos - 1);
@@ -118,7 +118,7 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, std::
 			// 如果现存的值是继承来的值，则不报警，新值覆盖后会去掉继承标签
 			// 如果是同文件内的覆盖, 就报警, 跨文件不报
 			if (!oldValue.isInheritance && oldValue.fileIndex == FileIndex)
-				Log::error<_DuplicateKey>({ section.name, oldValue.fileIndex, lineNumber },
+				Log::error<_DuplicateKey>({ section.origin, oldValue.fileIndex, lineNumber },
 					key, oldValue.line, oldValue, value);
 		}
 		section[key] = { value, lineNumber, origin, FileIndex };
@@ -152,15 +152,15 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 	if (colonPos != std::string::npos) {
 		// 检查 ':' 之后的第一个字符是否是 '['
 		if (colonPos + 1 >= line.size() || line[colonPos + 1] != '[')
-			return Log::error<_SectionFormat>({ curSectionName, GetFileIndex(), lineNumber });
+			return Log::error<_SectionFormat>({ line, GetFileIndex(), lineNumber });
 
 		size_t nextEndPos = line.find(']', colonPos + 2);
 		if (nextEndPos == std::string::npos)
-			return Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
+			return Log::error<_InheritanceBracketClosed>({ line, GetFileIndex(), lineNumber });
 
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 		if (!sections.contains(inheritedName))
-			return Log::error<_InheritanceSectionExsit>({ curSectionName, GetFileIndex(), lineNumber }, inheritedName);
+			return Log::error<_InheritanceSectionExsit>({ line, GetFileIndex(), lineNumber }, inheritedName);
 
 		auto& curSection = sections[curSectionName];
 		auto& inheritedSection = sections[inheritedName];
@@ -175,7 +175,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		Log::error<_InheritanceBracketClosed>({ curSectionName, GetFileIndex(), lineNumber });
+		Log::error<_InheritanceBracketClosed>({ line, GetFileIndex(), lineNumber });
 }
 
 std::string Value::getFileName() const {

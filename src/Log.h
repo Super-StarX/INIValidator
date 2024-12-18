@@ -19,20 +19,21 @@ struct LogData {
 	int line{ -2 };
 	size_t fileindex{ 0 };
 	std::string section{};
-	std::string key{};
-	std::string value{};
+	std::string origin{};
+	bool isSectionName{ false };
 
 	explicit LogData() = default;
 	LogData(const int line) : line(line) {}
-	LogData(const Section& section, const std::string& key) : key(key), section(section.name) {
+	LogData(const Section& section, const std::string& key) :section(section.name) {
 		const auto& value = section.at(key);
-		line = value.line;
-		this->value = value;
-		fileindex = value.fileIndex;
+		this->line = value.line;
+		this->origin = value.origin;
+		this->fileindex = value.fileIndex;
 	}
-	LogData(const std::string& section, size_t fileindex, const int line) : fileindex(fileindex), section(section), line(line){}
-	
-	bool operator<(const LogData& r) const{
+	LogData(const std::string& origin, size_t fileindex, const int line, bool isSectionName = false)
+		: fileindex(fileindex), origin(origin), line(line), isSectionName(isSectionName) {}
+
+	bool operator<(const LogData& r) const {
 		return fileindex == r.fileindex ? line < r.line : fileindex < r.fileindex;
 	}
 };
@@ -42,31 +43,37 @@ class LogStream;
 class Log {
 public:
 	friend LogStream;
-    static Log* Instance; 
+	static Log* Instance;
 	static std::set<LogStream> Logs;
 
-    Log();
+	Log();
 
 	void output(const std::string& logFileName);
 
+	template<typename... Args>
+	static void out(Args&&... args) {
+		LogData l;
+		stream<0>(Severity::DEFAULT, l, std::forward<Args>(args)...);
+	}
+
 	template <auto Member, typename... Args>
 	static void print(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::DEFAULT, logdata, std::make_format_args(args...));
+		stream<Member>(Severity::DEFAULT, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void info(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::INFO, logdata, std::make_format_args(args...));	
+		stream<Member>(Severity::INFO, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void warning(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::WARNING, logdata, std::make_format_args(args...));
+		stream<Member>(Severity::WARNING, logdata, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
 	static void error(const LogData& logdata, Args&&... args) {
-		stream<Member>(Severity::ERROR, logdata, std::make_format_args(args...));
+		stream<Member>(Severity::ERROR, logdata, std::forward<Args>(args)...);
 	}
 
 private:
@@ -78,15 +85,36 @@ private:
 	void summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount);
 
 	template <auto Member, typename... Args>
-	static void stream(Severity severity, const LogData& logdata, auto args) {
+	static void stream(Severity severity, const LogData& logdata, Args&&... args) {
 		try {
-			if (!(Settings::Instance->*Member).empty()) {
-				auto format = std::vformat(Settings::Instance->*Member, args);
-				Log::Logs.emplace(severity, logdata, format);
+			if constexpr (Member == 0) {
+				static_assert(sizeof...(Args) > 0, "不允许不写参数的直接LOG输出");
+
+				if constexpr (sizeof...(Args) > 1) {
+					auto tuple = std::make_tuple(std::forward<Args>(args)...);
+					auto content = std::apply(
+						[&](const auto& first, const auto&... rest) {
+						return std::vformat(first, std::make_format_args(rest...));
+					},
+						tuple);
+					Log::Logs.emplace(severity, logdata, content);
+				}
+				else {
+					auto content = std::vformat("{}", std::make_format_args(args...));
+					Log::Logs.emplace(severity, logdata, content);
+				}
+			}
+			else {
+				if (Settings::Instance && !(Settings::Instance->*Member).empty()) {
+					auto content = std::vformat(Settings::Instance->*Member, std::make_format_args(args...));
+					Log::Logs.emplace(severity, logdata, content);
+				}
 			}
 		}
 		catch (const std::format_error& e) {
-			std::cerr << "格式错误：" << e.what() << std::endl;
+			std::cerr << "格式错误：" << e.what() << "\n输入参数：";
+			((std::cerr << args << " "), ...);
+			std::cerr << std::endl;
 		}
 	}
 };
@@ -97,7 +125,7 @@ public:
 	friend Log;
 	explicit LogStream() = default;
 	LogStream(Severity severity, const LogData& logdata, std::string buffer);
-	
+
 	std::string getFileMessage() const;
 	std::string getPrintMessage() const;
 
