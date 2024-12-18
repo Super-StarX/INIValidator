@@ -69,9 +69,8 @@ void Checker::checkFile() {
 	Progress::getInstance().stop();
 
 	// [Registries] VehicleTypes=UnitType
-	Progress::getInstance().start("检查注册节", registries.size());
+	Progress::getInstance().start("检查注册节", targetIni->sections.size());
 	for (const auto& [registryName, type] : registries) {
-		Progress::getInstance().update();
 		// 检查预注册项
 		type.validateAllPreserItems(registryName);
 
