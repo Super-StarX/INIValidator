@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "Checker/RegistryChecker.h"
+#include "Checker/CustomChecker.h"
 #include "Checker/LimitChecker.h"
 #include "Checker/ListChecker.h"
 #include "Checker/NumberChecker.h"
+#include "Checker/RegistryChecker.h"
 #include "Checker/TypeChecker.h"
 #include "Dict.h"
 #include "IniFile.h"
@@ -26,6 +27,7 @@ private:
 	using Registrys = map<RegistryChecker>;
 	using Globals = map<Dict>;
 	using Sections = map<Dict>;
+	using Scripts = std::unique_ptr<CustomChecker>;
 	using Limits = map<LimitChecker>;
 	using Lists = map<ListChecker>;
 	using Numbers = map<NumberChecker>;
@@ -40,6 +42,7 @@ private:
 	Lists lists;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
 	Globals globals;		// 全局类型限制: 类型名 <-> 确定名字类型section
 	Sections sections;		// 实例类型限制: 类型名 <-> 自定义类型section
+	Scripts scripts;		// 实例类型限制: 类型名 <-> 自定义类型section
 	IniFile* targetIni;		// 检查的ini
 
 	int validateInteger(const Section& section, const std::string& key, const Value& str);

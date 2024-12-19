@@ -51,6 +51,8 @@ void Checker::loadConfig(IniFile& configFile) {
 		for (const auto& [key, _] : configFile.sections.at("Sections"))
 			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
+
+	scripts = std::make_unique<CustomChecker>("Scripts");
 }
 
 // 验证每个注册表的内容
@@ -110,6 +112,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
 	//else if (registries.contains(type)) registries.at(type).validate(section, key, value, type);
 	else if (sections.contains(type)) TypeChecker::validate(section, key, value, type);
+	else if (scripts->getSupportedTypes().count(type)) scripts->validate(section.name, key, value.value, type);
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {

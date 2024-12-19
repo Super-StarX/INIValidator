@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Checker\CustomChecker.cpp" />
     <ClCompile Include="INIValidater.cpp" />
     <ClCompile Include="src\Dict.cpp" />
     <ClCompile Include="src\IniFile.cpp" />
@@ -163,6 +164,7 @@
     <None Include=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Checker\CustomChecker.h" />
     <ClInclude Include="src\Dict.h" />
     <ClInclude Include="src\Helper.h" />
     <ClInclude Include="src\IniFile.h" />
