@@ -1,10 +1,8 @@
 ﻿#include "ProgressBar.h"
 #include "Helper.h"
 
-// 文件名宽度
-constexpr size_t fileNameWidth = 25;
-// 进度条宽度
-constexpr size_t totalLength = 50;
+constexpr size_t fileNameWidth = 25; // 文件名宽度
+constexpr size_t totalLength = 50; // 进度条宽度
 
 Progress::Progress() {}
 

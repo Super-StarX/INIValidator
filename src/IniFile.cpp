@@ -31,13 +31,13 @@ void IniFile::load(const std::string& filepath) {
 	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
 
 	if (!std::filesystem::exists(path)) {
-		std::cerr << "File not found: " << path << std::endl;
+		Log::out("File not found: {}", path);
 		return;
 	}
 
 	std::wifstream file(path);
 	if (!file.is_open()) {
-		std::cerr << "Failed to open file: " << path << std::endl;
+		Log::out("Failed to open file: {}", path);
 		return;
 	}
 
@@ -162,6 +162,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		if (!sections.contains(inheritedName))
 			return Log::error<_InheritanceSectionExsit>({ line, GetFileIndex(), lineNumber }, inheritedName);
 
+		// [curSection]:[inheritedSection]
 		auto& curSection = sections[curSectionName];
 		auto& inheritedSection = sections[inheritedName];
 		for (const auto& [key, value] : inheritedSection) {
@@ -170,8 +171,9 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 				inheritedValue.isInheritance = true; // 设置继承标志
 				curSection[key] = inheritedValue; // 插入到当前节中
 			}
-			else if (curSection[key].isInheritance)
-				Log::error<_InheritanceDuplicateKey>({ inheritedSection, key }, value, inheritedSection[key]);
+			else if (curSection[key].isInheritance) // 继承节里有重复的键(不是与原节重复)
+				Log::error<_InheritanceDuplicateKey>({ inheritedSection, key }
+					, key, value.line, value, inheritedSection[key]);
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
