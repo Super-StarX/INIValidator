@@ -50,10 +50,11 @@ public:
 
 	void output(const std::string& logFileName);
 
+	// 直接输出文本的形式，禁止不填内容，只填1个字符串时直接输出字符串
+	// 填入多个变量时，第一个变量为format，后续的变量为格式化参数
 	template<typename... Args>
 	static void out(Args&&... args) {
-		LogData l;
-		stream<0>(Severity::DEFAULT, l, std::forward<Args>(args)...);
+		stream<0>(Severity::DEFAULT, { -2 }, std::forward<Args>(args)...);
 	}
 
 	template <auto Member, typename... Args>
@@ -84,6 +85,7 @@ private:
 	void writeLog(const std::string& log);
 	void summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount);
 
+	// Member是Settings中定义的字符串，为0时代表直接输出文本
 	template <auto Member, typename... Args>
 	static void stream(Severity severity, const LogData& logdata, Args&&... args) {
 		try {

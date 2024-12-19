@@ -179,6 +179,11 @@ std::string LogStream::generateLogMessage() const {
 		auto filename = IniFile::GetFileName(data.fileindex);
 		std::string origin;
 
+
+		// 一共有3种输出方式
+		// 对于节报错，原文存储在origin中，输出 origin
+		// 对于行报错，只输出节名的模式下，不存储原文，节名存储在origin中，isSectionName为true，输出 [origin]
+		// 对于行报错，其他情况下，行所在的节存储在section中，输出 [section] origin
 		if (data.isSectionName)
 			origin = std::format("[{}]", data.origin);
 		else if (!data.section.empty())
