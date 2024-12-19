@@ -31,7 +31,7 @@ private:
 	void draw();         // 渲染进度条
 	void stopDrawing();  // 停止刷新线程
 	double getPercent() const;
-	long getElapsed() const;
+	long long getElapsed() const;
 
 	std::string startName;           // 进度条名称
 	size_t total{ 0 };               // 总项数

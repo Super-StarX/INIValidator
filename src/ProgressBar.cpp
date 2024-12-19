@@ -85,7 +85,7 @@ double Progress::getPercent() const {
 	return total > 0 ? (double)processed / total * 100 : 0.0;
 }
 
-long Progress::getElapsed() const {
+long long Progress::getElapsed() const {
 	auto now = std::chrono::steady_clock::now();
 	return std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
 }
