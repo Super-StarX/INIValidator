@@ -19,6 +19,7 @@ CustomChecker::CustomChecker(const std::string& scriptDir)
 	if (!Py_IsInitialized()) {
 		throw std::runtime_error("Failed to initialize Python interpreter");
 	}
+	PyRun_SimpleString("import locale; locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')");
 	scanScriptDirectory(); // 初始化支持的脚本类型
 }
 
@@ -31,6 +32,9 @@ CustomChecker::~CustomChecker() {
 
 // 扫描脚本目录
 void CustomChecker::scanScriptDirectory() {
+	if (!std::filesystem::exists(scriptDir_) || !std::filesystem::is_directory(scriptDir_))
+		return;
+
 	for (const auto& entry : std::filesystem::directory_iterator(scriptDir_)) {
 		if (entry.is_regular_file()) {
 			const auto& path = entry.path();

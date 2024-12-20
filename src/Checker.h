@@ -37,12 +37,12 @@ private:
 	friend TypeChecker;
 
 	Registrys registries;	// 注册表名字映射: 配置ini的Type名字 <-> 注册ini中注册表名字(注册表可能不存在,则value="")
-	Numbers numberLimits;	// 特殊类型限制: 类型名 <-> 特殊限制类型section
-	Limits limits;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
-	Lists lists;			// 特殊类型限制: 类型名 <-> 特殊限制类型section
+	Numbers numberLimits;	// 特殊类型限制: 类型名 <-> 数字限制类型section
+	Limits limits;			// 特殊类型限制: 类型名 <-> 范围限制类型section
+	Lists lists;			// 特殊类型限制: 类型名 <-> 列表限制类型section
 	Globals globals;		// 全局类型限制: 类型名 <-> 确定名字类型section
 	Sections sections;		// 实例类型限制: 类型名 <-> 自定义类型section
-	Scripts scripts;		// 实例类型限制: 类型名 <-> 自定义类型section
+	Scripts scripts;		// 实例类型限制: 类型名 <-> 自定义检查器
 	IniFile* targetIni;		// 检查的ini
 
 	int validateInteger(const Section& section, const std::string& key, const Value& str);
