@@ -4,6 +4,7 @@ debug/*
 release/*
 x64/*
 INIValidater/*
+INIValidator/*
 .vs/*
 *.log
 *.user

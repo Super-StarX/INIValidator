@@ -24,7 +24,7 @@
     <ProjectGuid>{d435c497-a982-44fb-9386-77991a9fb854}</ProjectGuid>
     <RootNamespace>INICodingCheck</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>INIValidater</ProjectName>
+    <ProjectName>INIValidator</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -147,7 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Checker\CustomChecker.cpp" />
-    <ClCompile Include="INIValidater.cpp" />
+    <ClCompile Include="INIValidator.cpp" />
     <ClCompile Include="src\Dict.cpp" />
     <ClCompile Include="src\IniFile.cpp" />
     <ClCompile Include="src\Log.cpp" />

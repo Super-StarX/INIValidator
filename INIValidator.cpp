@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
     try {
 		SetConsoleCP(CP_UTF8);
 		SetConsoleOutputCP(CP_UTF8);
+		system("title INI Validator");
 
         auto log = Log();
         std::string targetFilePath;
