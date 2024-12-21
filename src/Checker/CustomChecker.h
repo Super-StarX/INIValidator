@@ -1,6 +1,8 @@
 ﻿#pragma once
+#include "IniFile.h"
 #include <Python.h>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
@@ -15,10 +17,15 @@ public:
 	~CustomChecker();
 
 	// 检查指定脚本是否存在，并调用其验证逻辑
-	std::string validate(const std::string& section, const std::string& key, const std::string& value, const std::string& type);
+	std::tuple<std::string, int> validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 
 	// 返回支持的脚本类型
-	const std::unordered_set<std::string>& getSupportedTypes() const;
+	const std::unordered_set<std::string>& getSupportedTypes() const {
+		return supportedTypes_;
+	}
+
+	static void initializeGlobalSections(const std::unordered_map<std::string, Section>& sections);
+	static PyObject* GetSection(PyObject* self, PyObject* args); // Python绑定
 
 private:
 	// 脚本的结构体
@@ -29,6 +36,9 @@ private:
 		Script(PyObject* mod, PyObject* func);
 		~Script();
 	};
+
+	static std::unordered_map<std::string, Section> globalSections_; // 全局Section存储
+	static PyObject* pyGlobalSections_; // Python绑定的全局Section存储
 
 	std::string scriptDir_;                                     // 脚本目录
 	std::unordered_map<std::string, std::shared_ptr<Script>> scriptCache_; // 缓存已加载的脚本
