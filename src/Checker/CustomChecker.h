@@ -17,7 +17,7 @@ public:
 	~CustomChecker();
 
 	// 检查指定脚本是否存在，并调用其验证逻辑
-	std::tuple<std::string, int> validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
+	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 
 	// 返回支持的脚本类型
 	const std::unordered_set<std::string>& getSupportedTypes() const {
@@ -31,7 +31,7 @@ private:
 	// 脚本的结构体
 	struct Script {
 		PyObject* module;       // Python 模块
-		PyObject* validateFunc; // validate 函数指针
+		PyObject* func; // validate 函数指针
 
 		Script(PyObject* mod, PyObject* func);
 		~Script();

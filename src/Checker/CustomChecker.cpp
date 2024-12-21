@@ -12,9 +12,8 @@ void CustomChecker::initializeGlobalSections(const std::unordered_map<std::strin
 	globalSections_ = sections;
 
 	// 转换为Python字典
-	if (pyGlobalSections_) {
+	if (pyGlobalSections_)
 		Py_XDECREF(pyGlobalSections_);
-	}
 
 	pyGlobalSections_ = PyDict_New();
 	for (const auto& [name, section] : globalSections_) {
@@ -46,19 +45,18 @@ PyObject* CustomChecker::GetSection(PyObject* self, PyObject* args) {
 
 	std::lock_guard<std::mutex> lock(globalSectionsMutex_);
 
-	if (!globalSections_.count(sectionName)) {
+	if (!globalSections_.contains(sectionName))
 		Py_RETURN_NONE; // 如果不存在返回None
-	}
 
 	return PyDict_GetItemString(pyGlobalSections_, sectionName); // 返回对应的Python Section
 }
 
 CustomChecker::Script::Script(PyObject* mod, PyObject* func)
-	: module(mod), validateFunc(func) {
+	: module(mod), func(func) {
 }
 
 CustomChecker::Script::~Script() {
-	Py_XDECREF(validateFunc);
+	Py_XDECREF(func);
 	Py_XDECREF(module);
 }
 
@@ -92,24 +90,35 @@ void CustomChecker::scanScriptDirectory() {
 
 // 获取或加载脚本
 std::shared_ptr<CustomChecker::Script> CustomChecker::getOrLoadScript(const std::string& type) {
-	if (scriptCache_.count(type))
+	if (scriptCache_.contains(type))
 		return scriptCache_[type];
 
-	if (!supportedTypes_.count(type))
+	if (!supportedTypes_.contains(type)) {
 		Log::out("脚本类型不支持: {}", type);
+		return nullptr;
+	}
 
-	PyObject* pName = PyUnicode_DecodeFSDefault(type.c_str());
-	PyObject* pModule = PyImport_Import(pName);
-	Py_XDECREF(pName);
+	// 获取当前工作目录并拼接 Scripts 子目录
+	std::filesystem::path script_dir = std::filesystem::current_path() / "Scripts";
 
-	if (!pModule)
+	// 添加 Scripts 子目录到 Python 模块搜索路径
+	PyObject* sys_path = PySys_GetObject("path");  // borrowed reference
+	PyObject* path = PyUnicode_FromString(script_dir.string().c_str());
+	PyList_Append(sys_path, path);
+	Py_DECREF(path);
+
+	PyObject* pModule = PyImport_ImportModule(type.c_str());
+	if (!pModule) {
 		Log::out("加载脚本失败: {}", type);
+		return nullptr;
+	}
 
 	PyObject* pFunc = PyObject_GetAttrString(pModule, "validate");
 	if (!pFunc || !PyCallable_Check(pFunc)) {
 		Py_XDECREF(pFunc);
 		Py_XDECREF(pModule);
-		throw std::runtime_error("Python validate function not found or not callable in script: " + type);
+		Log::out("无法在脚本中找到\"validate\"函数或者函数无法被调用: {}", type);
+		return nullptr;
 	}
 
 	auto script = std::make_shared<Script>(pModule, pFunc);
@@ -118,11 +127,11 @@ std::shared_ptr<CustomChecker::Script> CustomChecker::getOrLoadScript(const std:
 }
 
 // 验证函数
-std::tuple<std::string, int> CustomChecker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
+void CustomChecker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
 	try {
 		auto script = getOrLoadScript(type);
-		if (!script || !script->validateFunc)
-			throw std::runtime_error("Invalid or missing Python validate function for type: " + type);
+		if (!script || !script->func)
+			return;
 
 		// 转换 Section 为 Python 字典
 		PyObject* pySection = PyDict_New();
@@ -142,16 +151,16 @@ std::tuple<std::string, int> CustomChecker::validate(const Section& section, con
 									   PyUnicode_FromString(type.c_str()));
 
 		// 调用 Python 函数
-		PyObject* pResult = PyObject_CallObject(script->validateFunc, pArgs);
+		PyObject* pResult = PyObject_CallObject(script->func, pArgs);
 		Py_XDECREF(pArgs);
 
 		if (!pResult)
-			throw std::runtime_error("Python function call failed");
+			return Log::out("Python函数调用失败: {}", type);
 
 		// 解析结果
 		if (!PyTuple_Check(pResult) || PyTuple_Size(pResult) != 2) {
 			Py_XDECREF(pResult);
-			throw std::runtime_error("Python function must return a tuple of (string, int)");
+			return Log::out("Python函数必须返回一个(string, int)的元组类型: {}", type);
 		}
 
 		PyObject* pMessage = PyTuple_GetItem(pResult, 0);
@@ -159,18 +168,15 @@ std::tuple<std::string, int> CustomChecker::validate(const Section& section, con
 
 		if (!PyUnicode_Check(pMessage) || !PyLong_Check(pCode)) {
 			Py_XDECREF(pResult);
-			throw std::runtime_error("Python function must return a tuple of (string, int)");
+			return Log::out("Python函数必须返回一个(string, int)的元组类型: {}", type);
 		}
 
 		std::string message = PyUnicode_AsUTF8(pMessage);
 		int code = static_cast<int>(PyLong_AsLong(pCode));
 
 		Py_XDECREF(pResult);
-		return { message, code };
-
 	}
 	catch (const std::exception& e) {
-		std::cerr << "Error in CustomChecker: " << e.what() << std::endl;
-		return { "Error", -1 };
+		Log::out("自定义检查器出现错误: {}", e.what());
 	}
 }

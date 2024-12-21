@@ -178,7 +178,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符
-		Log::error<_InheritanceBracketClosed>({ line, GetFileIndex(), lineNumber });
+		Log::info<_SectionFormat>({ line, GetFileIndex(), lineNumber }, curSectionName);
 }
 
 std::string Value::getFileName() const {
