@@ -10,7 +10,7 @@ RegistryChecker::RegistryChecker(Checker* checker, const Sections& config, const
 		if (registry.contains("Type"))
 			type = registry.at("Type");
 		if (registry.contains("CheckExist"))
-			checkExsit = string::isBool(registry.at("CheckExist"));
+			checkExist = string::isBool(registry.at("CheckExist"));
 		if (registry.contains("PresetItems"))
 			presetItems = string::split(registry.at("PresetItems"));
 	}
@@ -24,8 +24,8 @@ void RegistryChecker::validateAllPreserItems(const Section::Key& registryName) c
 
 void RegistryChecker::validatePreserItem(const Section::Key& registryName, const std::string& item) const {
 	if (!checker->targetIni->sections.contains(item)) {
-		if (checkExsit)
-			Log::warning<_SectionExsit>({ registryName, 1, -1 }, item);
+		if (checkExist)
+			Log::warning<_SectionExist>({ registryName, 1, -1 }, item);
 		return;
 	}
 	if (!checker->sections.contains(type)) {
@@ -38,8 +38,8 @@ void RegistryChecker::validatePreserItem(const Section::Key& registryName, const
 
 void RegistryChecker::validateSection(const Section::Key& registryName, const Value& name) const {
 	if (!checker->targetIni->sections.contains(name)) {
-		if (checkExsit)
-			Log::warning<_SectionExsit>({ registryName, name.fileIndex, name.line }, name.value);
+		if (checkExist)
+			Log::warning<_SectionExist>({ registryName, name.fileIndex, name.line }, name.value);
 		return;
 	}
 	if (!checker->sections.contains(type)) {
@@ -48,4 +48,8 @@ void RegistryChecker::validateSection(const Section::Key& registryName, const Va
 	}
 
 	checker->sections[type].validateSection(checker->targetIni->sections[name.value], type);
+}
+
+bool RegistryChecker::hasPresetItems() const {
+	return !presetItems.empty();
 }

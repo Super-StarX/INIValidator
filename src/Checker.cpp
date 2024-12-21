@@ -76,7 +76,8 @@ void Checker::checkFile() {
 
 		// 检查在ini里是否存在这个注册表
 		if (!targetIni->sections.contains(registryName)) {
-			Log::info<_UnusedRegistry>(-1, registryName);
+			if (!type.hasPresetItems())
+				Log::info<_UnusedRegistry>(-1, registryName);
 			continue;
 		}
 
@@ -93,7 +94,7 @@ void Checker::checkFile() {
 		if (!section.isScanned) {
 			Progress::update();
 			//std::this_thread::sleep_for(std::chrono::microseconds(1));
-			Log::info<_UnreachableSection>({ section.line }, section.name);
+			Log::info<_UnreachableSection>({ section.line, section.fileIndex }, section.name);
 		}
 	}
 }

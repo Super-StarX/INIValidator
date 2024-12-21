@@ -22,7 +22,7 @@ void Settings::load(const IniFile& configFile) {
 
 		READ(sections, UnusedGlobal)
 		READ(sections, UnusedRegistry)
-		READ(sections, SectionExsit)
+		READ(sections, SectionExist)
 		READ(sections, UnreachableSection)
 
 		READ(sections, BracketClosed)
@@ -30,7 +30,7 @@ void Settings::load(const IniFile& configFile) {
 		READ(sections, SectionFormat)
 		READ(sections, InheritanceFormat)
 		READ(sections, InheritanceBracketClosed)
-		READ(sections, InheritanceSectionExsit)
+		READ(sections, InheritanceSectionExist)
 		READ(sections, InheritanceDuplicateKey)
 
 		READ(sections, SpaceExistBetweenEqualSign)

@@ -17,7 +17,7 @@ public:
 	// 整个文件方面
 	std::string UnusedGlobal{ };				// 检测未使用的全局节
 	std::string UnusedRegistry{ };				// 检测未使用的注册表
-	std::string SectionExsit{ };				// 检测注册表注册项是否实现
+	std::string SectionExist{ };				// 检测注册表注册项是否实现
 	std::string UnreachableSection{ };			// 检测未收录没检测的节
 
 	// 节层面
@@ -26,7 +26,7 @@ public:
 	std::string SectionFormat{ };				// 检测节格式
 	std::string InheritanceFormat{ };			// 检测继承格式
 	std::string InheritanceBracketClosed{ };	// 检测继承括号闭合
-	std::string InheritanceSectionExsit{ };		// 检测继承内容是否实现
+	std::string InheritanceSectionExist{ };		// 检测继承内容是否实现
 	std::string InheritanceDuplicateKey{ };		// 检测继承键重复
 
 	// 键层面
@@ -62,7 +62,7 @@ public:
 
 #define _UnusedGlobal &Settings::UnusedGlobal
 #define _UnusedRegistry &Settings::UnusedRegistry
-#define _SectionExsit &Settings::SectionExsit
+#define _SectionExist &Settings::SectionExist
 #define _UnreachableSection &Settings::UnreachableSection
 
 #define _BracketClosed &Settings::BracketClosed
@@ -71,7 +71,7 @@ public:
 #define _SectionFormat &Settings::SectionFormat
 #define _InheritanceFormat &Settings::InheritanceFormat
 #define _InheritanceBracketClosed &Settings::InheritanceBracketClosed
-#define _InheritanceSectionExsit &Settings::InheritanceSectionExsit
+#define _InheritanceSectionExist &Settings::InheritanceSectionExist
 #define _InheritanceDuplicateKey &Settings::InheritanceDuplicateKey
 
 #define _SpaceExistBetweenEqualSign &Settings::SpaceExistBetweenEqualSign

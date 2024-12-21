@@ -15,11 +15,12 @@ public:
 	void validateAllPreserItems(const Section::Key& registryName) const;
 	void validatePreserItem(const Section::Key& registryName, const std::string& item) const;
 	void validateSection(const Section::Key& registryName, const Value& name) const;
+	bool hasPresetItems() const;
 
 private:
 	Checker* checker{ nullptr };
-	std::string type;
+	std::string type{ };
 	// int defaultFile;
-	bool checkExsit;
-	std::vector<std::string> presetItems;
+	bool checkExist{ };
+	std::vector<std::string> presetItems{ };
 };

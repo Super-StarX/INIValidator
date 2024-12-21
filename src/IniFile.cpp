@@ -95,6 +95,7 @@ void IniFile::readSection(std::string& currentSection, std::string& line, std::s
 	currentSection = line.substr(1, endPos - 1);
 	sections[currentSection].name = currentSection;
 	sections[currentSection].line = lineNumber;
+	sections[currentSection].fileIndex = FileIndex;
 	sections[currentSection].origin = origin;
 	processInheritance(line, endPos, lineNumber, currentSection);
 }
@@ -160,7 +161,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 
 		std::string inheritedName = line.substr(colonPos + 2, nextEndPos - colonPos - 2);
 		if (!sections.contains(inheritedName))
-			return Log::error<_InheritanceSectionExsit>({ line, GetFileIndex(), lineNumber }, inheritedName);
+			return Log::error<_InheritanceSectionExist>({ line, GetFileIndex(), lineNumber }, inheritedName);
 
 		// [curSection]:[inheritedSection]
 		auto& curSection = sections[curSectionName];

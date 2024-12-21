@@ -18,8 +18,8 @@ public:
 	std::string value{ };
 	int line{ -1 };
 	std::string origin{ };
-	size_t fileIndex{ 0 };
-	bool isInheritance{ false };
+	size_t fileIndex{ };
+	bool isInheritance{ };
 };
 
 template<>
@@ -42,10 +42,11 @@ public:
 	Value& operator[](const std::string& key) { return section[key]; }
 
 	std::string name{ };
-	int line{ 0 };
+	int line{ -1 };
 	std::string origin{ };
-	bool isScanned{ false };
-	int inheritanceLevel{ 0 };
+	size_t fileIndex{ };
+	bool isScanned{ };
+	int inheritanceLevel{ };
 	std::unordered_map<Key, Value> section;
 };
 

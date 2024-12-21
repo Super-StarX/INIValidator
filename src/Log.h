@@ -17,13 +17,13 @@ enum class Severity : int {
 
 struct LogData {
 	int line{ -2 };
-	size_t fileindex{ 0 };
-	std::string section{};
-	std::string origin{};
-	bool isSectionName{ false };
+	size_t fileindex{ };
+	std::string section{ };
+	std::string origin{ };
+	bool isSectionName{ };
 
 	explicit LogData() = default;
-	LogData(const int line) : line(line) {}
+	LogData(const int line, const size_t fileindex = 1) : line(line), fileindex(fileindex) {}
 	LogData(const Section& section, const std::string& key) :section(section.name) {
 		const auto& value = section.at(key);
 		this->line = value.line;
