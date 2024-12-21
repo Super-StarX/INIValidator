@@ -153,17 +153,17 @@ LogStream::LogStream(Severity severity, const LogData& logdata, std::string buff
 
 std::string LogStream::getFileMessage() const {
 	std::ostringstream plainMessage;
-	plainMessage << Log::getPlainSeverityLabel(severity) << " " << generateLogMessage();
+	plainMessage << Log::getPlainSeverityLabel(severity) << " " << generateLogMessage(false);
 	return plainMessage.str();
 }
 
 std::string LogStream::getPrintMessage() const {
 	std::ostringstream formattedMessage;
-	formattedMessage << Log::getSeverityLabel(severity) << " " << generateLogMessage();
+	formattedMessage << Log::getSeverityLabel(severity) << " " << generateLogMessage(true);
 	return formattedMessage.str();
 }
 
-std::string LogStream::generateLogMessage() const {
+std::string LogStream::generateLogMessage(bool isFormatted) const {
 	std::string retval;
 
 	if (data.origin.empty()) {
@@ -186,8 +186,12 @@ std::string LogStream::generateLogMessage() const {
 		// 对于行报错，其他情况下，行所在的节存储在section中，输出 [section] origin
 		if (data.isSectionName)
 			origin = std::format("[{}]", data.origin);
-		else if (!data.section.empty())
-			origin = std::format("\033[1m[{}]\033[0m {}", data.section, data.origin);
+		else if (!data.section.empty()) {
+			if (isFormatted)
+				origin = std::format("\033[1m[{}]\033[0m {}", data.section, data.origin);
+			else
+				origin = std::format("[{}] {}", data.section, data.origin);
+		}
 		else
 			origin = data.origin;
 

@@ -11,6 +11,7 @@ Dict::Dict(const Section& config) {
 			dynamicKeys.push_back(key);
 
 		section[key] = parseTypeValue(value);
+		keys.insert(key);
 	}
 }
 
@@ -22,13 +23,17 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 	const_cast<Section&>(object).isScanned = true;
 
 	auto pChecker = Checker::Instance;
+
 	for (const auto& dynamicKey : this->dynamicKeys) {
 		try {
 			auto keys = generateKey(dynamicKey, object);
-			for (const auto& key : keys)
-				if (object.contains(key))
+			for (const auto& key : keys) {
+				if (object.contains(key)) {
+					this->keys.insert(key);
 					for (const auto& type : this->at(dynamicKey).types)
 						pChecker->validate(object, key, object.at(key), type);
+				}
+			}
 		}
 		catch (const std::string& e) {
 			Log::warning<_DynamicKeyVariableError>(object.section.begin()->second.line, e);
@@ -40,7 +45,8 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 
 	for (const auto& [key, value] : object) {
 		if (!this->contains(key)) {
-			Log::print<_KeyNotExist>({ object, key }, key);
+			if (!keys.contains(key))
+				Log::info<_KeyNotExist>({ object, key }, key);
 			continue;
 		}
 

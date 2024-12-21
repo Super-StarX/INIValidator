@@ -140,7 +140,7 @@ public:
 	}
 
 private:
-	std::string generateLogMessage() const;
+	std::string generateLogMessage(bool isFormatted) const;
 
 	Severity severity;
 	LogData data;

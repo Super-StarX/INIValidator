@@ -3,6 +3,7 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class DictData {
@@ -15,7 +16,8 @@ public:
 class Dict {
 public:
 	using Map = std::unordered_map<std::string, DictData>;
-	Dict() {};
+	using Set = std::unordered_set<std::string>;
+	explicit Dict() = default;
 	Dict(const Section& config);
 	auto begin() { return section.begin(); }
 	auto begin() const { return section.begin(); }
@@ -31,6 +33,7 @@ public:
 private:
 	std::vector<std::string> dynamicKeys;			// 存储所有需要动态生成的key
 	Map section;									// key <-> 该key对应的自定义类型
+	Set keys;										// 存储该字典所有的键，用来检测键是否存在
 
 	static DictData parseTypeValue(const std::string& str);
 	static std::vector<std::string> generateKey(const std::string& dynamicKey, const Section& object);
