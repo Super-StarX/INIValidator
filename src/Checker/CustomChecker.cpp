@@ -70,6 +70,7 @@ CustomChecker::CustomChecker(const std::string& scriptDir)
 }
 
 CustomChecker::~CustomChecker() {
+	scriptCache_.clear();
 	if (Py_IsInitialized())
 		Py_Finalize();
 }
