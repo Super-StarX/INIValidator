@@ -22,8 +22,8 @@ public:
 	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 
 	// 返回支持的脚本类型
-	const std::unordered_set<std::string>& getSupportedTypes() const {
-		return supportedTypes_;
+	bool contains(const std::string& type) const {
+		return supportedTypes_.contains(type);
 	}
 
 	static void initializeGlobalSections(const std::unordered_map<std::string, Section>& sections);
