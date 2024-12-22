@@ -86,8 +86,13 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
 		registry.isScanned = true;
-		for (const auto& [_, name] : registry)
-			type.validateSection(registryName, name);
+
+		if (sections.contains(type))
+			for (const auto& [_, name] : registry)
+				type.validateSection(registryName, name);
+		else
+			for (const auto& [name, value] : registry)
+				validate(registry, name, value, type);
 	}
 
 	// 检查剩余未检测的节
@@ -116,6 +121,7 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	//else if (registries.contains(type)) registries.at(type).validate(section, key, value, type);
 	else if (sections.contains(type)) TypeChecker::validate(section, key, value, type);
 	else if (scripts->contains(type)) scripts->validate(section, key, value, type);
+	else Log::print<_TypeNotExist>({ value.line }, type);
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {

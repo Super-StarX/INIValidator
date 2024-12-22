@@ -14,6 +14,11 @@ int main(int argc, char* argv[]) {
 		SetConsoleOutputCP(CP_UTF8);
 		system("title INI Validator");
 
+#ifndef _DEBUG
+		std::filesystem::path exe_path = std::filesystem::path(argv[0]).parent_path();
+		std::filesystem::current_path(exe_path);
+#endif // !_DEBUG
+
         auto log = Log();
         std::string targetFilePath;
         if (argc >= 2)

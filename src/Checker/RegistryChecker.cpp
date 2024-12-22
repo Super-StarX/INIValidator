@@ -32,7 +32,7 @@ void RegistryChecker::validatePreserItem(const Section::Key& registryName, const
 		Log::print<_TypeNotExist>({ registryName, 1, -1 }, type);
 		return;
 	}
-
+	
 	checker->sections[type].validateSection(checker->targetIni->sections[item], type);
 }
 
@@ -40,10 +40,6 @@ void RegistryChecker::validateSection(const Section::Key& registryName, const Va
 	if (!checker->targetIni->sections.contains(name)) {
 		if (checkExist)
 			Log::warning<_SectionExist>({ registryName, name.fileIndex, name.line }, name.value);
-		return;
-	}
-	if (!checker->sections.contains(type)) {
-		Log::print<_TypeNotExist>({ registryName, name.fileIndex, name.line }, type);
 		return;
 	}
 
