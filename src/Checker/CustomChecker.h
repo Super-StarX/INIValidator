@@ -16,6 +16,8 @@ public:
 	// 析构函数，释放 Python 资源
 	~CustomChecker();
 
+	void reportResult(PyObject* pMessage, PyObject* pCode, const Section& section, const std::string& key);
+
 	// 检查指定脚本是否存在，并调用其验证逻辑
 	void validate(const Section& section, const std::string& key, const Value& value, const std::string& type);
 

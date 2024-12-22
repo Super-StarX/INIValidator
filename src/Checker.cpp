@@ -51,12 +51,14 @@ void Checker::loadConfig(IniFile& configFile) {
 		for (const auto& [key, _] : configFile.sections.at("Sections"))
 			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
-
 	scripts = std::make_unique<CustomChecker>("Scripts");
 }
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
+	if (scripts)
+		CustomChecker::initializeGlobalSections(targetIni->sections);
+
 	// [Globals] General
 	Progress::start("检查全局部分", globals.size());
 	for (const auto& [globalName, _] : globals) {

@@ -75,16 +75,27 @@ CustomChecker::~CustomChecker() {
 		Py_Finalize();
 }
 
-// 扫描脚本目录
-void CustomChecker::scanScriptDirectory() {
-	if (!std::filesystem::exists(scriptDir_) || !std::filesystem::is_directory(scriptDir_))
-		return;
-
-	for (const auto& entry : std::filesystem::directory_iterator(scriptDir_)) {
-		if (entry.is_regular_file()) {
-			const auto& path = entry.path();
-			if (path.extension() == ".py")
-				supportedTypes_.insert(path.stem().string());
+void CustomChecker::reportResult(PyObject* pMessage, PyObject* pCode, const Section& section, const std::string& key) {
+	std::string message = PyUnicode_AsUTF8(pMessage);
+	int code = static_cast<int>(PyLong_AsLong(pCode));
+	if (code != -1) {
+		switch (static_cast<Severity>(code)) {
+		case Severity::DEFAULT:
+			Log::print<0>({ section ,key }, message);
+			break;
+		case Severity::INFO:
+			Log::info<0>({ section ,key }, message);
+			break;
+		case Severity::WARNING:
+			Log::warning<0>({ section ,key }, message);
+			break;
+		case Severity::ERROR:
+			Log::error<0>({ section ,key }, message);
+			break;
+		default:
+			Log::out("非预期的状态码:{}", code);
+			Log::out(message);
+			break;
 		}
 	}
 }
@@ -127,6 +138,20 @@ std::shared_ptr<CustomChecker::Script> CustomChecker::getOrLoadScript(const std:
 	return script;
 }
 
+// 扫描脚本目录
+void CustomChecker::scanScriptDirectory() {
+	if (!std::filesystem::exists(scriptDir_) || !std::filesystem::is_directory(scriptDir_))
+		return;
+
+	for (const auto& entry : std::filesystem::directory_iterator(scriptDir_)) {
+		if (entry.is_regular_file()) {
+			const auto& path = entry.path();
+			if (path.extension() == ".py")
+				supportedTypes_.insert(path.stem().string());
+		}
+	}
+}
+
 // 验证函数
 void CustomChecker::validate(const Section& section, const std::string& key, const Value& value, const std::string& type) {
 	try {
@@ -161,19 +186,18 @@ void CustomChecker::validate(const Section& section, const std::string& key, con
 		// 解析结果
 		if (!PyTuple_Check(pResult) || PyTuple_Size(pResult) != 2) {
 			Py_XDECREF(pResult);
-			return Log::out("Python函数必须返回一个(string, int)的元组类型: {}", type);
+			return Log::out("Python函数必须返回一个(int, string)的元组类型: {}", type);
 		}
 
-		PyObject* pMessage = PyTuple_GetItem(pResult, 0);
-		PyObject* pCode = PyTuple_GetItem(pResult, 1);
+		PyObject* pCode = PyTuple_GetItem(pResult, 0);
+		PyObject* pMessage = PyTuple_GetItem(pResult, 1);
 
 		if (!PyUnicode_Check(pMessage) || !PyLong_Check(pCode)) {
 			Py_XDECREF(pResult);
-			return Log::out("Python函数必须返回一个(string, int)的元组类型: {}", type);
+			return Log::out("Python函数必须返回一个(int, string)的元组类型: {}", type);
 		}
 
-		std::string message = PyUnicode_AsUTF8(pMessage);
-		int code = static_cast<int>(PyLong_AsLong(pCode));
+		reportResult(pMessage, pCode, section, key);
 
 		Py_XDECREF(pResult);
 	}
