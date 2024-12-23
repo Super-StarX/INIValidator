@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "IniFile.h"
 #include <Python.h>
 #include <string>
@@ -11,7 +11,7 @@
 class CustomChecker {
 public:
 	// 构造函数，指定脚本目录
-	explicit CustomChecker(const std::string& scriptDir);
+	explicit CustomChecker(const std::string& scriptDir, const IniFile& targetIni);
 
 	// 析构函数，释放 Python 资源
 	~CustomChecker();
@@ -26,13 +26,12 @@ public:
 		return supportedTypes_.contains(type);
 	}
 
-	static void initializeGlobalSections(const std::unordered_map<std::string, Section>& sections);
-	static PyObject* GetSection(PyObject* self, PyObject* args); // Python绑定
+	static PyObject* py_get_section(PyObject* self, PyObject* args);
 
 private:
 	// 脚本的结构体
 	struct Script {
-		PyObject* module;       // Python 模块
+		PyObject* module; // Python 模块
 		PyObject* func; // validate 函数指针
 
 		Script(PyObject* mod, PyObject* func);

@@ -6,6 +6,7 @@ x64/*
 INIValidater/*
 INIValidator/*
 .vs/*
+*.pyc
 *.log
 *.user
 *.filters

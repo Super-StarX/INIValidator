@@ -6,49 +6,54 @@ std::unordered_map<std::string, Section> CustomChecker::globalSections_;
 PyObject* CustomChecker::pyGlobalSections_ = nullptr;
 std::mutex globalSectionsMutex_;
 
-// 初始化全局Sections
-void CustomChecker::initializeGlobalSections(const std::unordered_map<std::string, Section>& sections) {
-	std::lock_guard<std::mutex> lock(globalSectionsMutex_);
-	globalSections_ = sections;
+PyObject* CustomChecker::py_get_section(PyObject* self, PyObject* args) {
+	const char* name;
 
-	// 转换为Python字典
-	if (pyGlobalSections_)
-		Py_XDECREF(pyGlobalSections_);
-
-	pyGlobalSections_ = PyDict_New();
-	for (const auto& [name, section] : globalSections_) {
-		PyObject* pyName = PyUnicode_FromString(name.c_str());
-
-		// 转换Section为字典
-		PyObject* pySection = PyDict_New();
-		for (const auto& [k, v] : section.section) {
-			PyObject* pyKey = PyUnicode_FromString(k.c_str());
-			PyObject* pyValue = PyUnicode_FromString(v.value.c_str());
-			PyDict_SetItem(pySection, pyKey, pyValue);
-			Py_XDECREF(pyKey);
-			Py_XDECREF(pyValue);
-		}
-
-		PyDict_SetItem(pyGlobalSections_, pyName, pySection);
-		Py_XDECREF(pyName);
-		Py_XDECREF(pySection);
-	}
-}
-
-// Python绑定的GetSection函数
-PyObject* CustomChecker::GetSection(PyObject* self, PyObject* args) {
-	const char* sectionName;
-	if (!PyArg_ParseTuple(args, "s", &sectionName)) {
-		PyErr_SetString(PyExc_ValueError, "Invalid argument: expected a section name (string)");
+	// 从参数中解析 Section 名称
+	if (!PyArg_ParseTuple(args, "s", &name)) {
+		PyErr_SetString(PyExc_ValueError, "Expected a string argument for section name");
 		return nullptr;
 	}
 
-	std::lock_guard<std::mutex> lock(globalSectionsMutex_);
+	try {
+		// 获取 Section
+		auto it = globalSections_.find(std::string(name));
+		if (it == globalSections_.end()) {
+			Log::out("找不到section[{}]: ", name);
+			return PyDict_New();
+		}
 
-	if (!globalSections_.contains(sectionName))
-		Py_RETURN_NONE; // 如果不存在返回None
+		PyObject* pyDict = PyDict_New();
+		for (const auto& [key, value] : it->second.section) {
+			PyObject* pyValue = PyUnicode_FromString(value.value.c_str());
+			PyDict_SetItemString(pyDict, key.c_str(), pyValue);
+			Py_DECREF(pyValue);
+		}
+		return pyDict;
+	}
+	catch (const std::exception& e) {
+		Log::out("获取section[{}]失败，错误信息: ", name, e.what());
+		PyErr_SetString(PyExc_KeyError, e.what());
+		return nullptr;
+	}
+}
 
-	return PyDict_GetItemString(pyGlobalSections_, sectionName); // 返回对应的Python Section
+static PyMethodDef CustomCheckerMethods[] = {
+	{"get_section", CustomChecker::py_get_section, METH_VARARGS, "Get a Section by name as a dictionary"},
+	{nullptr, nullptr, 0, nullptr}  // 哨兵，用于结束方法列表
+};
+
+static struct PyModuleDef customCheckerModule = {
+	PyModuleDef_HEAD_INIT,
+	"iv",  // 模块名
+	nullptr,           // 模块文档
+	-1,                // 模块状态
+	CustomCheckerMethods  // 模块方法列表
+};
+
+// 模块初始化函数
+PyMODINIT_FUNC PyInit_iv(void) {
+	return PyModule_Create(&customCheckerModule);
 }
 
 CustomChecker::Script::Script(PyObject* mod, PyObject* func)
@@ -60,13 +65,22 @@ CustomChecker::Script::~Script() {
 	Py_XDECREF(module);
 }
 
-CustomChecker::CustomChecker(const std::string& scriptDir)
+CustomChecker::CustomChecker(const std::string& scriptDir, const IniFile& targetIni)
 	: scriptDir_(scriptDir) {
+	globalSections_ = targetIni.sections;
+	// 注册模块到 Python 解释器
+	if (PyImport_AppendInittab("iv", PyInit_iv) == -1) {
+		Log::out("Failed to add iv module");
+		return;
+	}
 	Py_Initialize();
-	if (!Py_IsInitialized())
+	if (!Py_IsInitialized()) {
 		Log::out("初始化Python解释器失败，脚本名: {}", scriptDir);
+		return;
+	}
 	PyRun_SimpleString("import locale; locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')");
 	scanScriptDirectory(); // 初始化支持的脚本类型
+	PyRun_SimpleString("import iv");
 }
 
 CustomChecker::~CustomChecker() {

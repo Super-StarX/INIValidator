@@ -1,4 +1,4 @@
-#include "Checker.h"
+﻿#include "Checker.h"
 #include "Helper.h"
 #include "Log.h"
 #include "ProgressBar.h"
@@ -13,6 +13,7 @@ std::atomic<size_t> Checker::ProcessedSections(0);
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
 	Instance = this;
+	scripts = std::make_unique<CustomChecker>("Scripts", targetIni);
 }
 
 // 加载配置文件
@@ -51,13 +52,11 @@ void Checker::loadConfig(IniFile& configFile) {
 		for (const auto& [key, _] : configFile.sections.at("Sections"))
 			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
-	scripts = std::make_unique<CustomChecker>("Scripts");
+
 }
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
-	if (scripts)
-		CustomChecker::initializeGlobalSections(targetIni->sections);
 
 	// [Globals] General
 	Progress::start("检查全局部分", globals.size());
