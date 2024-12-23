@@ -37,16 +37,15 @@ def validate(section, key, value, type):
     except ValueError:
         return 3, f"第一个值不是有效的整数: {parts[0]}"
 
-    # 检查第二个值是否为指定的字符串
+    # 检查第二个值是否为动画
     second_value = parts[1].strip()
     section_name = "Animations"
 
-    # 
+    # 调用主程序模块iv以获取其他section信息
     global_section = iv.get_section(section_name)
     if not global_section:
         return 3, f"注册表{section_name}是空的"
 
-    # 使用全局Section进行验证
     if second_value not in global_section.values():
         return 3, f"键{second_value}无法在注册表{section_name}中找到"
 
@@ -66,5 +65,4 @@ def validate(section, key, value, type):
         except ValueError:
             return 3, f"第四个值必须是一个数字，但实际值为: {fourth_value}"
 
-    # 全部检查通过
     return -1, "验证通过"
