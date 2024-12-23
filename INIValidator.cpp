@@ -10,10 +10,8 @@
 
 int main(int argc, char* argv[]) {
     try {
-		SetConsoleCP(CP_UTF8);
 		SetConsoleOutputCP(CP_UTF8);
 		system("title INI Validator");
-
 #ifndef _DEBUG
 		std::filesystem::path exe_path = std::filesystem::path(argv[0]).parent_path();
 		std::filesystem::current_path(exe_path);
@@ -26,9 +24,8 @@ int main(int argc, char* argv[]) {
         else {
             std::cout << "请输入要检查的INI文件路径: ";
             std::getline(std::cin, targetFilePath);
-			std::u8string targetFilePath_u8 = std::u8string(targetFilePath.begin(), targetFilePath.end());
-			targetFilePath = std::filesystem::path(targetFilePath_u8).string();
         }
+		SetConsoleCP(CP_UTF8);
 
 		Settings setting(IniFile("Settings.ini", false));
 		IniFile configIni("INICodingCheck.ini", true);
