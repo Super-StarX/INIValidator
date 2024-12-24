@@ -3,15 +3,68 @@
 #include <iostream>
 
 std::unordered_map<std::string, Section> CustomChecker::globalSections_;
-PyObject* CustomChecker::pyGlobalSections_ = nullptr;
 std::mutex globalSectionsMutex_;
 
+static PyMethodDef CustomCheckerMethods[] = {
+	{"get_section",			CustomChecker::py_get_section,			METH_VARARGS, "获取指定的section字典"},
+	{"get_section_value",	CustomChecker::py_get_section_value,	METH_VARARGS, "获取指定的section中的指定key的值"},
+	{nullptr, nullptr, 0, nullptr}  // 哨兵，用于结束方法列表
+};
+
+static struct PyModuleDef customCheckerModule = {
+	PyModuleDef_HEAD_INIT,
+	"iv",  // 模块名
+	nullptr,           // 模块文档
+	-1,                // 模块状态
+	CustomCheckerMethods  // 模块方法列表
+};
+
+PyMODINIT_FUNC PyInit_iv(void) {
+	return PyModule_Create(&customCheckerModule);
+}
+
+CustomChecker::Script::Script(PyObject* mod, PyObject* func)
+	: module(mod), func(func) {
+}
+
+// 模块初始化函数
+CustomChecker::Script::~Script() {
+	Py_XDECREF(func);
+	Py_XDECREF(module);
+}
+
+CustomChecker::CustomChecker(const std::string& scriptDir, const IniFile& targetIni) {
+	globalSections_ = targetIni.sections;
+
+	// 注册模块到 Python 解释器
+
+	if (PyImport_AppendInittab("iv", PyInit_iv) == -1) {
+		Log::out("添加Python模块\"iv\"失败");
+		return;
+	}
+	Py_Initialize();
+	if (!Py_IsInitialized()) {
+		Log::out("初始化Python解释器失败，脚本名: {}", scriptDir);
+		return;
+	}
+	PyRun_SimpleString("import locale; locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')");
+	PyRun_SimpleString("import iv");
+	scanScriptDirectory(scriptDir); // 初始化支持的脚本类型
+}
+
+CustomChecker::~CustomChecker() {
+	scriptCache_.clear();
+	if (Py_IsInitialized())
+		Py_Finalize();
+}
+
+// 获取指定的section字典
 PyObject* CustomChecker::py_get_section(PyObject* self, PyObject* args) {
 	const char* name;
 
 	// 从参数中解析 Section 名称
 	if (!PyArg_ParseTuple(args, "s", &name)) {
-		PyErr_SetString(PyExc_ValueError, "Expected a string argument for section name");
+		PyErr_SetString(PyExc_ValueError, "Section名获取到一个预期外的字符串参数");
 		return nullptr;
 	}
 
@@ -38,57 +91,47 @@ PyObject* CustomChecker::py_get_section(PyObject* self, PyObject* args) {
 	}
 }
 
-static PyMethodDef CustomCheckerMethods[] = {
-	{"get_section", CustomChecker::py_get_section, METH_VARARGS, "Get a Section by name as a dictionary"},
-	{nullptr, nullptr, 0, nullptr}  // 哨兵，用于结束方法列表
-};
+// 获取指定的section中的指定key的值
+PyObject* CustomChecker::py_get_section_value(PyObject* self, PyObject* args) {
+	const char* sectionName;
+	const char* keyName;
 
-static struct PyModuleDef customCheckerModule = {
-	PyModuleDef_HEAD_INIT,
-	"iv",  // 模块名
-	nullptr,           // 模块文档
-	-1,                // 模块状态
-	CustomCheckerMethods  // 模块方法列表
-};
-
-// 模块初始化函数
-PyMODINIT_FUNC PyInit_iv(void) {
-	return PyModule_Create(&customCheckerModule);
-}
-
-CustomChecker::Script::Script(PyObject* mod, PyObject* func)
-	: module(mod), func(func) {
-}
-
-CustomChecker::Script::~Script() {
-	Py_XDECREF(func);
-	Py_XDECREF(module);
-}
-
-CustomChecker::CustomChecker(const std::string& scriptDir, const IniFile& targetIni)
-	: scriptDir_(scriptDir) {
-	globalSections_ = targetIni.sections;
-	// 注册模块到 Python 解释器
-	if (PyImport_AppendInittab("iv", PyInit_iv) == -1) {
-		Log::out("Failed to add iv module");
-		return;
+	// 从参数中解析 Section 名称和 Key 名称
+	if (!PyArg_ParseTuple(args, "ss", &sectionName, &keyName)) {
+		PyErr_SetString(PyExc_ValueError, "Expected two string arguments: section name and key name");
+		return nullptr;
 	}
-	Py_Initialize();
-	if (!Py_IsInitialized()) {
-		Log::out("初始化Python解释器失败，脚本名: {}", scriptDir);
-		return;
+
+	try {
+		// 获取指定的 Section
+		auto sectionIt = globalSections_.find(std::string(sectionName));
+		if (sectionIt == globalSections_.end()) {
+			Log::out("找不到section[{}]: ", sectionName);
+			Py_RETURN_NONE;  // 如果 Section 不存在，返回 None
+		}
+
+		const Section& section = sectionIt->second;
+
+		// 获取指定 Key 的 Value
+		auto valueIt = section.section.find(std::string(keyName));
+		if (valueIt == section.section.end()) {
+			Log::out("找不到key[{}] in section[{}]: ", keyName, sectionName);
+			Py_RETURN_NONE;  // 如果 Key 不存在，返回 None
+		}
+
+		const Value& value = valueIt->second;
+
+		// 返回 Value 的字符串值
+		return PyUnicode_FromString(value.value.c_str());
 	}
-	PyRun_SimpleString("import locale; locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')");
-	scanScriptDirectory(); // 初始化支持的脚本类型
-	PyRun_SimpleString("import iv");
+	catch (const std::exception& e) {
+		Log::out("获取section[{}]和key[{}]失败，错误信息: ", sectionName, keyName, e.what());
+		PyErr_SetString(PyExc_KeyError, e.what());
+		return nullptr;
+	}
 }
 
-CustomChecker::~CustomChecker() {
-	scriptCache_.clear();
-	if (Py_IsInitialized())
-		Py_Finalize();
-}
-
+// 根据返回值状态码映射对应的日志输出函数
 void CustomChecker::reportResult(PyObject* pMessage, PyObject* pCode, const Section& section, const std::string& key) {
 	std::string message = PyUnicode_AsUTF8(pMessage);
 	int code = static_cast<int>(PyLong_AsLong(pCode));
@@ -114,7 +157,7 @@ void CustomChecker::reportResult(PyObject* pMessage, PyObject* pCode, const Sect
 	}
 }
 
-// 获取或加载脚本
+// 加载或从缓存中获取指定的脚本
 std::shared_ptr<CustomChecker::Script> CustomChecker::getOrLoadScript(const std::string& type) {
 	if (scriptCache_.contains(type))
 		return scriptCache_[type];
@@ -152,12 +195,12 @@ std::shared_ptr<CustomChecker::Script> CustomChecker::getOrLoadScript(const std:
 	return script;
 }
 
-// 扫描脚本目录
-void CustomChecker::scanScriptDirectory() {
-	if (!std::filesystem::exists(scriptDir_) || !std::filesystem::is_directory(scriptDir_))
+// 扫描脚本目录，初始化支持的脚本类型
+void CustomChecker::scanScriptDirectory(const std::string& path) {
+	if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
 		return;
 
-	for (const auto& entry : std::filesystem::directory_iterator(scriptDir_)) {
+	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (entry.is_regular_file()) {
 			const auto& path = entry.path();
 			if (path.extension() == ".py")
