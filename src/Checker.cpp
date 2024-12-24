@@ -13,6 +13,7 @@ std::atomic<size_t> Checker::ProcessedSections(0);
 Checker::Checker(IniFile& configFile, IniFile& targetIni) : targetIni(&targetIni) {
 	loadConfig(configFile);
 	Instance = this;
+	scripts = std::make_unique<CustomChecker>("Scripts", targetIni);
 }
 
 // 加载配置文件
@@ -52,11 +53,11 @@ void Checker::loadConfig(IniFile& configFile) {
 			if (configFile.sections.contains(key))
 				sections[key] = Dict(configFile.sections.at(key));
 
-	scripts = std::make_unique<CustomChecker>("Scripts");
 }
 
 // 验证每个注册表的内容
 void Checker::checkFile() {
+
 	// [Globals] General
 	Progress::start("检查全局部分", globals.size());
 	for (const auto& [globalName, _] : globals) {
@@ -84,8 +85,13 @@ void Checker::checkFile() {
 		// 遍历目标ini的注册表的每个注册项
 		auto& registry = targetIni->sections.at(registryName);
 		registry.isScanned = true;
-		for (const auto& [_, name] : registry)
-			type.validateSection(registryName, name);
+
+		if (sections.contains(type))
+			for (const auto& [_, name] : registry)
+				type.validateSection(registryName, name);
+		else
+			for (const auto& [name, value] : registry)
+				validate(registry, name, value, type);
 	}
 
 	// 检查剩余未检测的节
@@ -113,7 +119,8 @@ void Checker::validate(const Section& section, const std::string& key, const Val
 	else if (lists.contains(type)) lists.at(type).validate(section, key, value); // 新增
 	//else if (registries.contains(type)) registries.at(type).validate(section, key, value, type);
 	else if (sections.contains(type)) TypeChecker::validate(section, key, value, type);
-	else if (scripts->getSupportedTypes().count(type)) scripts->validate(section.name, key, value.value, type);
+	else if (scripts->contains(type)) scripts->validate(section, key, value, type);
+	else Log::print<_TypeNotExist>({ value.line }, type);
 }
 
 int Checker::validateInteger(const Section& section, const std::string& key, const Value& value) {

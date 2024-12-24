@@ -9,10 +9,10 @@
 
 // 日志级别
 enum class Severity : int {
-	DEFAULT,
-	INFO,
-	WARNING,
-	ERROR,
+	DEFAULT,	// 程序自身导致的错误
+	INFO,		// 不影响游戏运行的错误, 例如格式拼写
+	WARNING,	// 会导致游戏产生非预期结果的错误
+	ERROR,		// 会导致游戏崩溃的错误
 };
 
 struct LogData {

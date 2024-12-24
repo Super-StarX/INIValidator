@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-// 用于value列表的的值
+// 用于value列表的值
 // [Lists]
 // Type = 列表的数据类型, 可填Sections、NumberLimits、Limits中的值
 // Range = 列表长度最小值, 列表长度最大值
