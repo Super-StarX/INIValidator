@@ -2,6 +2,7 @@
 #include "Helper.h"
 #include "Log.h"
 #include "RegistryChecker.h"
+#include "Settings.h"
 
 RegistryChecker::RegistryChecker(Checker* checker, const Sections& config, const std::string& name, const Value& value)
 	:checker(checker), type(value) {
@@ -13,13 +14,16 @@ RegistryChecker::RegistryChecker(Checker* checker, const Sections& config, const
 			checkExist = string::isBool(registry.at("CheckExist"));
 		if (registry.contains("PresetItems"))
 			presetItems = string::split(registry.at("PresetItems"));
+		if (registry.contains("FileType"))
+			fileType = registry.at("FileType");
+		else
+			fileType = Settings::Instance->defaultFile;
 	}
 }
 
 void RegistryChecker::validateAllPreserItems(const Section::Key& registryName) const {
-	for (const auto& item : presetItems) {
+	for (const auto& item : presetItems)
 		validatePreserItem(registryName, item);
-	}
 }
 
 void RegistryChecker::validatePreserItem(const Section::Key& registryName, const std::string& item) const {
@@ -33,7 +37,7 @@ void RegistryChecker::validatePreserItem(const Section::Key& registryName, const
 		return;
 	}
 	
-	checker->sections[type].validateSection(checker->targetIni->sections[item], type);
+	checker->sections[type].validateSection(checker->targetIni->sections[item], type, fileType);
 }
 
 void RegistryChecker::validateSection(const Section::Key& registryName, const Value& name) const {
@@ -43,7 +47,7 @@ void RegistryChecker::validateSection(const Section::Key& registryName, const Va
 		return;
 	}
 
-	checker->sections[type].validateSection(checker->targetIni->sections[name.value], type);
+	checker->sections[type].validateSection(checker->targetIni->sections[name.value], type, fileType);
 }
 
 bool RegistryChecker::hasPresetItems() const {

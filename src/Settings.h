@@ -4,9 +4,14 @@
 
 class Settings {
 public:
+	using Keywords = std::vector<std::string>;
+
 	static Settings* Instance;
+	static std::string defaultFile;
 	Settings(const IniFile& configFile);
 	void load(const IniFile& configFile);
+
+	std::unordered_map<std::string, Keywords> files;
 
 	// 配置文件方面
 	std::string KeyNotExist{ };					// 记录不存在的Key

@@ -1,4 +1,5 @@
 ﻿#include "Settings.h"
+#include "Helper.h"
 
 Settings* Settings::Instance = nullptr;
 
@@ -8,6 +9,15 @@ Settings::Settings(const IniFile& configFile) {
 }
 
 void Settings::load(const IniFile& configFile) {
+	if (configFile.sections.contains("Files")) {
+		const auto& filesSection = configFile.sections.at("Files");
+		if (!filesSection.section.empty())
+			defaultFile = filesSection.begin()->first;
+		for (const auto& [file, keywords] : filesSection) {
+			files[file] = string::split(keywords);
+		}
+	}
+	
 	if (configFile.sections.contains("LogSetting")) {
 		auto& sections = configFile.sections.at("LogSetting");
 

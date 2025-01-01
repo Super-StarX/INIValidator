@@ -42,18 +42,25 @@ void IniFile::load(const std::string& filepath) {
 	}
 
 	FileIndex++;
-	auto curFileIndex = FileIndex;
 	auto fileName = std::filesystem::path(path).filename().string();
 	FileNames.push_back(fileName);
+	if (!isConfig) {
+		for (const auto& [fileType, keywords] : Settings::Instance->files) {
+			if (string::containsAny(fileName, keywords)) {
+				this->fileType = fileName;
+				break;
+			}
+		}
+	}
+
 	std::string origin, currentSection;
-	int lineNumber = 0;
 
 	size_t totalLines = std::count(std::istreambuf_iterator<wchar_t>(file), std::istreambuf_iterator<wchar_t>(), '\n');
 	file.clear();
 	file.seekg(0);
 	file.imbue(std::locale("zh_CN.UTF-8"));
 
-	std::string name = "[" + std::to_string(curFileIndex) + "] " + fileName + " ";
+	std::string name = "[" + std::to_string(FileIndex) + "] " + fileName + " ";
 	Progress::start(name, totalLines);
 
 	auto fromWString = [](const std::wstring& wstr) {
@@ -65,6 +72,7 @@ void IniFile::load(const std::string& filepath) {
 		return result;
 	};
 
+	int lineNumber = 0;
 	std::wstring wline;
 	// 逐行扫描加载ini
 	while (std::getline(file, wline)) {

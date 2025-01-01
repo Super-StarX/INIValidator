@@ -66,6 +66,7 @@ public:
 	void readKeyValue(std::string& currentSection, std::string& line, std::string origin, int lineNumber);
 
 	bool isConfig{ false };
+	std::string fileType;
 	Sections sections;
 private:
 	void processIncludes(const std::string& basePath);

@@ -13,7 +13,7 @@ namespace string {
 			tokens.push_back(token);
 		return tokens;
 	}
-
+	
 	static std::vector<std::string> splitAsString(const std::string& input, const std::string& delimiter = "||") {
 		std::vector<std::string> result;
 		size_t start = 0, end = 0;
@@ -64,6 +64,13 @@ namespace string {
 		if (size > length)
 			return str.substr(0, length - 3) + "..."; // 超出部分用省略号
 		return str + std::string(length - size, ' '); // 补齐空格
+	}
+
+	static bool containsAny(const std::string& str, const std::vector<std::string>& keywords) {
+		for (const auto& substring : keywords)
+			if (str.find(substring) != std::string::npos)
+				return true;
+		return false;
 	}
 
 	// 去除注释

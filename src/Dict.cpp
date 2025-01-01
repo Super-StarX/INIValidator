@@ -15,14 +15,12 @@ Dict::Dict(const Section& config) {
 	}
 }
 
-void Dict::validateSection(const Section& object, const std::string& type) {
-	if (object.isScanned) 
+void Dict::validateSection(const Section& object, const std::string& type, const std::string& fileType) {
+	if (object.isScanned)
 		return;
 
 	Progress::update();
 	const_cast<Section&>(object).isScanned = true;
-
-	auto pChecker = Checker::Instance;
 
 	for (const auto& dynamicKey : this->dynamicKeys) {
 		try {
@@ -30,8 +28,7 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 			for (const auto& key : keys) {
 				if (object.contains(key)) {
 					this->keys.insert(key);
-					for (const auto& type : this->at(dynamicKey).types)
-						pChecker->validate(object, key, object.at(key), type);
+					this->validate(dynamicKey, object, object.at(key), fileType);
 				}
 			}
 		}
@@ -50,9 +47,15 @@ void Dict::validateSection(const Section& object, const std::string& type) {
 			continue;
 		}
 
-		for (const auto& type : this->at(key).types)
-			pChecker->validate(object, key, value, type);
+		this->validate(key, object, value, fileType);
 	}
+}
+
+void Dict::validate(const Section::Key& key, const Section& object, const Value& value, const std::string& fileType) {
+	if (this->at(key).file != fileType) return;
+
+	for (const auto& type : this->at(key).types)
+		Checker::Instance->validate(object, key, value, type);
 }
 
 DictData Dict::parseTypeValue(const std::string& str) {
