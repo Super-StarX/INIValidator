@@ -20,7 +20,7 @@ public:
 private:
 	Checker* checker{ nullptr };
 	std::string type{ };
-	std::string fileType{ };
+	std::string fileType{ "" };
 	// int defaultFile;
 	bool checkExist{ };
 	std::vector<std::string> presetItems{ };

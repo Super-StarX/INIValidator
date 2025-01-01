@@ -59,7 +59,7 @@ public:
 	static std::vector<std::string> FileNames;
 	static size_t FileIndex;
 
-	IniFile(const std::string& filepath, bool isConfig);
+	IniFile(const std::string& filepath, bool isConfig = false);
 
 	void load(const std::string& filepath);
 	void readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber);

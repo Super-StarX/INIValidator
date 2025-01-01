@@ -27,9 +27,9 @@ int main(int argc, char* argv[]) {
         }
 		SetConsoleCP(CP_UTF8);
 
-		Settings setting(IniFile("Settings.ini", false));
+		Settings setting(IniFile("Settings.ini", true));
 		IniFile configIni("INICodingCheck.ini", true);
-		IniFile targetIni(targetFilePath, false);
+		IniFile targetIni(targetFilePath);
         Checker checker(configIni, targetIni);
         checker.checkFile();
 

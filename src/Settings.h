@@ -7,10 +7,10 @@ public:
 	using Keywords = std::vector<std::string>;
 
 	static Settings* Instance;
-	static std::string defaultFile;
 	Settings(const IniFile& configFile);
 	void load(const IniFile& configFile);
 
+	std::string defaultFile;
 	std::unordered_map<std::string, Keywords> files;
 
 	// 配置文件方面

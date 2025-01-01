@@ -52,7 +52,8 @@ void Dict::validateSection(const Section& object, const std::string& type, const
 }
 
 void Dict::validate(const Section::Key& key, const Section& object, const Value& value, const std::string& fileType) {
-	if (this->at(key).file != fileType) return;
+	if (!fileType.empty() && this->at(key).file != fileType)
+		return;
 
 	for (const auto& type : this->at(key).types)
 		Checker::Instance->validate(object, key, value, type);
