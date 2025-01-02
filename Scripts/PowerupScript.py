@@ -1,4 +1,4 @@
-import iv
+﻿import iv
 
 def validate(section, key, value, type):
     """
@@ -46,7 +46,7 @@ def validate(section, key, value, type):
     if not global_section:
         return 3, f"注册表{section_name}是空的"
 
-    if second_value not in global_section.values():
+    if second_value != "<none>" and second_value not in global_section.values():
         return 3, f"键{second_value}无法在注册表{section_name}中找到"
 
     # 检查第三个值的第一个字符
