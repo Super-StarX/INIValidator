@@ -9,8 +9,39 @@
 #include <string>
 #include <windows.h>
 
-void loadFromArg(int argc, char* argv[], IniFile& targetIni) {
-	std::vector<std::string> filePaths;
+static void loadFromInput(IniFile& targetIni) {
+	std::string targetFilePath;
+	std::cout << "请输入要检查的INI文件路径: ";
+	std::getline(std::cin, targetFilePath);
+	targetFilePath = std::regex_replace(targetFilePath, std::regex("^\"|\"$"), "");
+	if (!targetFilePath.empty()) {
+		std::filesystem::path targetPath(targetFilePath);
+		if (std::filesystem::is_regular_file(targetPath))
+			targetIni.load(targetFilePath);
+		else if (std::filesystem::is_directory(targetPath)) {
+			for (const auto& filePath : targetFilePath)
+				targetIni.load(std::to_string(filePath));
+		}
+		else {
+			std::cerr << "输入路径无效，无法加载文件: " << targetFilePath << std::endl;
+			loadFromInput(targetIni);
+		}
+	}
+	else if (!Settings::Instance->folderPath.empty()) {
+		// 用户直接按回车，使用默认目录
+		std::string defaultDir = Settings::Instance->folderPath;
+		for (const auto& entry : std::filesystem::directory_iterator(defaultDir)) {
+			if (entry.is_regular_file() && entry.path().extension() == ".ini")
+				targetIni.load(entry.path().string());
+		}
+	}
+	else {
+		std::cerr << "默认路径为空，无法加载文件。" << std::endl;
+		loadFromInput(targetIni);
+	}
+}
+
+static void loadFromArg(int argc, char* argv[], IniFile& targetIni) {
 	for (int i = 1; i < argc; ++i) {
 		std::filesystem::path path(argv[i]);
 		if (std::filesystem::is_regular_file(path))
@@ -26,34 +57,6 @@ void loadFromArg(int argc, char* argv[], IniFile& targetIni) {
 			loadFromInput(targetIni);
 		}
 	}
-}
-
-void loadFromInput(IniFile& targetIni) {
-	std::string targetFilePath;
-	std::cout << "请输入要检查的INI文件路径: ";
-	std::getline(std::cin, targetFilePath);
-	targetFilePath = std::regex_replace(targetFilePath, std::regex("^\"|\"$"), "");
-	if (!targetFilePath.empty()) {
-		std::filesystem::path targetPath(targetFilePath);
-		if (std::filesystem::is_regular_file(targetPath))
-			return targetIni.load(targetFilePath);
-		else if (std::filesystem::is_directory(targetPath)) {
-			for (const auto& filePath : targetFilePath)
-				targetIni.load(std::to_string(filePath));
-			return;
-		}
-	}
-	else if (!Settings::Instance->folderPath.empty()){
-		// 用户直接按回车，使用默认目录
-		std::string defaultDir = Settings::Instance->folderPath;
-		for (const auto& entry : std::filesystem::directory_iterator(defaultDir)) {
-			if (entry.is_regular_file() && entry.path().extension() == ".ini")
-				targetIni.load(entry.path().string());
-		}
-		return;
-	}
-	std::cerr << "输入路径无效，无法加载文件: " << targetFilePath;
-	loadFromInput(targetIni);
 }
 
 int main(int argc, char* argv[]) {
