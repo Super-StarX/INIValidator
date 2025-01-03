@@ -1,4 +1,4 @@
-# **INI Validator**
+﻿# **INI Validator**
 
 ##  **版本信息**
 - 当前版本：`v1.0`
@@ -24,7 +24,7 @@
 
 - **方法 1**：将ini文件(或多个)拖放到程序图标。
 
-- **方法 2**：打开程序，直接按下回车，程序会以`Settings.ini`中的[INIValidator]->FolderPath作为文件夹路径进行读取。
+- **方法 2**：打开程序，直接按下回车，程序会以`Settings.ini`中的`[INIValidator]->FolderPath`作为文件夹路径进行读取。
 
 - **方法 3**：打开程序，输入ini文件(或文件夹)路径，按下回车。
 
@@ -47,7 +47,7 @@
 ### 2. 配置文件结构
 
 #### 2.1 INIConfigCheck.ini文件结构
-由五大检查器: 注册表检查器、类型检查器、限制检查器、列表检查器、数字检查器组成。每个检查器都有其相应的注册表以及所注册内容的实现，程序会从注册表检查器为入口进行递归搜索，根据注册表对应的类型，逐个检查目标ini的每一个节的每一个键值对，根据键的类型调用相应的检查器进行检查。
+由六大检查器: 注册表检查器、类型检查器、限制检查器、列表检查器、数字检查器、自定义检查器组成。每个检查器都有其相应的注册表以及所注册内容的实现，程序会从注册表检查器为入口进行递归搜索，根据注册表对应的类型，逐个检查目标ini的每一个节的每一个键值对，根据键的类型自动调用相应的检查器进行检查。
 
 > INIConfigCheck.ini中的注册表无需像原版ini那样填写序号，可以直接填写内容。
 
@@ -160,6 +160,79 @@ AbstractType
 [AbstractType]
 UIName=string
 Name=string
+```
+
+#### 3.5 自定义检查器
+
+用于通过Python脚本检查键值对是否合法, 程序将在`Scripts`文件夹中寻找同名脚本, 调用Python解释器检查键值对
+除此之外, 我们提供了一系列预置函数并打包成名为iv模块, 通过`import iv`来实现Python脚本与c++程序之间的联动
+
+##### 3.5.1 脚本规范
+
+> 参数: 
+>         section (dict): 当前 Section 的键值对。
+>         key (str): 当前被检查的键名。
+>         value (str): 当前被检查的键值。
+> 返回值: 
+>         tuple: (检查结果说明, 状态码)
+> 状态码:
+> ​    -1: 没有错误, 不会报错
+> ​     0: DEFAULT (程序自身导致的错误)
+> ​     1: INFO (不影响游戏运行)
+> ​     2: WARNING (可能产生非预期结果)
+> ​     3: ERROR (会导致游戏崩溃)
+
+例:
+```python
+import re
+
+def validate(section, key, value, type):
+    """
+    检查值是否为逗号分隔的颜色列表，并确保每个颜色在 0-255 范围内。
+    """
+
+    # 定义正则表达式匹配 (R,G,B) 格式
+    pattern = r"\((-?\d+),(-?\d+),(-?\d+)\)"
+    rgbs = re.findall(pattern, value)
+
+    if not rgbs:
+        return 2, f"非法的颜色列表格式: {value}"
+
+    correct_values = []
+    for rgb in rgbs:
+        try:
+            r, g, b = map(int, rgb)
+            if 0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255:
+                correct_values.append((r, g, b))
+            else:
+                return 2, f"RGB颜色值必须在0~255之间: ({r},{g},{b})"
+        except ValueError:
+            return 2, f"非法的RGB颜色值: {rgb}"
+
+    # 检查是否完全匹配 value 的长度，确保没有额外的非法字符
+    valid_part  = ",".join(f"({r},{g},{b})" for r, g, b in correct_values)
+    remaining = value.replace(valid_part, "").strip()
+    if remaining:
+        return 2, f"存在非法字符或格式错误: {remaining}"
+
+    return -1, f""
+
+```
+
+##### 3.5.2 获取其他section的内容
+
+> 函数格式: iv.get_section(section_name: str)
+
+```python
+import iv
+
+section_name = "Animations"
+global_section = iv.get_section(section_name)
+if not global_section:
+    return 3, f"注册表{section_name}是空的"
+
+if second_value != "<none>" and second_value not in global_section.values():
+    return 3, f"键{second_value}无法在注册表{section_name}中找到"
 ```
 
 ## 未来展望
