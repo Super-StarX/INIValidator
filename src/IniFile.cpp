@@ -23,6 +23,9 @@ size_t IniFile::GetFileIndex() {
 	return FileNames.size() - 1;
 }
 
+IniFile::IniFile() {
+}
+
 IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig) {
 	load(filepath);
 }

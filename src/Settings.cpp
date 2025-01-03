@@ -9,13 +9,18 @@ Settings::Settings(const IniFile& configFile) {
 }
 
 void Settings::load(const IniFile& configFile) {
+	if (configFile.sections.contains("INIValidator")) {
+		const auto& section = configFile.sections.at("INIValidator");
+		if (section.contains("FolderPath"))
+			folderPath = section.at("FolderPath");
+	}
+
 	if (configFile.sections.contains("Files")) {
 		const auto& filesSection = configFile.sections.at("Files");
 		if (!filesSection.section.empty())
 			defaultFile = filesSection.begin()->first;
-		for (const auto& [file, keywords] : filesSection) {
+		for (const auto& [file, keywords] : filesSection)
 			files[file] = string::split(keywords);
-		}
 	}
 	
 	if (configFile.sections.contains("LogSetting")) {
