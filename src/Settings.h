@@ -3,8 +3,8 @@
 #include <string>
 
 class Settings {
-public:
 	using Keywords = std::vector<std::string>;
+public:
 
 	static Settings* Instance;
 	Settings(const IniFile& configFile);
