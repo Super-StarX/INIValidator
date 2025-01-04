@@ -80,7 +80,7 @@ void Progress::draw() {
 		std::cerr << std::fixed << std::setprecision(2) << processed << "/" << total << " (" << percent << "% " << elapsed << "ms)";
 	}
 	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Progress draw error: " << e.what() << std::endl;
 	}
 }
 

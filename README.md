@@ -254,11 +254,18 @@ if second_value != "<none>" and second_value not in global_section.values():
   - 完善INIConfigCheck.ini以实现检查拓展平台的标签。
 
 ## 更新日志
+- 2024.1.3
+  - 允许用户拖放/输入多个文件/文件夹、允许用户直接回车以读取`Settings.ini`中的路径
+  
+- 2024.1.1
+  - 实现区分文件类型(例如是rules还是art)
+
 - 2024.12.23 
   - 修复Windows10下中文路径无法正确识别的问题
 
 - 2024.12.22 
   - 修复拖文件打开的方式运作不正常的问题
+  - 允许用户通过写Python脚本的方式自定义检查器
 
 - 2024.12.21 
   - 发布1.0版本
