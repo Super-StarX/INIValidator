@@ -28,7 +28,7 @@ void Dict::validateSection(const Section& object, const std::string& type, const
 			for (const auto& key : keys) {
 				if (object.contains(key)) {
 					this->keys.insert(key);
-					this->validate(dynamicKey, object, object.at(key), fileType);
+					this->validate(dynamicKey, key, object, object.at(key), fileType);
 				}
 			}
 		}
@@ -47,16 +47,16 @@ void Dict::validateSection(const Section& object, const std::string& type, const
 			continue;
 		}
 
-		this->validate(key, object, value, fileType);
+		this->validate(key, key, object, value, fileType);
 	}
 }
 
-void Dict::validate(const Section::Key& key, const Section& object, const Value& value, const std::string& fileType) {
+void Dict::validate(const Section::Key& key, const Section::Key& vkey, const Section& object, const Value& value, const std::string& fileType) {
 	if (!fileType.empty() && this->at(key).file != fileType)
 		return;
 
 	for (const auto& type : this->at(key).types)
-		Checker::Instance->validate(object, key, value, type);
+		Checker::Instance->validate(object, vkey, value, type);
 }
 
 DictData Dict::parseTypeValue(const std::string& str) {

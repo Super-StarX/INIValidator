@@ -30,7 +30,7 @@ IniFile::IniFile(const std::string& filepath, bool isConfig) :isConfig(isConfig)
 	load(filepath);
 }
 
-void IniFile::load(const std::string& filepath) {
+void IniFile::load(const std::string& filepath, bool isInclude) {
 	auto path = std::regex_replace(filepath, std::regex("^\"|\"$"), "");
 
 	if (!std::filesystem::exists(path)) {
@@ -44,9 +44,7 @@ void IniFile::load(const std::string& filepath) {
 		return;
 	}
 
-	FileIndex++;
 	auto fileName = std::filesystem::path(path).filename().string();
-	FileNames.push_back(fileName);
 	if (!isConfig) {
 		for (const auto& [fileType, keywords] : Settings::Instance->files) {
 			if (string::containsAny(fileName, keywords)) {
@@ -56,6 +54,11 @@ void IniFile::load(const std::string& filepath) {
 		}
 	}
 
+	if (!isInclude && !isConfig && this->fileType.empty())
+		return;
+
+	FileIndex++;
+	FileNames.push_back(fileName);
 	std::string origin, currentSection;
 
 	size_t totalLines = std::count(std::istreambuf_iterator<wchar_t>(file), std::istreambuf_iterator<wchar_t>(), '\n');
@@ -154,7 +157,7 @@ void IniFile::processIncludes(const std::string& basePath) {
 		for (const auto& [key, value] : include)
 			// 将新的ini载入到本ini中，并判断文件编号防止死循环
 			if (value.fileIndex == curFileIndex)
-				this->load(basePath + "/" + value.value);
+				this->load(basePath + "/" + value.value, true);
 	}
 }
 
@@ -185,7 +188,7 @@ void IniFile::processInheritance(std::string& line, size_t endPos, int& lineNumb
 			}
 			else if (curSection[key].isInheritance) // 继承节里有重复的键(不是与原节重复)
 				Log::error<_InheritanceDuplicateKey>({ inheritedSection, key }
-					, key, value.line, value, inheritedSection[key]);
+			, key, value.line, value, inheritedSection[key]);
 		}
 	}
 	else if (endPos != line.size() - 1) // 检查 ']' 是否是最后一个字符

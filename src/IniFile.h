@@ -62,7 +62,7 @@ public:
 	IniFile();
 	IniFile(const std::string& filepath, bool isConfig = false);
 
-	void load(const std::string& filepath);
+	void load(const std::string& filepath, bool isInclude = false);
 	void readSection(std::string& currentSection, std::string& line, std::string origin, int& lineNumber);
 	void readKeyValue(std::string& currentSection, std::string& line, std::string origin, int lineNumber);
 
