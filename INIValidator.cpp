@@ -8,7 +8,6 @@
 #include <regex>
 #include <string>
 #include <windows.h>
-#include "INIValidator.h"
 
 static void loadFromInput(IniFile& targetIni) {
 	std::string targetFilePath;

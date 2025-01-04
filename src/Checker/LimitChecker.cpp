@@ -7,6 +7,13 @@ LimitChecker::LimitChecker(const Section& config) {
 	startWith = getToken(config, "StartWith");
 	endWith = getToken(config, "EndWith");
 	limitIn = getToken(config, "LimitIn");
+	for (const auto& [key, _] : config) {
+		if (key.rfind("LimitIn.", 0) == 0) {
+			auto parts = getToken(config, key);
+			limitIn.insert(limitIn.end(), parts.begin(), parts.end());
+		}
+	}
+
 	if (config.contains("MaxLength"))
 		maxLength = std::stoi(config.at("MaxLength"));
 	if (config.contains("CaseSenstive")) {
