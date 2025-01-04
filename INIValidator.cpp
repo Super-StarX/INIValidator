@@ -8,6 +8,7 @@
 #include <regex>
 #include <string>
 #include <windows.h>
+#include "INIValidator.h"
 
 static void loadFromInput(IniFile& targetIni) {
 	std::string targetFilePath;
@@ -59,6 +60,14 @@ static void loadFromArg(int argc, char* argv[], IniFile& targetIni) {
 	}
 }
 
+static void loadAgain(IniFile& targetIni) {
+	std::cout << "按任意键继续检测..." << std::endl;
+	std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+	std::cout << "\033[2J\033[H"; // 清空控制台
+	targetIni = IniFile();
+	loadFromInput(targetIni);
+}
+
 int main(int argc, char* argv[]) {
     try {
 		SetConsoleOutputCP(CP_UTF8);
@@ -79,11 +88,15 @@ int main(int argc, char* argv[]) {
 			loadFromInput(targetIni);
 		SetConsoleCP(CP_UTF8);
 
-        Checker checker(configIni, targetIni);
-        checker.checkFile();
+		while (true) {
+			Checker checker(configIni, targetIni);
+			checker.checkFile();
 
-		log.output("Checker.log");
-		std::cout << "\n检查完毕" << std::endl;
+			log.output("Checker.log");
+			std::cout << "\n检查完毕" << std::endl;
+
+			loadAgain(targetIni);
+		}
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
