@@ -86,8 +86,7 @@ void Log::output() {
 			std::lock_guard<std::mutex> lock(queueMutex);
 			if (jsonLog) {
 				auto& back = *std::prev(Logs.end());
-				logQueue.push(log.getJsonLog());
-				logQueue.push(&log == &back ? "]" : ",");
+				logQueue.push(log.getJsonLog(&log == &back));
 			}
 			else
 				logQueue.push(log.getFileMessage());
@@ -183,7 +182,7 @@ std::string LogStream::getPrintMessage() const {
 	return formattedMessage.str();
 }
 
-std::string LogStream::getJsonLog() const {
+std::string LogStream::getJsonLog(bool isLast) const {
 	std::ostringstream jsonStream;
 	jsonStream << "\t{\n"
 		<< "\t\t\"filename\": \"" << IniFile::GetFileName(data.fileindex) << "\",\n"
@@ -192,7 +191,9 @@ std::string LogStream::getJsonLog() const {
 		//<< "\t\t\"origin\": \"" << data.origin << "\",\n"
 		<< "\t\t\"level\": \"" << Log::getJsonSeverityLabel(severity) << "\",\n"
 		<< "\t\t\"message\": \"" << string::escapeJson(buffer) << "\"\n"
-		<< "\t}";
+		<< "\t}"
+		<< (isLast ? "\n]" : ",");
+	
 	return jsonStream.str();
 }
 

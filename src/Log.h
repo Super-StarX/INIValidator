@@ -141,7 +141,7 @@ public:
 	}
 
 private:
-	std::string getJsonLog() const;
+	std::string getJsonLog(bool isLast) const;
 	std::string generateLogMessage(bool isFormatted) const;
 
 	Severity severity;
