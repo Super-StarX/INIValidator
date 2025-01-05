@@ -85,7 +85,31 @@ namespace string {
 		size_t end = str.find_last_not_of(" \t\r\n");
 		return (start == std::string::npos || end == std::string::npos) ? "" : str.substr(start, end - start + 1);
 	}
-	
+	inline std::string escapeJson(const std::string& input) {
+		std::ostringstream oss;
+
+		for (char c : input) {
+			switch (c) {
+			case '"': oss << "\\\""; break;
+			case '\\': oss << "\\\\"; break;
+			case '\n': oss << "\\n"; break;
+			case '\r': oss << "\\r"; break;
+			case '\t': oss << "\\t"; break;
+			case '\b': oss << "\\b"; break;
+			case '\f': oss << "\\f"; break;
+			default:
+				// 对于所有非打印字符（ASCII 范围 0–31），用 \uXXXX 转义
+				if (std::iscntrl(c)) {
+					oss << "\\u" << std::setfill('0') << std::setw(4) << std::hex << (0xFF & static_cast<unsigned char>(c));
+				}
+				else {
+					oss << c;  // 正常字符不做转义
+				}
+			}
+		}
+
+		return oss.str();
+	}
 	// 绑定超链接
 	inline std::string linkTo(const std::string& str, const std::string& path, const size_t line) {
 		std::string absolutePath = std::filesystem::absolute(path).string();

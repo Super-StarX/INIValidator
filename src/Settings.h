@@ -10,6 +10,8 @@ public:
 	Settings(const IniFile& configFile);
 	void load(const IniFile& configFile);
 
+	bool jsonLog{ false };
+
 	std::string folderPath;
 	std::string defaultFile;
 	std::unordered_map<std::string, Keywords> files;

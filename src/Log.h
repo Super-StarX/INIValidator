@@ -48,7 +48,7 @@ public:
 
 	Log();
 
-	void output(const std::string& logFileName);
+	void output();
 
 	// 直接输出文本的形式，禁止不填内容，只填1个字符串时直接输出字符串
 	// 填入多个变量时，第一个变量为format，后续的变量为格式化参数
@@ -82,6 +82,7 @@ private:
 	std::mutex fileMutex;
 	static std::string getSeverityLabel(Severity severity);
 	static std::string getPlainSeverityLabel(Severity severity);
+	static std::string getJsonSeverityLabel(Severity severity);
 	void writeLog(const std::string& log);
 	void summary(std::map<std::string, std::map<Severity, int>>& fileSeverityCount);
 
@@ -140,6 +141,7 @@ public:
 	}
 
 private:
+	std::string getJsonLog() const;
 	std::string generateLogMessage(bool isFormatted) const;
 
 	Severity severity;

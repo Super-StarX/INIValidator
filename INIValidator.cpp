@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 			Checker checker(configIni, targetIni);
 			checker.checkFile();
 
-			log.output("Checker.log");
+			log.output();
 			std::cout << "\n检查完毕" << std::endl;
 
 			loadAgain(targetIni);

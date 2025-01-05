@@ -32,7 +32,19 @@ std::string Log::getPlainSeverityLabel(Severity severity) {
 	}
 }
 
-void Log::output(const std::string& logFileName) {
+std::string Log::getJsonSeverityLabel(Severity severity) {
+	switch (severity) {
+	case Severity::DEFAULT: return "";
+	case Severity::INFO:    return "建议";
+	case Severity::WARNING: return "非法";
+	case Severity::ERROR:   return "错误";
+	default: __assume(0);
+	}
+}
+
+void Log::output() {
+	bool jsonLog = Settings::Instance->jsonLog;
+	const std::string& logFileName = jsonLog ? "Checker.json" : "Checker.log";
 	Progress::stop();
 	// 共享资源和同步机制
 	std::queue<std::string> logQueue;
@@ -66,11 +78,19 @@ void Log::output(const std::string& logFileName) {
 		}
 	});
 
+	if (jsonLog)
+		logQueue.push("[");
 	// 将日志放入队列
 	for (const auto& log : Logs) {
 		{
 			std::lock_guard<std::mutex> lock(queueMutex);
-			logQueue.push(log.getFileMessage());
+			if (jsonLog) {
+				auto& back = *std::prev(Logs.end());
+				logQueue.push(log.getJsonLog());
+				logQueue.push(&log == &back ? "]" : ",");
+			}
+			else
+				logQueue.push(log.getFileMessage());
 		}
 		cv.notify_one(); // 通知写线程
 	}
@@ -161,6 +181,19 @@ std::string LogStream::getPrintMessage() const {
 	std::ostringstream formattedMessage;
 	formattedMessage << Log::getSeverityLabel(severity) << " " << generateLogMessage(true);
 	return formattedMessage.str();
+}
+
+std::string LogStream::getJsonLog() const {
+	std::ostringstream jsonStream;
+	jsonStream << "\t{\n"
+		<< "\t\t\"filename\": \"" << IniFile::GetFileName(data.fileindex) << "\",\n"
+		<< "\t\t\"line\": " << data.line << ",\n"
+		<< "\t\t\"section\": \"" << data.section << "\",\n"
+		//<< "\t\t\"origin\": \"" << data.origin << "\",\n"
+		<< "\t\t\"level\": \"" << Log::getJsonSeverityLabel(severity) << "\",\n"
+		<< "\t\t\"message\": \"" << string::escapeJson(buffer) << "\"\n"
+		<< "\t}";
+	return jsonStream.str();
 }
 
 std::string LogStream::generateLogMessage(bool isFormatted) const {

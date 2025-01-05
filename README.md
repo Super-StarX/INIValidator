@@ -237,25 +237,17 @@ if second_value != "<none>" and second_value not in global_section.values():
 
 ## 未来展望
 
-- **记录历史检查文件**
-  - 打开程序，直接按下回车，程序会自动检查上次检查的路径(即Settings.ini中的[Files]LastFilePath=)。
-  - 按↑键，可以选择历史检查文件。
-
-- **重新检查**
-  - 完成一轮检查后，程序会询问是否继续检查其他文件。用户可以选择退出或输入新的文件路径。
-
-- **自定义检查器**
-  - 允许用户写python脚本以实现一些拓展平台独有的ini格式。
-
 - **支持Ares与Phobos标签**
   - 完善INIConfigCheck.ini以实现检查拓展平台的标签。
-
-- **检查除Rules以外的ini及相关耦合项**
-  - 完善INIConfigCheck.ini以实现检查拓展平台的标签。
+  
+- **与VSC插件交互**
+  - 向Visual Studio Code插件INI-Intellisense提供语法合规检查支持。
 
 ## 更新日志
 - 2024.1.3
   - 允许用户拖放/输入多个文件/文件夹、允许用户直接回车以读取`Settings.ini`中的路径
+  - 检测完毕后可以直接进行下一次检测了
+  - 支持输出为json格式的日志
   
 - 2024.1.1
   - 实现区分文件类型(例如是rules还是art)

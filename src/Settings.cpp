@@ -13,6 +13,8 @@ void Settings::load(const IniFile& configFile) {
 		const auto& section = configFile.sections.at("INIValidator");
 		if (section.contains("FolderPath"))
 			folderPath = section.at("FolderPath");
+		if (section.contains("JsonLog"))
+			jsonLog = string::isBool(section.at("JsonLog"));
 	}
 
 	if (configFile.sections.contains("Files")) {
