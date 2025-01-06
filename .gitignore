@@ -1,4 +1,4 @@
-bin/*
+﻿bin/*
 build/*
 debug/*
 release/*
@@ -10,3 +10,4 @@ INIValidator/*
 *.log
 *.user
 *.filters
+.vscode/settings.json

@@ -1,19 +1,58 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Build Solution",
-            "type": "shell",
-            "command": "msbuild",
-            "args": [
-                "${workspaceFolder}/INIValidator.sln",
-                "/p:Configuration=Debug"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": "$msCompile"
-        }
-    ]
+  "version": "2.0.0",
+  "windows": {
+    "options": {
+      "shell": {
+        "executable": "cmd.exe",
+        "args": [
+          "/C",
+          "\"${workspaceFolder}/.vscode/env.bat\"",
+          "&&"
+        ]
+      }
+    }
+  },
+  "tasks": [
+    {
+      "label": "Debug",
+      "type": "shell",
+      "command": "msbuild",
+      "args": [
+        "INIValidator.sln",
+        "/property:Configuration=Debug",
+        "/property:GenerateFullPaths=true",
+        "/t:build",
+        "/consoleloggerparameters:NoSummary",
+        "/v:m"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Release",
+      "type": "shell",
+      "command": "msbuild",
+      "args": [
+        "INIValidator.sln",
+        "/property:Configuration=Release",
+        "/property:GenerateFullPaths=true",
+        "/t:build",
+        "/consoleloggerparameters:NoSummary",
+        "/v:m"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": "$msCompile"
+    }
+  ]
 }
