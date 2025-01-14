@@ -67,25 +67,20 @@ void Progress::stopDrawing() {
 }
 
 void Progress::draw() {
-	try {
-		double percent = getPercent();
-		auto elapsed = getElapsed();
+	double percent = getPercent();
+	auto elapsed = getElapsed();
 
-		// 渲染进度条
-		size_t completed = (size_t)(percent / 2);
-		size_t remain = totalLength - completed;
-		std::cerr << "\r" << startName << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
+	// 渲染进度条
+	size_t completed = (size_t)(percent / 2);
+	size_t remain = totalLength - completed;
+	std::cerr << "\r" << startName << std::format("[\033[32m{0:━<{1}}>\033[90m{2:┈<{3}}\033[0m]", "", completed, "", remain);
 
-		// 显示百分比和时间
-		std::cerr << std::fixed << std::setprecision(2) << processed << "/" << total << " (" << percent << "% " << elapsed << "ms)";
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Progress draw error: " << e.what() << std::endl;
-	}
+	// 显示百分比和时间
+	std::cerr << std::fixed << std::setprecision(2) << processed << "/" << total << " (" << percent << "% " << elapsed << "ms)";
 }
 
 double Progress::getPercent() const {
-	return total > 0 ? (double)processed / total * 100 : 0.0;
+	return total > 0 ? std::clamp((double)processed / total * 100, 0.0, 100.0) : 0.0;
 }
 
 long long Progress::getElapsed() const {
