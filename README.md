@@ -1,11 +1,9 @@
 ﻿# **INI Validator**
-
-##  **版本信息**
-- 当前版本：`v1.3`
-- 发布日期：`2025-01-15`
-
-##  **简介**
 是星轨实验室研发的一款INI检查器，其预计可以检查《命令与征服：红色警戒2之尤里的复仇》1.001版本的配置文件内容，主为模组作者（Modders）服务，旨在构建CI流水线的静态代码分析与门禁校验器。
+
+## **版本信息**
+- 当前版本：[`v1.3`](https://github.com/Super-StarX/INIValidator/releases)
+- 发布日期：`2025-01-15`
 
 ## **主要功能**
 
@@ -289,8 +287,11 @@ Noble_Fish
 ### 如何贡献
 如果希望为项目贡献代码，请通过 GitHub 提交 Pull Request。
 
-### 问题反馈：
+### 问题反馈
 如果在使用过程中遇到问题，请通过 GitHub 提交 Issue。
+
+### 联系我们
+QQ群：[966912243](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=3pF9dRngeMmduKU6JzTEXMZMqtTF0RXg&authKey=YWnaMP7Pe6oSD0%2FsYAOFdZ643iuDPxWdLLesaTurCCcqW1yDwvE3jKTI9Tcc%2BiAS&noverify=0&group_code=966912243)
 
 ## 许可证
 本项目基于 GPL3.0 许可证 开源。
