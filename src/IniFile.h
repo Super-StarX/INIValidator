@@ -19,6 +19,7 @@ public:
 	int line{ -1 };
 	std::string origin{ };
 	size_t fileIndex{ };
+	std::string filetype{ };
 	bool isInheritance{ };
 };
 
@@ -58,6 +59,7 @@ public:
 	static size_t GetFileIndex();
 	static std::vector<std::string> FileNames;
 	static size_t FileIndex;
+	static std::string FileType;
 
 	IniFile();
 	IniFile(const std::string& filepath, bool isConfig = false);
@@ -67,7 +69,6 @@ public:
 	void readKeyValue(std::string& currentSection, std::string& line, std::string origin, int lineNumber);
 
 	bool isConfig{ false };
-	std::string fileType;
 	Sections sections;
 private:
 	void processIncludes(const std::string& basePath);

@@ -37,7 +37,7 @@ void RegistryChecker::validatePreserItem(const Section::Key& registryName, const
 		return;
 	}
 	
-	checker->sections[type].validateSection(checker->targetIni->sections[item], type, fileType);
+	checker->sections[type].validateSection(checker->targetIni->sections[item], type);
 }
 
 void RegistryChecker::validateSection(const Section::Key& registryName, const Value& name) const {
@@ -47,7 +47,7 @@ void RegistryChecker::validateSection(const Section::Key& registryName, const Va
 		return;
 	}
 
-	checker->sections[type].validateSection(checker->targetIni->sections[name.value], type, fileType);
+	checker->sections[type].validateSection(checker->targetIni->sections[name.value], type);
 }
 
 bool RegistryChecker::hasPresetItems() const {

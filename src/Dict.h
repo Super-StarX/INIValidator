@@ -28,8 +28,8 @@ public:
 	DictData at(const std::string& key) const { return section.at(key); }
 	DictData& at(const std::string& key) { return section.at(key); }
 	DictData& operator[](const std::string& key) { return section[key]; }
-	void validateSection(const Section& object, const std::string& type, const std::string& fileType = "");
-	void validate(const Section::Key& key, const Section::Key& vkey, const Section& object, const Value& value, const std::string& fileType);
+	void validateSection(const Section& object, const std::string& type);
+	void validate(const Section::Key& key, const Section::Key& vkey, const Section& object, const Value& value);
 
 private:
 	std::vector<std::string> dynamicKeys;			// 存储所有需要动态生成的key

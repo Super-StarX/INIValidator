@@ -14,6 +14,7 @@
 
 std::vector<std::string> IniFile::FileNames;
 size_t IniFile::FileIndex = ULLONG_MAX;
+std::string IniFile::FileType;
 
 std::string IniFile::GetFileName(size_t index) {
 	return FileNames.at(index);
@@ -45,17 +46,18 @@ void IniFile::load(const std::string& filepath, bool isInclude) {
 	}
 
 	auto fileName = std::filesystem::path(path).filename().string();
-	if (!isConfig) {
+	if (!isConfig && !isInclude) {
+		FileType.clear();
 		for (const auto& [fileType, keywords] : Settings::Instance->files) {
 			if (string::containsAny(fileName, keywords)) {
-				this->fileType = fileName;
+				FileType = fileName;
 				break;
 			}
 		}
-	}
 
-	if (!isInclude && !isConfig && this->fileType.empty())
-		return;
+		if (FileType.empty())
+			return;
+	}
 
 	FileIndex++;
 	FileNames.push_back(fileName);
@@ -136,11 +138,11 @@ void IniFile::readKeyValue(std::string& currentSection, std::string& line, std::
 				Log::error<_DuplicateKey>({ section.origin, oldValue.fileIndex, lineNumber },
 					key, oldValue.line, oldValue, value);
 		}
-		section[key] = { value, lineNumber, origin, FileIndex };
+		section[key] = { value, lineNumber, origin, FileIndex, FileType };
 	}
 	else
 		// 仅有键, 无值, 用于配置ini的注册表, 暂时不报错, 未来会改
-		section[line] = { "", lineNumber, origin, FileIndex };
+		section[line] = { "", lineNumber, origin, FileIndex, FileType };
 }
 
 // 处理#include
